@@ -12,7 +12,6 @@ import os
 private let logger = Logger(subsystem: "io.fluxhaus.GT3Companion", category: "Coordinator")
 
 /// Central orchestrator wiring BLE → Register Reader → Ride Tracker → Upload → Live Activity.
-/// This is the glue that makes "hop on and ride, everything logs automatically" work.
 @MainActor
 class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     static let shared = AppCoordinator()
@@ -33,22 +32,23 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     private let liveActivityManager = GT3LiveActivityManager.shared
 
     private var storedPassword: Data?
+    private var hasStarted = false
+    private var pendingEndTask: Task<Void, Never>?
 
     private init() {
         connectionManager.delegate = self
-
         Task {
             await rideTracker.setOnComplete { [weak self] rideLog in
                 guard let self else { return }
-                Task {
-                    await self.handleRideComplete(rideLog)
-                }
+                Task { await self.handleRideComplete(rideLog) }
             }
         }
     }
 
     /// Start the coordinator — called once on app launch.
     func start(storedPassword: Data? = nil) {
+        guard !hasStarted else { return }
+        hasStarted = true
         self.storedPassword = storedPassword
         connectionManager.start(storedPassword: storedPassword)
         logger.info("AppCoordinator started — watching for GT3 Pro")
@@ -56,72 +56,58 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
 
     // MARK: - ScooterConnectionDelegate
 
-    nonisolated func connectionStateChanged(_ state: ConnectionState) {
-        Task { @MainActor in
-            self.connectionState = state
-        }
+    func connectionStateChanged(_ state: ConnectionState) {
+        self.connectionState = state
     }
 
-    nonisolated func didAuthenticate(serialNumber: String) {
-        Task { @MainActor in
-            logger.info("Authenticated: \(serialNumber)")
-            await self.onConnected()
-        }
+    func didAuthenticate(serialNumber: String) {
+        logger.info("Authenticated: \(serialNumber)")
+        Task { await self.onConnected() }
     }
 
-    nonisolated func didReceiveTelemetry(_ frame: NinebotFrameBuilder.ParsedFrame) {
-        Task { @MainActor in
-            await self.handleTelemetryFrame(frame)
-        }
+    func didReceiveTelemetry(_ frame: NinebotFrameBuilder.ParsedFrame) {
+        Task { await self.handleTelemetryFrame(frame) }
     }
 
-    nonisolated func didDisconnect(error: Error?) {
-        Task { @MainActor in
-            await self.onDisconnected()
-        }
+    func didDisconnect(error: Error?) {
+        Task { await self.onDisconnected() }
     }
 
     // MARK: - Connection Lifecycle
 
     private func onConnected() async {
-        // Read cumulative registers (snapshot)
+        pendingEndTask?.cancel()
+        pendingEndTask = nil
+
         await registerReader.configure { [weak self] frame in
             self?.connectionManager.sendFrame(frame)
         }
         await registerReader.readCumulativeRegisters()
 
-        // Upload snapshot
         let snapshot = await registerReader.getDiagnosticSnapshot()
         await uploadQueue.uploadSnapshot(snapshot)
 
-        // Start GPS + roughness tracking
+        gpsTracker.requestPermissions()
         gpsTracker.startTracking()
         roughnessTracker.startTracking()
 
-        // Start telemetry polling
         await registerReader.startPolling()
-
-        // Start Live Activity
         await liveActivityManager.startRideActivity()
 
         logger.info("Fully connected — polling, GPS, roughness, Live Activity active")
     }
 
     private func onDisconnected() async {
-        // Stop polling
         await registerReader.stopPolling()
-
-        // Stop trackers
         gpsTracker.stopTracking()
         roughnessTracker.stopTracking()
 
-        // Force-end ride if one is active
         let lastBattery = currentBattery
         await rideTracker.forceEndRide(endBattery: lastBattery)
 
-        // End Live Activity with delay
-        Task {
+        pendingEndTask = Task {
             try? await Task.sleep(for: .seconds(30))
+            guard !Task.isCancelled else { return }
             await liveActivityManager.endRideActivity()
         }
 
@@ -133,7 +119,6 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     private func handleTelemetryFrame(_ frame: NinebotFrameBuilder.ParsedFrame) async {
         guard let result = await registerReader.processResponse(frame) else { return }
 
-        // Update published state from known registers
         switch result.name {
         case "rSpeed":
             currentSpeed = result.doubleValue ?? 0
@@ -147,7 +132,9 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
             break
         }
 
-        // Build telemetry sample with GPS + roughness
+        // Only emit a full sample when speed arrives (one per polling cycle)
+        guard result.name == "rSpeed" else { return }
+
         let gpsSample = gpsTracker.latestSample
         let roughness = roughnessTracker.latestSample
 
@@ -183,14 +170,10 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
             heartRate: nil
         )
 
-        // Feed to ride tracker (handles start/stop detection)
         await rideTracker.addSample(sample)
         isRiding = await rideTracker.state != .idle
-
-        // Batch upload telemetry
         await uploadQueue.enqueueSamples([sample])
 
-        // Update Live Activity
         await liveActivityManager.updateActivity(state: .init(
             speed: currentSpeed,
             battery: currentBattery,
@@ -207,16 +190,10 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
 
     private func handleRideComplete(_ rideLog: RideLog) async {
         logger.info("Ride complete: \(rideLog.totalDistance) km")
-
-        // Flush remaining telemetry
         await uploadQueue.flushSamples()
-
-        // Upload ride summary
         await uploadQueue.uploadRide(rideLog)
     }
 }
-
-// MARK: - RideTracker callback helper
 
 extension RideTracker {
     func setOnComplete(_ callback: @escaping @Sendable (RideLog) -> Void) {

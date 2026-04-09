@@ -144,3 +144,14 @@ struct DashboardView: View {
         }
     }
 }
+
+#if DEBUG
+#Preview {
+    #if os(iOS)
+    DashboardView()
+        .environmentObject(AppCoordinator.shared)
+    #else
+    DashboardView()
+    #endif
+}
+#endif
