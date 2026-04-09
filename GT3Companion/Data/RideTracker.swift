@@ -151,7 +151,7 @@ actor RideTracker {
             totalDistance: samples.last?.tripDistance ?? 0,
             maxSpeed: maxSpeed,
             avgSpeed: speedCount > 0 ? speedSum / Double(speedCount) : 0,
-            batteryUsed: startBattery - endBattery,
+            batteryUsed: max(0, startBattery - endBattery),
             startBattery: startBattery,
             endBattery: endBattery
         )

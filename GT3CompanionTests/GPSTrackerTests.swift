@@ -9,6 +9,7 @@
 import XCTest
 @testable import GT3Companion
 
+@MainActor
 final class GPSTrackerTests: XCTestCase {
     func testInitialStateIsNotTracking() {
         let tracker = GPSTracker()

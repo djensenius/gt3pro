@@ -24,7 +24,8 @@ struct GPSSample: Sendable {
 }
 
 /// CoreLocation GPS tracker for ride route recording.
-final class GPSTracker: NSObject, @unchecked Sendable {
+@MainActor
+final class GPSTracker: NSObject {
     private let locationManager = CLLocationManager()
     private(set) var latestSample: GPSSample?
     private(set) var isTracking = false
@@ -60,7 +61,7 @@ final class GPSTracker: NSObject, @unchecked Sendable {
     }
 }
 
-extension GPSTracker: CLLocationManagerDelegate {
+extension GPSTracker: @preconcurrency CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
 

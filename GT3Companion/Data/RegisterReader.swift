@@ -47,15 +47,17 @@ actor RegisterReader {
     func startPolling(intervalMs: UInt64 = 500) {
         guard !isPolling else { return }
         isPolling = true
-        pollTask = Task {
-            while isPolling && !Task.isCancelled {
-                for register in GT3Registers.liveTelemetry {
-                    guard isPolling else { break }
-                    await readRegister(register)
-                    try? await Task.sleep(for: .milliseconds(25))
-                }
-                try? await Task.sleep(for: .milliseconds(intervalMs))
+        pollTask = Task { await self.pollLoop(intervalMs: intervalMs) }
+    }
+
+    private func pollLoop(intervalMs: UInt64) async {
+        while isPolling && !Task.isCancelled {
+            for register in GT3Registers.liveTelemetry {
+                guard isPolling else { break }
+                await readRegister(register)
+                try? await Task.sleep(for: .milliseconds(25))
             }
+            try? await Task.sleep(for: .milliseconds(intervalMs))
         }
     }
 
@@ -82,7 +84,9 @@ actor RegisterReader {
         guard parsed.cmd == BLEConstants.Command.readAck.rawValue else { return nil }
 
         let matchingRegister = GT3Registers.all.first { register in
-            register.board.rawValue == parsed.source && register.index == parsed.index
+            register.board.rawValue == parsed.source
+            && register.index == parsed.index
+            && register.size == UInt8(parsed.payload.count)
         }
 
         guard let register = matchingRegister else {

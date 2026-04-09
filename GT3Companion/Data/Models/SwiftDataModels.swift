@@ -63,7 +63,13 @@ class PersistedSample {
     var gpsCourse: Double?
     var horizontalAccuracy: Double?
     var roughnessScore: Double?
+    var maxAcceleration: Double?
     var heartRate: Int?
+    var tripTime: Int
+    var errorCode: Int
+    var warnCode: Int
+    var regenLevel: Int
+    var speedResponse: Int
 
     init(timestamp: Date, speed: Double, battery: Int) {
         self.timestamp = timestamp
@@ -81,6 +87,11 @@ class PersistedSample {
         self.bodyTemp = 0
         self.gearMode = 0
         self.estimatedRange = 0
+        self.tripTime = 0
+        self.errorCode = 0
+        self.warnCode = 0
+        self.regenLevel = 0
+        self.speedResponse = 0
     }
 }
 

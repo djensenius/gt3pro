@@ -24,20 +24,28 @@ struct RoughnessSample: Sendable {
 /// Records at 50 Hz internally, outputs smoothed samples at ~1 Hz.
 final class SurfaceRoughnessTracker: @unchecked Sendable {
     private let motionManager = CMMotionManager()
-    private var zValues: [Double] = []
+    private let processingQueue: OperationQueue = {
+        let queue = OperationQueue()
+        queue.maxConcurrentOperationCount = 1
+        queue.name = "io.fluxhaus.GT3Companion.roughness"
+        return queue
+    }()
+    private nonisolated(unsafe) var zValues: [Double] = []
     private let windowSize = 50  // 1 second at 50 Hz
-    private(set) var isTracking = false
-    private(set) var latestSample: RoughnessSample?
+    private nonisolated(unsafe) var _isTracking = false
+    var isTracking: Bool { _isTracking }
+    private nonisolated(unsafe) var _latestSample: RoughnessSample?
+    var latestSample: RoughnessSample? { _latestSample }
 
-    var onSample: ((RoughnessSample) -> Void)?
+    var onSample: (@Sendable (RoughnessSample) -> Void)?
 
     func startTracking() {
-        guard motionManager.isAccelerometerAvailable, !isTracking else { return }
-        isTracking = true
+        guard motionManager.isAccelerometerAvailable, !_isTracking else { return }
+        _isTracking = true
         zValues.removeAll()
 
         motionManager.accelerometerUpdateInterval = 1.0 / 50.0  // 50 Hz
-        motionManager.startAccelerometerUpdates(to: OperationQueue()) { [weak self] data, error in
+        motionManager.startAccelerometerUpdates(to: processingQueue) { [weak self] data, error in
             guard let self, let acceleration = data?.acceleration else {
                 if let error { logger.error("Accelerometer error: \(error.localizedDescription)") }
                 return
@@ -48,7 +56,7 @@ final class SurfaceRoughnessTracker: @unchecked Sendable {
     }
 
     func stopTracking() {
-        isTracking = false
+        _isTracking = false
         motionManager.stopAccelerometerUpdates()
         zValues.removeAll()
         logger.info("Surface roughness tracking stopped")
@@ -61,7 +69,8 @@ final class SurfaceRoughnessTracker: @unchecked Sendable {
 
         let mean = zValues.reduce(0, +) / Double(zValues.count)
         let variance = zValues.reduce(0) { $0 + ($1 - mean) * ($1 - mean) } / Double(zValues.count)
-        let rms = variance.squareRoot()
+        let sumOfSquares = zValues.reduce(0) { $0 + $1 * $1 }
+        let rms = (sumOfSquares / Double(zValues.count)).squareRoot()
         let maxAcc = zValues.map { abs($0) }.max() ?? 0
 
         let sample = RoughnessSample(
@@ -71,7 +80,7 @@ final class SurfaceRoughnessTracker: @unchecked Sendable {
             accelerometerVariance: variance
         )
 
-        latestSample = sample
+        _latestSample = sample
         onSample?(sample)
         zValues.removeAll()
     }
