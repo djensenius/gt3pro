@@ -42,7 +42,7 @@ class NavigationManager: ObservableObject {
 
         do {
             let search = MKLocalSearch(request: request)
-            let response = try await search.start()
+            nonisolated(unsafe) let response = try await search.start()
             searchResults = response.mapItems
         } catch {
             logger.error("Search failed: \(error.localizedDescription)")
@@ -59,7 +59,7 @@ class NavigationManager: ObservableObject {
 
         do {
             let directions = MKDirections(request: request)
-            let response = try await directions.calculate()
+            nonisolated(unsafe) let response = try await directions.calculate()
             guard let route = response.routes.first else { return }
 
             currentRoute = route
