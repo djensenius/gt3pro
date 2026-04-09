@@ -12,8 +12,7 @@ options:
 
 settings:
   base:
-    SWIFT_VERSION: "6.0"
-    SWIFT_STRICT_CONCURRENCY: complete
+    SWIFT_VERSION: "5"
 
 targets:
   GT3Companion:
@@ -82,6 +81,25 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.fluxhaus.GT3Companion.widgets
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: false
+
+  GT3CompanionWatch:
+    type: application
+    platform: watchOS
+    sources:
+      - path: GT3CompanionWatch
+        excludes:
+          - "**/.DS_Store"
+    info:
+      path: GT3CompanionWatch/Info.plist
+      properties:
+        CFBundleDisplayName: GT3 Companion
+        CFBundleName: GT3CompanionWatch
+        WKApplication: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.fluxhaus.GT3Companion.watch
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
 
@@ -162,6 +180,17 @@ schemes:
     build:
       targets:
         GT3CompanionMac: all
+    run:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+
+  GT3CompanionWatch:
+    build:
+      targets:
+        GT3CompanionWatch: all
     run:
       config: Debug
     profile:
