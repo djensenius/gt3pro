@@ -9,23 +9,31 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        NavigationStack {
-            VStack(spacing: Theme.Spacing.large) {
-                Image(systemName: "scooter")
-                    .font(.system(size: 60))
-                    .foregroundStyle(Theme.Colors.accent)
-
-                Text("GT3 Companion")
-                    .font(Theme.Fonts.headerXL())
-                    .foregroundStyle(Theme.Colors.textPrimary)
-
-                Text("Connect to your Segway GT3 Pro")
-                    .font(Theme.Fonts.bodyMedium)
-                    .foregroundStyle(Theme.Colors.textSecondary)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Theme.Colors.background)
+        TabView {
+            DashboardView()
+                .tabItem {
+                    Label(
+                        "Dashboard",
+                        systemImage: "gauge.open.with.lines.needle.33percent.and.arrowtriangle"
+                    )
+                }
+            RideHistoryView()
+                .tabItem {
+                    Label(
+                        "Rides",
+                        systemImage: "point.topleft.down.to.point.bottomright.curvepath"
+                    )
+                }
+            ScooterInfoView()
+                .tabItem {
+                    Label("Scooter", systemImage: "scooter")
+                }
+            SettingsView()
+                .tabItem {
+                    Label("Settings", systemImage: "gear")
+                }
         }
+        .tint(Theme.Colors.accent)
     }
 }
 
