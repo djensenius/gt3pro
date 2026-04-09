@@ -96,6 +96,9 @@ struct OnboardingView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
 
+            // swiftlint:disable:next todo
+            // TODO: Wire up actual permission requests (CLLocationManager, CBCentralManager, etc.)
+            // in the integration PR. For now the button simply advances the step.
             Button("Continue") {
                 withAnimation { currentStep += 1 }
             }

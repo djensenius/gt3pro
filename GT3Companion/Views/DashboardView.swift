@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct DashboardView: View {
+    // swiftlint:disable:next todo
+    // TODO: Will be driven by ScooterConnectionManager once BLE layer lands.
     @State private var isConnected = false
     @State private var speed: Double = 0
     @State private var battery: Int = 0
@@ -28,6 +30,15 @@ struct DashboardView: View {
             }
             .background(Theme.Colors.background)
             .navigationTitle("GT3 Companion")
+            #if DEBUG
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Toggle("Connected", isOn: $isConnected)
+                        .toggleStyle(.switch)
+                        .labelsHidden()
+                }
+            }
+            #endif
         }
     }
 
@@ -44,9 +55,10 @@ struct DashboardView: View {
                 .font(Theme.Fonts.bodyMedium)
                 .foregroundStyle(Theme.Colors.textSecondary)
                 .multilineTextAlignment(.center)
-            Button("Scan for Scooter") { }
+            Button("Scan for Scooter (Coming soon)") { }
                 .buttonStyle(.gt3Primary)
                 .padding(.horizontal, 40)
+                .disabled(true)
             Spacer()
         }
         .padding()
@@ -131,29 +143,5 @@ struct DashboardView: View {
         case 3: return "Sport"
         default: return "Mode \(gearMode)"
         }
-    }
-}
-
-struct StatCard: View {
-    let title: String
-    let value: String
-    let icon: String
-    let color: Color
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.small) {
-            HStack {
-                Image(systemName: icon)
-                    .foregroundStyle(color)
-                Text(title)
-                    .font(Theme.Fonts.caption)
-                    .foregroundStyle(Theme.Colors.textSecondary)
-            }
-            Text(value)
-                .font(Theme.Fonts.headerLarge())
-                .foregroundStyle(Theme.Colors.textPrimary)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .glassCard()
     }
 }

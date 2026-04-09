@@ -8,10 +8,10 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @State private var pollingFrequency: Double = 1.0
-    @State private var liveActivityEnabled = true
-    @State private var gpsEnabled = true
-    @State private var roughnessEnabled = true
+    @AppStorage("pollingFrequency") private var pollingFrequency: Double = 1.0
+    @AppStorage("liveActivityEnabled") private var liveActivityEnabled = true
+    @AppStorage("gpsEnabled") private var gpsEnabled = true
+    @AppStorage("roughnessEnabled") private var roughnessEnabled = true
 
     var body: some View {
         NavigationStack {
@@ -24,7 +24,8 @@ struct SettingsView: View {
 
                 Section("Scooter") {
                     NavigationLink("Pair Scooter") { PairingView() }
-                    Button("Forget Scooter", role: .destructive) { }
+                    Button("Forget Scooter (coming soon)", role: .destructive) { }
+                        .disabled(true)
                 }
 
                 Section("Ride Tracking") {
@@ -52,13 +53,19 @@ struct SettingsView: View {
                 }
 
                 Section("Data") {
-                    Button("Export Rides (CSV)") { }
-                    Button("Export Rides (JSON)") { }
-                    Button("Clear Local Data", role: .destructive) { }
+                    Button("Export Rides (CSV) — Coming soon") { }
+                        .disabled(true)
+                    Button("Export Rides (JSON) — Coming soon") { }
+                        .disabled(true)
+                    Button("Clear Local Data — Coming soon", role: .destructive) { }
+                        .disabled(true)
                 }
 
                 Section("About") {
-                    InfoRow(label: "Version", value: "1.0.0")
+                    InfoRow(
+                        label: "Version",
+                        value: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "–"
+                    )
                     NavigationLink("Privacy Policy") {
                         Text("Privacy details")
                     }

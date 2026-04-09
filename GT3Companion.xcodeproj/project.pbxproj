@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0758E056912DD69BF99B8A33 /* InfoRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0856E72AC9FBE6ED37B60387 /* InfoRow.swift */; };
 		0C8889E0C40B8FE46C7B7384 /* GT3CompanionWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACAA4BB834A0DB9BE3860C6D /* GT3CompanionWidgetsBundle.swift */; };
 		0DF2E1196C1BC1747DDE07D4 /* GT3RideAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0BC7212A2BD252D996C21B /* GT3RideAttributes.swift */; };
 		12BC724CF4BE3DEDED407778 /* GPSTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C1ECE09CFA84C86FA1A4892 /* GPSTracker.swift */; };
@@ -26,6 +27,7 @@
 		4BC625C2D3BB5FCC4438003E /* BLEConstantsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8F629FF9561B10531DA56F /* BLEConstantsTests.swift */; };
 		516E7EE6D37E51B5133E143D /* RideTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB74E70511E2177DEC4F0210 /* RideTracker.swift */; };
 		571D0940C9C51CBBDB35589D /* SurfaceRoughnessTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C76AE1C74BD9FB056599493D /* SurfaceRoughnessTracker.swift */; };
+		5895CDEDBED135E910777F7D /* StatCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFA059564462F3ED6EFEE13A /* StatCard.swift */; };
 		5B8B2DEF2BEAD0E2F187FC2A /* GT3CompanionVisionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58211C5A6E89A9919BDE331B /* GT3CompanionVisionApp.swift */; };
 		5C87DAD23B4EFD25C8768839 /* RideTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493E6A4BC6CC47F6D1F9762B /* RideTrackerTests.swift */; };
 		5D1C2C708109269FA6E8BCA2 /* GPSTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3529E2F04653B7962C5A5B /* GPSTrackerTests.swift */; };
@@ -105,6 +107,7 @@
 		047BB1B09415CC35C15712AE /* GT3CompanionMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3CompanionMacApp.swift; sourceTree = "<group>"; };
 		0533325A4BB52BAE271F38E0 /* NinebotCryptoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NinebotCryptoTests.swift; sourceTree = "<group>"; };
 		05FA94F2A81DC172E483E5B4 /* RideHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideHistoryView.swift; sourceTree = "<group>"; };
+		0856E72AC9FBE6ED37B60387 /* InfoRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoRow.swift; sourceTree = "<group>"; };
 		0901B8C6458BCC78713A6A9C /* ScooterConnectionManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScooterConnectionManagerTests.swift; sourceTree = "<group>"; };
 		0B3AAFD381FF70FD11643480 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		0C1ECE09CFA84C86FA1A4892 /* GPSTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSTracker.swift; sourceTree = "<group>"; };
@@ -156,6 +159,7 @@
 		D79298EC0DD3C0258F248BCC /* GT3CompanionTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GT3CompanionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D8D8302BED52B6CDA212C08A /* AESHelperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AESHelperTests.swift; sourceTree = "<group>"; };
 		DEE7C3B06D5FF3708534DD86 /* JavaLCG.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JavaLCG.swift; sourceTree = "<group>"; };
+		DFA059564462F3ED6EFEE13A /* StatCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatCard.swift; sourceTree = "<group>"; };
 		E4967528A480BD2A3DAAC694 /* GT3LiveActivityManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3LiveActivityManagerTests.swift; sourceTree = "<group>"; };
 		EA3529E2F04653B7962C5A5B /* GPSTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSTrackerTests.swift; sourceTree = "<group>"; };
 		EB74E70511E2177DEC4F0210 /* RideTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideTracker.swift; sourceTree = "<group>"; };
@@ -177,6 +181,15 @@
 				1DCD3F4E090513234E3E93D4 /* VisionContentView.swift */,
 			);
 			path = GT3CompanionVision;
+			sourceTree = "<group>";
+		};
+		1E218CAFC8EDFAADB68FF41F /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				0856E72AC9FBE6ED37B60387 /* InfoRow.swift */,
+				DFA059564462F3ED6EFEE13A /* StatCard.swift */,
+			);
+			path = Components;
 			sourceTree = "<group>";
 		};
 		21095628F71C2695BA153843 /* GT3Companion */ = {
@@ -217,6 +230,7 @@
 				05FA94F2A81DC172E483E5B4 /* RideHistoryView.swift */,
 				55D4452F70F7EF550BC5F879 /* ScooterInfoView.swift */,
 				997B5274C0201254D5A58FB9 /* SettingsView.swift */,
+				1E218CAFC8EDFAADB68FF41F /* Components */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -561,6 +575,7 @@
 				7900D8D2F1815E4F13DB020F /* GT3LiveActivityManager.swift in Sources */,
 				A902A69E59363833093B62F7 /* GT3Registers.swift in Sources */,
 				FC2180F4FEED50A0B0C5F60F /* GT3RideAttributes.swift in Sources */,
+				0758E056912DD69BF99B8A33 /* InfoRow.swift in Sources */,
 				72F93EB94912607D21E5FE6F /* JavaLCG.swift in Sources */,
 				8A23628C545F836287E58ECC /* KeyDerivation.swift in Sources */,
 				A022DE3920811B71E141BB0F /* NinebotAuth.swift in Sources */,
@@ -576,6 +591,7 @@
 				729BBDA62779EBF888A6BDD0 /* ScooterConnectionManager.swift in Sources */,
 				C99CB1DBA6D4E3FC4BAAD86C /* ScooterInfoView.swift in Sources */,
 				1BEF8CF4A46AD2CD9A912CDD /* SettingsView.swift in Sources */,
+				5895CDEDBED135E910777F7D /* StatCard.swift in Sources */,
 				571D0940C9C51CBBDB35589D /* SurfaceRoughnessTracker.swift in Sources */,
 				DD0BB71491A4F8A8611160FA /* SwiftDataModels.swift in Sources */,
 				CA89B23819A601DD7DF53246 /* TelemetryParser.swift in Sources */,

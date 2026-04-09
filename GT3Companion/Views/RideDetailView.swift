@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import Charts
 
 struct RideDetailView: View {
     let ride: RideHistoryItem

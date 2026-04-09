@@ -103,7 +103,9 @@ struct PairingView: View {
                 .font(Theme.Fonts.bodySmall)
             Text("3. Look for the {serial}_decrypt key (Base64 encoded)")
                 .font(Theme.Fonts.bodySmall)
-            Text("4. Paste the hex password below")
+            Text("4. Base64-decode the value, then convert the raw bytes to hex")
+                .font(Theme.Fonts.bodySmall)
+            Text("5. Paste the resulting 32-character hex string below")
                 .font(Theme.Fonts.bodySmall)
 
             TextField("Hex password (32 characters)", text: $recoveredPassword)
@@ -113,7 +115,13 @@ struct PairingView: View {
 
             Button("Save Password") { }
                 .buttonStyle(.gt3Primary)
-                .disabled(recoveredPassword.count != 32)
+                .disabled(!Self.isValidHex(recoveredPassword))
         }
+    }
+
+    /// Validates that the input is exactly 32 hex characters (0-9, a-f, A-F).
+    private static func isValidHex(_ value: String) -> Bool {
+        let hexPattern = /^[0-9a-fA-F]{32}$/
+        return value.wholeMatch(of: hexPattern) != nil
     }
 }

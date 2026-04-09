@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct RideHistoryView: View {
-    @State private var rides: [RideHistoryItem] = RideHistoryItem.sampleData
+    @State private var rides: [RideHistoryItem] = []
 
     var body: some View {
         NavigationStack {
@@ -61,6 +61,9 @@ struct RideRowView: View {
     }
 }
 
+// swiftlint:disable:next todo
+// TODO: Migrate to PersistedRide once Core Data / SwiftData models land.
+// RideHistoryItem remains as the view-model layer between persistence and UI.
 struct RideHistoryItem: Identifiable {
     let id = UUID()
     let date: Date
@@ -78,6 +81,10 @@ struct RideHistoryItem: Identifiable {
         return String(format: "%d:%02d", minutes, seconds)
     }
 
+}
+
+#if DEBUG
+extension RideHistoryItem {
     static let sampleData: [RideHistoryItem] = [
         RideHistoryItem(
             date: Date().addingTimeInterval(-86400),
@@ -101,3 +108,4 @@ struct RideHistoryItem: Identifiable {
         )
     ]
 }
+#endif
