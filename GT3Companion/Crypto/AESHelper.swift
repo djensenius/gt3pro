@@ -53,8 +53,11 @@ enum AESHelper {
         guard status == kCCSuccess else {
             throw AESError.encryptionFailed(status: status)
         }
+        guard outLength == blockSize else {
+            throw AESError.encryptionFailed(status: CCCryptorStatus(kCCUnspecifiedError))
+        }
 
-        return outBuffer.prefix(blockSize)
+        return outBuffer.prefix(outLength)
     }
 
     /// Decrypt a single 16-byte block with AES-128-ECB.
@@ -89,7 +92,10 @@ enum AESHelper {
         guard status == kCCSuccess else {
             throw AESError.decryptionFailed(status: status)
         }
+        guard outLength == blockSize else {
+            throw AESError.decryptionFailed(status: CCCryptorStatus(kCCUnspecifiedError))
+        }
 
-        return outBuffer.prefix(blockSize)
+        return outBuffer.prefix(outLength)
     }
 }

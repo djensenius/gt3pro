@@ -69,7 +69,7 @@ enum BLEConstants {
     static let defaultMTU = 23
 
     /// Payload size per fragment = MTU - 3 (ATT overhead)
-    static let defaultFragmentSize = 20
+    static let defaultFragmentSize = defaultMTU - 3
 
     /// Inter-fragment write delay
     static let fragmentDelayMs: UInt64 = 10
