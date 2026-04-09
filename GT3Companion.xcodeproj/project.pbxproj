@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0C8889E0C40B8FE46C7B7384 /* GT3CompanionWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACAA4BB834A0DB9BE3860C6D /* GT3CompanionWidgetsBundle.swift */; };
 		0DF2E1196C1BC1747DDE07D4 /* GT3RideAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0BC7212A2BD252D996C21B /* GT3RideAttributes.swift */; };
+		12BC724CF4BE3DEDED407778 /* GPSTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C1ECE09CFA84C86FA1A4892 /* GPSTracker.swift */; };
 		18816EF42D84BEE79BAECC77 /* VisionContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DCD3F4E090513234E3E93D4 /* VisionContentView.swift */; };
 		1B3980D421AC54B23ADC469A /* NinebotCrypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1DF0B6837DF0A29239682E /* NinebotCrypto.swift */; };
 		1D4D239F64B82E1540DD3E93 /* GT3CompanionWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BDE60F2A3E20E8CFCAE04D6A /* GT3CompanionWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -16,9 +17,15 @@
 		301CE4D692028486F466BF18 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE53582C2CC4F2EFA20AD815 /* Theme.swift */; };
 		31572ECF63F373A2BCAC326E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB87773429ACD607F25A8BF3 /* ContentView.swift */; };
 		377A07118A0C2F41F0A40D31 /* NinebotFrameBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FDD78758A79865ACE4CE701 /* NinebotFrameBuilder.swift */; };
+		3F9E66D56F8851A8BF3A7C56 /* RegisterReaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FC63A3A2D8799086BC58523 /* RegisterReaderTests.swift */; };
 		442A1FD606975DF3B90BB12E /* GT3CompanionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CA73CFF555039D3094FDDBF /* GT3CompanionApp.swift */; };
+		49A0FE3BA5D02FE42E7E6619 /* TelemetryParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D6E8F36E6C056415E4BB47A /* TelemetryParserTests.swift */; };
 		4BC625C2D3BB5FCC4438003E /* BLEConstantsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8F629FF9561B10531DA56F /* BLEConstantsTests.swift */; };
+		516E7EE6D37E51B5133E143D /* RideTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB74E70511E2177DEC4F0210 /* RideTracker.swift */; };
+		571D0940C9C51CBBDB35589D /* SurfaceRoughnessTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C76AE1C74BD9FB056599493D /* SurfaceRoughnessTracker.swift */; };
 		5B8B2DEF2BEAD0E2F187FC2A /* GT3CompanionVisionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58211C5A6E89A9919BDE331B /* GT3CompanionVisionApp.swift */; };
+		5C87DAD23B4EFD25C8768839 /* RideTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493E6A4BC6CC47F6D1F9762B /* RideTrackerTests.swift */; };
+		5D1C2C708109269FA6E8BCA2 /* GPSTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3529E2F04653B7962C5A5B /* GPSTrackerTests.swift */; };
 		5F3888A7666C48AA5B8443C3 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE53582C2CC4F2EFA20AD815 /* Theme.swift */; };
 		640DEBB3F6A29329AE8ADAE3 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE53582C2CC4F2EFA20AD815 /* Theme.swift */; };
 		6471858475656BCE7F3C71BB /* ScooterConnectionManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0901B8C6458BCC78713A6A9C /* ScooterConnectionManagerTests.swift */; };
@@ -29,14 +36,19 @@
 		8129DDC3E23E43B303E71586 /* KeyDerivationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF41BC7A131F7835D3D5FC88 /* KeyDerivationTests.swift */; };
 		8193ABBD8A123282200926E7 /* GT3RideAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0BC7212A2BD252D996C21B /* GT3RideAttributes.swift */; };
 		8A23628C545F836287E58ECC /* KeyDerivation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8934033CB09959903D59EF5C /* KeyDerivation.swift */; };
+		8F085638E5D961EC00DE31CE /* RegisterReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 424F02984953C13821C555EE /* RegisterReader.swift */; };
 		928A708482AF1A011B59847B /* GT3CompanionMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 047BB1B09415CC35C15712AE /* GT3CompanionMacApp.swift */; };
 		9DB54D1BF352F6D0EF538E5F /* AESHelperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D8302BED52B6CDA212C08A /* AESHelperTests.swift */; };
 		A022DE3920811B71E141BB0F /* NinebotAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58F5E78620013EA4336A56E9 /* NinebotAuth.swift */; };
+		A902A69E59363833093B62F7 /* GT3Registers.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7BEE3B916F38F756C2A05FA /* GT3Registers.swift */; };
 		AD9AE97BEBC7105939F36C3A /* NinebotAuthTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45160E9C4AC8147D2A6D6029 /* NinebotAuthTests.swift */; };
 		BCD9B0A7ABA989E446832078 /* GT3RideAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0BC7212A2BD252D996C21B /* GT3RideAttributes.swift */; };
 		BE07B60042098A1ADCB739A6 /* NinebotCryptoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0533325A4BB52BAE271F38E0 /* NinebotCryptoTests.swift */; };
 		C40F2CFE5E4ED5602CA09F32 /* AESHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 661067C3865CBF095F1EF85B /* AESHelper.swift */; };
+		CA89B23819A601DD7DF53246 /* TelemetryParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3EA3E613117DC3CB9BF72A9 /* TelemetryParser.swift */; };
 		CD3CFFE66FCAD787FA6DAFD4 /* NinebotTransportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83460368F60A53C5A30952A7 /* NinebotTransportTests.swift */; };
+		D941EC95DE6544512A52074A /* GT3RegistersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ABE49BC4B627FB608831639 /* GT3RegistersTests.swift */; };
+		DD0BB71491A4F8A8611160FA /* SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81A024883426B8B0C84F3D7E /* SwiftDataModels.swift */; };
 		DF6A88BD36CBAB7FA8DEC557 /* BLEConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD7FB93A05065AD29C9B23A0 /* BLEConstants.swift */; };
 		E849A2BAB32AACC0A8D08C37 /* MacContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA58425277ED9CA3252868B8 /* MacContentView.swift */; };
 		EB5A30564B4E37F9D8F36416 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE53582C2CC4F2EFA20AD815 /* Theme.swift */; };
@@ -80,28 +92,38 @@
 		047BB1B09415CC35C15712AE /* GT3CompanionMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3CompanionMacApp.swift; sourceTree = "<group>"; };
 		0533325A4BB52BAE271F38E0 /* NinebotCryptoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NinebotCryptoTests.swift; sourceTree = "<group>"; };
 		0901B8C6458BCC78713A6A9C /* ScooterConnectionManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScooterConnectionManagerTests.swift; sourceTree = "<group>"; };
+		0C1ECE09CFA84C86FA1A4892 /* GPSTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSTracker.swift; sourceTree = "<group>"; };
 		1DCD3F4E090513234E3E93D4 /* VisionContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionContentView.swift; sourceTree = "<group>"; };
 		2CFA6EEC6FC4981ACF73576B /* GT3CompanionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3CompanionTests.swift; sourceTree = "<group>"; };
 		2D0BC7212A2BD252D996C21B /* GT3RideAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3RideAttributes.swift; sourceTree = "<group>"; };
 		35AB36E7D729C0D68B6B3A03 /* GT3LiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3LiveActivity.swift; sourceTree = "<group>"; };
+		3ABE49BC4B627FB608831639 /* GT3RegistersTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3RegistersTests.swift; sourceTree = "<group>"; };
+		3D6E8F36E6C056415E4BB47A /* TelemetryParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelemetryParserTests.swift; sourceTree = "<group>"; };
+		424F02984953C13821C555EE /* RegisterReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterReader.swift; sourceTree = "<group>"; };
 		45160E9C4AC8147D2A6D6029 /* NinebotAuthTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NinebotAuthTests.swift; sourceTree = "<group>"; };
+		493E6A4BC6CC47F6D1F9762B /* RideTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideTrackerTests.swift; sourceTree = "<group>"; };
 		5312D85AD3849B1B86711DF6 /* NinebotFrameBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NinebotFrameBuilderTests.swift; sourceTree = "<group>"; };
 		58211C5A6E89A9919BDE331B /* GT3CompanionVisionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3CompanionVisionApp.swift; sourceTree = "<group>"; };
 		58F5E78620013EA4336A56E9 /* NinebotAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NinebotAuth.swift; sourceTree = "<group>"; };
 		5CA73CFF555039D3094FDDBF /* GT3CompanionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3CompanionApp.swift; sourceTree = "<group>"; };
 		5FA2314681A86349911C2B0F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		661067C3865CBF095F1EF85B /* AESHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AESHelper.swift; sourceTree = "<group>"; };
+		7FC63A3A2D8799086BC58523 /* RegisterReaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterReaderTests.swift; sourceTree = "<group>"; };
+		81A024883426B8B0C84F3D7E /* SwiftDataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataModels.swift; sourceTree = "<group>"; };
 		83460368F60A53C5A30952A7 /* NinebotTransportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NinebotTransportTests.swift; sourceTree = "<group>"; };
 		86B8226EFDA7D34866B48B2E /* GT3CompanionVision.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GT3CompanionVision.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8934033CB09959903D59EF5C /* KeyDerivation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyDerivation.swift; sourceTree = "<group>"; };
 		8FC8DF5E472D510C6DDEDF69 /* GT3Companion.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GT3Companion.entitlements; sourceTree = "<group>"; };
 		8FDD78758A79865ACE4CE701 /* NinebotFrameBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NinebotFrameBuilder.swift; sourceTree = "<group>"; };
+		A3EA3E613117DC3CB9BF72A9 /* TelemetryParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelemetryParser.swift; sourceTree = "<group>"; };
 		ACAA4BB834A0DB9BE3860C6D /* GT3CompanionWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3CompanionWidgetsBundle.swift; sourceTree = "<group>"; };
 		ACFF7915A5105F90F7895B3B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		ADC13C5A39D3483D8EEDD04B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		B7BEE3B916F38F756C2A05FA /* GT3Registers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3Registers.swift; sourceTree = "<group>"; };
 		BDE60F2A3E20E8CFCAE04D6A /* GT3CompanionWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = GT3CompanionWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		BEEE5678757A80552FB8CD6E /* JavaLCGTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JavaLCGTests.swift; sourceTree = "<group>"; };
 		C52F4AD50049BAA6D58C7B83 /* GT3CompanionMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GT3CompanionMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C76AE1C74BD9FB056599493D /* SurfaceRoughnessTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurfaceRoughnessTracker.swift; sourceTree = "<group>"; };
 		C822EB76A11042B82719F773 /* GT3Companion.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GT3Companion.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CA0670D4CC9E61B989E835AC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		CB87773429ACD607F25A8BF3 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -109,6 +131,8 @@
 		D79298EC0DD3C0258F248BCC /* GT3CompanionTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GT3CompanionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D8D8302BED52B6CDA212C08A /* AESHelperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AESHelperTests.swift; sourceTree = "<group>"; };
 		DEE7C3B06D5FF3708534DD86 /* JavaLCG.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JavaLCG.swift; sourceTree = "<group>"; };
+		EA3529E2F04653B7962C5A5B /* GPSTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSTrackerTests.swift; sourceTree = "<group>"; };
+		EB74E70511E2177DEC4F0210 /* RideTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideTracker.swift; sourceTree = "<group>"; };
 		EF41BC7A131F7835D3D5FC88 /* KeyDerivationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyDerivationTests.swift; sourceTree = "<group>"; };
 		F4E04531F9A6C7BD543444A1 /* NinebotTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NinebotTransport.swift; sourceTree = "<group>"; };
 		F79C0E11316D08F40945E24B /* ScooterConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScooterConnectionManager.swift; sourceTree = "<group>"; };
@@ -137,6 +161,7 @@
 				B725655AD3100EA482466C21 /* App */,
 				24D6454286A531DA57B6508C /* BLE */,
 				61B0DF80B86EBFC9E5D02262 /* Crypto */,
+				4799BD5273FF79207606DF7B /* Data */,
 				3506AE1E52760D981BAF2A1E /* Views */,
 			);
 			path = GT3Companion;
@@ -161,19 +186,38 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
+		4799BD5273FF79207606DF7B /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				0C1ECE09CFA84C86FA1A4892 /* GPSTracker.swift */,
+				B7BEE3B916F38F756C2A05FA /* GT3Registers.swift */,
+				424F02984953C13821C555EE /* RegisterReader.swift */,
+				EB74E70511E2177DEC4F0210 /* RideTracker.swift */,
+				C76AE1C74BD9FB056599493D /* SurfaceRoughnessTracker.swift */,
+				A3EA3E613117DC3CB9BF72A9 /* TelemetryParser.swift */,
+				FD4CD388DB8666B4FEBEF9D6 /* Models */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
 		480146D7597BFCCDA52CE893 /* GT3CompanionTests */ = {
 			isa = PBXGroup;
 			children = (
 				D8D8302BED52B6CDA212C08A /* AESHelperTests.swift */,
 				FA8F629FF9561B10531DA56F /* BLEConstantsTests.swift */,
+				EA3529E2F04653B7962C5A5B /* GPSTrackerTests.swift */,
 				2CFA6EEC6FC4981ACF73576B /* GT3CompanionTests.swift */,
+				3ABE49BC4B627FB608831639 /* GT3RegistersTests.swift */,
 				BEEE5678757A80552FB8CD6E /* JavaLCGTests.swift */,
 				EF41BC7A131F7835D3D5FC88 /* KeyDerivationTests.swift */,
 				45160E9C4AC8147D2A6D6029 /* NinebotAuthTests.swift */,
 				0533325A4BB52BAE271F38E0 /* NinebotCryptoTests.swift */,
 				5312D85AD3849B1B86711DF6 /* NinebotFrameBuilderTests.swift */,
 				83460368F60A53C5A30952A7 /* NinebotTransportTests.swift */,
+				7FC63A3A2D8799086BC58523 /* RegisterReaderTests.swift */,
+				493E6A4BC6CC47F6D1F9762B /* RideTrackerTests.swift */,
 				0901B8C6458BCC78713A6A9C /* ScooterConnectionManagerTests.swift */,
+				3D6E8F36E6C056415E4BB47A /* TelemetryParserTests.swift */,
 			);
 			path = GT3CompanionTests;
 			sourceTree = "<group>";
@@ -250,6 +294,14 @@
 				CE53582C2CC4F2EFA20AD815 /* Theme.swift */,
 			);
 			path = Shared;
+			sourceTree = "<group>";
+		};
+		FD4CD388DB8666B4FEBEF9D6 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				81A024883426B8B0C84F3D7E /* SwiftDataModels.swift */,
+			);
+			path = Models;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -407,14 +459,19 @@
 			files = (
 				9DB54D1BF352F6D0EF538E5F /* AESHelperTests.swift in Sources */,
 				4BC625C2D3BB5FCC4438003E /* BLEConstantsTests.swift in Sources */,
+				5D1C2C708109269FA6E8BCA2 /* GPSTrackerTests.swift in Sources */,
 				7A925BD6B53F8E6668D072C8 /* GT3CompanionTests.swift in Sources */,
+				D941EC95DE6544512A52074A /* GT3RegistersTests.swift in Sources */,
 				667C96D36D8A1492900AE4FE /* JavaLCGTests.swift in Sources */,
 				8129DDC3E23E43B303E71586 /* KeyDerivationTests.swift in Sources */,
 				AD9AE97BEBC7105939F36C3A /* NinebotAuthTests.swift in Sources */,
 				BE07B60042098A1ADCB739A6 /* NinebotCryptoTests.swift in Sources */,
 				F3E43A2E9CD4321FFDF4AB01 /* NinebotFrameBuilderTests.swift in Sources */,
 				CD3CFFE66FCAD787FA6DAFD4 /* NinebotTransportTests.swift in Sources */,
+				3F9E66D56F8851A8BF3A7C56 /* RegisterReaderTests.swift in Sources */,
+				5C87DAD23B4EFD25C8768839 /* RideTrackerTests.swift in Sources */,
 				6471858475656BCE7F3C71BB /* ScooterConnectionManagerTests.swift in Sources */,
+				49A0FE3BA5D02FE42E7E6619 /* TelemetryParserTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -447,7 +504,9 @@
 				C40F2CFE5E4ED5602CA09F32 /* AESHelper.swift in Sources */,
 				DF6A88BD36CBAB7FA8DEC557 /* BLEConstants.swift in Sources */,
 				31572ECF63F373A2BCAC326E /* ContentView.swift in Sources */,
+				12BC724CF4BE3DEDED407778 /* GPSTracker.swift in Sources */,
 				442A1FD606975DF3B90BB12E /* GT3CompanionApp.swift in Sources */,
+				A902A69E59363833093B62F7 /* GT3Registers.swift in Sources */,
 				FC2180F4FEED50A0B0C5F60F /* GT3RideAttributes.swift in Sources */,
 				72F93EB94912607D21E5FE6F /* JavaLCG.swift in Sources */,
 				8A23628C545F836287E58ECC /* KeyDerivation.swift in Sources */,
@@ -455,7 +514,12 @@
 				1B3980D421AC54B23ADC469A /* NinebotCrypto.swift in Sources */,
 				377A07118A0C2F41F0A40D31 /* NinebotFrameBuilder.swift in Sources */,
 				F2CD2B1D502623C41495B602 /* NinebotTransport.swift in Sources */,
+				8F085638E5D961EC00DE31CE /* RegisterReader.swift in Sources */,
+				516E7EE6D37E51B5133E143D /* RideTracker.swift in Sources */,
 				729BBDA62779EBF888A6BDD0 /* ScooterConnectionManager.swift in Sources */,
+				571D0940C9C51CBBDB35589D /* SurfaceRoughnessTracker.swift in Sources */,
+				DD0BB71491A4F8A8611160FA /* SwiftDataModels.swift in Sources */,
+				CA89B23819A601DD7DF53246 /* TelemetryParser.swift in Sources */,
 				640DEBB3F6A29329AE8ADAE3 /* Theme.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
