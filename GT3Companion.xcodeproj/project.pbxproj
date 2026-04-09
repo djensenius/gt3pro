@@ -18,6 +18,7 @@
 		1D4D239F64B82E1540DD3E93 /* GT3CompanionWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BDE60F2A3E20E8CFCAE04D6A /* GT3CompanionWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		1D72CA507FFC44DE20181BDA /* UploadQueueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EE0032842C5447ED97334A9 /* UploadQueueTests.swift */; };
 		2845F91100AAD99587071D9B /* RouteNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71C4965BA8E974E0A6B214CF /* RouteNavigationView.swift */; };
+		2B401A698FFB367DE95FD69F /* ComplicationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D7EC839B4E3F7B106C2E6C /* ComplicationProvider.swift */; };
 		2EC4462F146FF8FF09753F09 /* GT3LiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35AB36E7D729C0D68B6B3A03 /* GT3LiveActivity.swift */; };
 		301CE4D692028486F466BF18 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE53582C2CC4F2EFA20AD815 /* Theme.swift */; };
 		31572ECF63F373A2BCAC326E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB87773429ACD607F25A8BF3 /* ContentView.swift */; };
@@ -64,6 +65,7 @@
 		BCD9B0A7ABA989E446832078 /* GT3RideAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0BC7212A2BD252D996C21B /* GT3RideAttributes.swift */; };
 		BE07B60042098A1ADCB739A6 /* NinebotCryptoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0533325A4BB52BAE271F38E0 /* NinebotCryptoTests.swift */; };
 		C40F2CFE5E4ED5602CA09F32 /* AESHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 661067C3865CBF095F1EF85B /* AESHelper.swift */; };
+		C5C2A7ADE84A9F51A41D04A0 /* HROverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11CCA802EAEB244E26A00839 /* HROverlayView.swift */; };
 		C99CB1DBA6D4E3FC4BAAD86C /* ScooterInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55D4452F70F7EF550BC5F879 /* ScooterInfoView.swift */; };
 		CA89B23819A601DD7DF53246 /* TelemetryParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3EA3E613117DC3CB9BF72A9 /* TelemetryParser.swift */; };
 		CD3CFFE66FCAD787FA6DAFD4 /* NinebotTransportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83460368F60A53C5A30952A7 /* NinebotTransportTests.swift */; };
@@ -122,6 +124,7 @@
 		0B3AAFD381FF70FD11643480 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		0C1ECE09CFA84C86FA1A4892 /* GPSTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSTracker.swift; sourceTree = "<group>"; };
 		11C5682B34F0870664C57915 /* PairingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairingView.swift; sourceTree = "<group>"; };
+		11CCA802EAEB244E26A00839 /* HROverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HROverlayView.swift; sourceTree = "<group>"; };
 		13B4AB9F1F1CAE720C0A2B9B /* NavigationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationManager.swift; sourceTree = "<group>"; };
 		15ECCFB9DA9B244FB4261E4E /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		19905BAB58FB3DB581F8B592 /* GPXExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPXExporter.swift; sourceTree = "<group>"; };
@@ -147,6 +150,7 @@
 		60A31234CEAAD986C4952B40 /* GT3CompanionWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GT3CompanionWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		661067C3865CBF095F1EF85B /* AESHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AESHelper.swift; sourceTree = "<group>"; };
 		71C4965BA8E974E0A6B214CF /* RouteNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteNavigationView.swift; sourceTree = "<group>"; };
+		75D7EC839B4E3F7B106C2E6C /* ComplicationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComplicationProvider.swift; sourceTree = "<group>"; };
 		7FC63A3A2D8799086BC58523 /* RegisterReaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterReaderTests.swift; sourceTree = "<group>"; };
 		81A024883426B8B0C84F3D7E /* SwiftDataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataModels.swift; sourceTree = "<group>"; };
 		83460368F60A53C5A30952A7 /* NinebotTransportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NinebotTransportTests.swift; sourceTree = "<group>"; };
@@ -216,6 +220,7 @@
 		1D5E70F7D9DCE658B083FF39 /* GT3CompanionWatch */ = {
 			isa = PBXGroup;
 			children = (
+				75D7EC839B4E3F7B106C2E6C /* ComplicationProvider.swift */,
 				891BD92EAAEA3BFE7C483FEA /* GT3CompanionWatchApp.swift */,
 				1E34BA6710E1650D5275870E /* Info.plist */,
 				FA8D580E2A873BE70E1F49EE /* RideWorkoutManager.swift */,
@@ -268,6 +273,7 @@
 				CB87773429ACD607F25A8BF3 /* ContentView.swift */,
 				15ECCFB9DA9B244FB4261E4E /* DashboardView.swift */,
 				A98F52FDEE889FF02990D9F0 /* GT3LiveActivityManager.swift */,
+				11CCA802EAEB244E26A00839 /* HROverlayView.swift */,
 				EBEE3BF0C58F8ABAFF006549 /* MapRouteView.swift */,
 				0B3AAFD381FF70FD11643480 /* OnboardingView.swift */,
 				11C5682B34F0870664C57915 /* PairingView.swift */,
@@ -649,6 +655,7 @@
 				7900D8D2F1815E4F13DB020F /* GT3LiveActivityManager.swift in Sources */,
 				A902A69E59363833093B62F7 /* GT3Registers.swift in Sources */,
 				FC2180F4FEED50A0B0C5F60F /* GT3RideAttributes.swift in Sources */,
+				C5C2A7ADE84A9F51A41D04A0 /* HROverlayView.swift in Sources */,
 				0758E056912DD69BF99B8A33 /* InfoRow.swift in Sources */,
 				72F93EB94912607D21E5FE6F /* JavaLCG.swift in Sources */,
 				8A23628C545F836287E58ECC /* KeyDerivation.swift in Sources */,
@@ -681,6 +688,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2B401A698FFB367DE95FD69F /* ComplicationProvider.swift in Sources */,
 				1BCC17969E11E97F3D009E00 /* GT3CompanionWatchApp.swift in Sources */,
 				4015788E36F5E39F65B91E0A /* RideWorkoutManager.swift in Sources */,
 				5380FA77C5A87906A5A84985 /* WatchConnectivityManager.swift in Sources */,
