@@ -6,7 +6,7 @@
 //
 
 #if os(iOS)
-import CoreBluetooth
+@preconcurrency import CoreBluetooth
 import Foundation
 import os
 

@@ -22,4 +22,5 @@ jobs:
             -destination 'generic/platform=iOS Simulator' \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO \
-            EXCLUDED_ARCHS=x86_64
+            EXCLUDED_ARCHS=x86_64 \
+            ASSETCATALOG_COMPILER_SKIP_VALIDATIONS=YES
