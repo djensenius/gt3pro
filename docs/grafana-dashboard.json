@@ -1,0 +1,43 @@
+{
+  "dashboard": {
+    "title": "GT3 Companion",
+    "tags": ["gt3", "scooter"],
+    "panels": [
+      {
+        "title": "Speed",
+        "type": "timeseries",
+        "datasource": "InfluxDB",
+        "targets": [{ "query": "from(bucket: \"fluxhaus\") |> range(start: -24h) |> filter(fn: (r) => r._measurement == \"gt3_telemetry\" and r._field == \"speed\")" }],
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 }
+      },
+      {
+        "title": "Battery",
+        "type": "timeseries",
+        "datasource": "InfluxDB",
+        "targets": [{ "query": "from(bucket: \"fluxhaus\") |> range(start: -24h) |> filter(fn: (r) => r._measurement == \"gt3_telemetry\" and r._field == \"battery\")" }],
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 }
+      },
+      {
+        "title": "Temperature",
+        "type": "timeseries",
+        "datasource": "InfluxDB",
+        "targets": [{ "query": "from(bucket: \"fluxhaus\") |> range(start: -24h) |> filter(fn: (r) => r._measurement == \"gt3_telemetry\" and (r._field == \"bms1_temp\" or r._field == \"bms2_temp\" or r._field == \"body_temp\"))" }],
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 }
+      },
+      {
+        "title": "Heart Rate",
+        "type": "timeseries",
+        "datasource": "InfluxDB",
+        "targets": [{ "query": "from(bucket: \"fluxhaus\") |> range(start: -24h) |> filter(fn: (r) => r._measurement == \"gt3_health\" and r._field == \"heart_rate\")" }],
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 }
+      },
+      {
+        "title": "Rides",
+        "type": "table",
+        "datasource": "InfluxDB",
+        "targets": [{ "query": "from(bucket: \"fluxhaus\") |> range(start: -30d) |> filter(fn: (r) => r._measurement == \"gt3_ride\")" }],
+        "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 }
+      }
+    ]
+  }
+}
