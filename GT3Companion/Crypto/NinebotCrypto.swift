@@ -43,7 +43,8 @@ final class NinebotCrypto: @unchecked Sendable {
     // MARK: - Encrypt
 
     /// Encrypt a plaintext frame. Returns the encrypted payload + MAC + counter.
-    /// The caller prepends the 3-byte header [5A, B5, LEN] separately.
+    /// The caller prepends the 3-byte header separately:
+    /// [5A, A5, LEN] for plaintext or [5A, B5, LEN] for encrypted frames.
     func encrypt(plaintext: Data) throws -> Data {
         if counter == 0 {
             return try encryptNonSN(plaintext: plaintext)
@@ -98,6 +99,7 @@ final class NinebotCrypto: @unchecked Sendable {
 
         let payloadEnd = encrypted.count - 6
         let payload = encrypted[0..<payloadEnd]
+        let tail = encrypted[payloadEnd...]
         let keystream = try AESHelper.encryptBlock(key: aesKey, plaintext: Data(count: 16))
 
         var decrypted = Data()
@@ -107,6 +109,19 @@ final class NinebotCrypto: @unchecked Sendable {
             for idx in 0..<block.count {
                 decrypted.append(block[block.startIndex + idx] ^ keystream[idx])
             }
+        }
+
+        // Validate checksum from tail bytes [0x00, 0x00, checksum_lo, checksum_hi, 0x00, 0x00]
+        let checksumLo = tail[tail.startIndex + 2]
+        let checksumHi = tail[tail.startIndex + 3]
+        let receivedChecksum = UInt16(checksumHi) << 8 | UInt16(checksumLo)
+
+        let checksumData = decrypted.count > 3 ? decrypted[3...] : Data()
+        let sum = checksumData.reduce(UInt32(0)) { $0 + UInt32($1) }
+        let expectedChecksum = UInt16(truncatingIfNeeded: ~sum)
+
+        guard receivedChecksum == expectedChecksum else {
+            throw NinebotCryptoError.checksumMismatch
         }
 
         return decrypted
@@ -287,4 +302,5 @@ final class NinebotCrypto: @unchecked Sendable {
 enum NinebotCryptoError: Error {
     case frameTooShort
     case macVerificationFailed
+    case checksumMismatch
 }

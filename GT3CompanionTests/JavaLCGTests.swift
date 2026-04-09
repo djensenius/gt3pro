@@ -44,12 +44,11 @@ final class JavaLCGTests: XCTestCase {
 
     func testNextBytesKnownOutput() {
         // Java: new Random(0).nextBytes(new byte[4])
-        // Result bytes come from nextInt() = -1155484576 = 0xBB1F4520
-        // Bytes extracted LSB first: [0x20, 0x45, 0x1F, 0xBB]
+        // nextInt() = -1155484576 = 0xBB20B460
+        // Bytes extracted LSB first: [0x60, 0xB4, 0x20, 0xBB]
         let lcg = JavaLCG(seed: 0)
         let bytes = lcg.nextBytes(count: 4)
-        XCTAssertEqual(bytes[0], 0x60) // Verify against real Java output
-        // The important thing is determinism — same seed always gives same bytes
+        XCTAssertEqual(bytes, Data([0x60, 0xB4, 0x20, 0xBB]))
     }
 
     func testPasswordGeneration() {

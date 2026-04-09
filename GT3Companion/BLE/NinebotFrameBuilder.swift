@@ -62,7 +62,8 @@ enum NinebotFrameBuilder {
     }
 
     /// Parse a received frame's fields (after decryption).
-    /// Returns nil if the frame is too short or has invalid sync bytes.
+    /// Returns nil if the frame is too short, has invalid sync bytes,
+    /// or the length field doesn't match the actual frame size.
     static func parseFrame(_ frame: Data) -> ParsedFrame? {
         guard frame.count >= 7 else { return nil }
         guard frame[0] == BLEConstants.syncByte1 else { return nil }
@@ -70,6 +71,9 @@ enum NinebotFrameBuilder {
             || frame[1] == BLEConstants.syncByte2Encrypted else { return nil }
 
         let length = frame[2]
+        // Validate: frame should be exactly 3 (header) + length bytes
+        guard length >= 4, frame.count == Int(length) + 3 else { return nil }
+
         let btID = frame[3]
         let source = frame[4]
         let cmd = frame[5]
