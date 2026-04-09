@@ -15,14 +15,14 @@ class GT3LiveActivityManager {
     private init() {}
 
     /// Start a new Live Activity for a ride.
-    func startRideActivity(scooterName: String = "GT3 Pro") {
+    func startRideActivity(scooterName: String = "GT3 Pro") async {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else {
             logger.warning("Live Activities disabled")
             return
         }
 
         // End any existing activity first
-        Task { await endRideActivity() }
+        await endRideActivity()
 
         let attributes = GT3RideAttributes(scooterName: scooterName, startTime: Date())
         let initialState = GT3RideAttributes.ContentState(

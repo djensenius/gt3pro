@@ -1,16 +1,16 @@
 #if os(iOS)
 import Foundation
-import SwiftData
 import os
 
 private let logger = Logger(subsystem: "io.fluxhaus.GT3Companion", category: "UploadQueue")
 
-/// Offline-capable upload queue. Batches telemetry, retries on failure.
+/// Upload queue. Batches telemetry and flushes to server.
+/// Note: SwiftData persistence for true offline support will be wired in a future PR.
 actor UploadQueue {
     private let apiClient = GT3APIClient()
     private var pendingSamples: [TelemetrySample] = []
     private let batchSize = 50
-    private let maxRetries = 5
+    private var isFlushing = false
 
     /// Add telemetry samples to the pending batch.
     func enqueueSamples(_ samples: [TelemetrySample]) {
@@ -22,16 +22,19 @@ actor UploadQueue {
 
     /// Flush pending telemetry samples to the server.
     func flushSamples() async {
-        guard !pendingSamples.isEmpty else { return }
+        guard !isFlushing, !pendingSamples.isEmpty else { return }
+        isFlushing = true
         let batch = Array(pendingSamples.prefix(batchSize))
+        pendingSamples.removeFirst(min(batch.count, pendingSamples.count))
 
         do {
             try await apiClient.uploadTelemetry(batch)
-            pendingSamples.removeFirst(min(batch.count, pendingSamples.count))
-            logger.info("Flushed \(batch.count) samples, \(self.pendingSamples.count) remaining")
+            logger.info("Flushed \(batch.count) samples")
         } catch {
-            logger.error("Failed to flush samples: \(error). Will retry later.")
+            pendingSamples.insert(contentsOf: batch, at: 0)
+            logger.error("Flush failed, re-queued \(batch.count) samples: \(error)")
         }
+        isFlushing = false
     }
 
     /// Upload a completed ride.
@@ -39,7 +42,7 @@ actor UploadQueue {
         do {
             _ = try await apiClient.uploadRide(ride)
         } catch {
-            logger.error("Failed to upload ride: \(error). Queuing for retry.")
+            logger.error("Failed to upload ride: \(error). Failed, data lost (persistence not yet implemented).")
         }
     }
 

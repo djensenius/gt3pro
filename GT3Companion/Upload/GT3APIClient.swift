@@ -4,7 +4,9 @@ import os
 
 private let logger = Logger(subsystem: "io.fluxhaus.GT3Companion", category: "API")
 
-/// Authenticated API client for the FluxHaus GT3 endpoints.
+/// API client for FluxHaus GT3 endpoints.
+/// Note: Authentication (OIDC via AuthManager) will be integrated in a future PR.
+/// Currently sends unauthenticated requests.
 actor GT3APIClient {
     private let baseURL = "https://api.fluxhaus.io"
     private let session = URLSession(configuration: .default)
@@ -53,7 +55,10 @@ actor GT3APIClient {
 
     @discardableResult
     private func post(path: String, body: Data) async throws -> Data {
-        var request = URLRequest(url: URL(string: baseURL + path)!)
+        guard let url = URL(string: baseURL + path) else {
+            throw APIError.invalidURL
+        }
+        var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.addValue("application/json", forHTTPHeaderField: "Accept")
@@ -70,7 +75,10 @@ actor GT3APIClient {
     }
 
     private func get(path: String) async throws -> Data {
-        var request = URLRequest(url: URL(string: baseURL + path)!)
+        guard let url = URL(string: baseURL + path) else {
+            throw APIError.invalidURL
+        }
+        var request = URLRequest(url: url)
         request.addValue("application/json", forHTTPHeaderField: "Accept")
 
         let (data, response) = try await session.data(for: request)
@@ -87,5 +95,6 @@ actor GT3APIClient {
 enum APIError: Error {
     case httpError(statusCode: Int)
     case encodingError
+    case invalidURL
 }
 #endif

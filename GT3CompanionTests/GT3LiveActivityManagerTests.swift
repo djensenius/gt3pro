@@ -12,8 +12,7 @@ final class GT3LiveActivityManagerTests: XCTestCase {
     @MainActor
     func testInitiallyNotActive() {
         let manager = GT3LiveActivityManager.shared
-        // Can't guarantee state without actual ActivityKit, but the property should be accessible
-        _ = manager.isActive
+        XCTAssertFalse(manager.isActive)
     }
 }
 #endif
