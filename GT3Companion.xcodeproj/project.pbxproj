@@ -729,7 +729,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = io.fluxhaus.GT3Companion;
+				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -746,7 +746,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = io.fluxhaus.GT3Companion.widgets;
+				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.widgets;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -759,7 +759,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GT3CompanionWatch/Info.plist;
-				PRODUCT_BUNDLE_IDENTIFIER = io.fluxhaus.GT3Companion.watch;
+				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.watch;
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = 4;
@@ -778,7 +778,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = io.fluxhaus.GT3Companion.mac;
+				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.mac;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -792,7 +792,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = io.fluxhaus.GT3Companion.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.tests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GT3Companion.app/GT3Companion";
@@ -812,7 +812,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = io.fluxhaus.GT3Companion;
+				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -829,7 +829,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = io.fluxhaus.GT3Companion.vision;
+				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.vision;
 				SDKROOT = xros;
 				TARGETED_DEVICE_FAMILY = 7;
 			};
@@ -905,7 +905,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = io.fluxhaus.GT3Companion.mac;
+				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.mac;
 				SDKROOT = macosx;
 			};
 			name = Debug;
@@ -984,7 +984,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = io.fluxhaus.GT3Companion.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.tests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GT3Companion.app/GT3Companion";
@@ -998,7 +998,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GT3CompanionWatch/Info.plist;
-				PRODUCT_BUNDLE_IDENTIFIER = io.fluxhaus.GT3Companion.watch;
+				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.watch;
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = 4;
@@ -1016,7 +1016,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = io.fluxhaus.GT3Companion.vision;
+				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.vision;
 				SDKROOT = xros;
 				TARGETED_DEVICE_FAMILY = 7;
 			};
@@ -1033,7 +1033,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = io.fluxhaus.GT3Companion.widgets;
+				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.widgets;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

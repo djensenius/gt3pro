@@ -10,7 +10,7 @@ import CoreBluetooth
 import Foundation
 import os
 
-private let logger = Logger(subsystem: "io.fluxhaus.GT3Companion", category: "BLE")
+private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", category: "BLE")
 
 /// Connection states for the BLE lifecycle.
 enum ConnectionState: Sendable, Equatable, CaseIterable {
@@ -63,7 +63,7 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     private var btName: String?
     private var storedPassword: Data?
     private var echoRetryCount = 0
-    private let bleQueue = DispatchQueue(label: "io.fluxhaus.GT3Companion.ble", qos: .userInitiated)
+    private let bleQueue = DispatchQueue(label: "org.davidjensenius.GT3Companion.ble", qos: .userInitiated)
 
     override init() {
         super.init()

@@ -2,7 +2,7 @@
 import Foundation
 import os
 
-private let logger = Logger(subsystem: "io.fluxhaus.GT3Companion", category: "API")
+private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", category: "API")
 
 /// API client for FluxHaus GT3 endpoints.
 /// Note: Authentication (OIDC via AuthManager) will be integrated in a future PR.

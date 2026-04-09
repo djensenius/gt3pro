@@ -8,7 +8,7 @@
 import Foundation
 import os
 
-private let logger = Logger(subsystem: "io.fluxhaus.GT3Companion", category: "RegisterReader")
+private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", category: "RegisterReader")
 
 /// Result of processing a register read response.
 struct RegisterReadResult: Sendable {

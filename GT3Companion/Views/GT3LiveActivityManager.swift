@@ -3,7 +3,7 @@ import ActivityKit
 import Foundation
 import os
 
-private let logger = Logger(subsystem: "io.fluxhaus.GT3Companion", category: "LiveActivity")
+private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", category: "LiveActivity")
 
 /// Manages the GT3 ride Live Activity lifecycle.
 @MainActor

@@ -2,7 +2,7 @@
 import Foundation
 import os
 
-private let logger = Logger(subsystem: "io.fluxhaus.GT3Companion", category: "UploadQueue")
+private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", category: "UploadQueue")
 
 /// Upload queue. Batches telemetry and flushes to server.
 /// Note: SwiftData persistence for true offline support will be wired in a future PR.

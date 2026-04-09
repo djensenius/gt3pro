@@ -10,7 +10,7 @@ import CoreLocation
 import Foundation
 import os
 
-private let logger = Logger(subsystem: "io.fluxhaus.GT3Companion", category: "GPS")
+private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", category: "GPS")
 
 /// GPS location sample paired with telemetry.
 struct GPSSample: Sendable {

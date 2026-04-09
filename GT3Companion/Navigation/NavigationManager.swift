@@ -10,7 +10,7 @@ import Foundation
 import MapKit
 import os
 
-private let logger = Logger(subsystem: "io.fluxhaus.GT3Companion", category: "Navigation")
+private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", category: "Navigation")
 
 /// Navigation state for turn-by-turn directions.
 struct NavigationState {

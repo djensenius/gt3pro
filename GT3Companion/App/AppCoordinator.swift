@@ -9,7 +9,7 @@
 import Foundation
 import os
 
-private let logger = Logger(subsystem: "io.fluxhaus.GT3Companion", category: "Coordinator")
+private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", category: "Coordinator")
 
 /// Central orchestrator wiring BLE → Register Reader → Ride Tracker → Upload → Live Activity.
 @MainActor

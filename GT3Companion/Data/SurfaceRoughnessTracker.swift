@@ -10,7 +10,7 @@ import CoreMotion
 import Foundation
 import os
 
-private let logger = Logger(subsystem: "io.fluxhaus.GT3Companion", category: "Roughness")
+private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", category: "Roughness")
 
 /// Surface roughness measurement from accelerometer data.
 struct RoughnessSample: Sendable {
@@ -27,7 +27,7 @@ final class SurfaceRoughnessTracker: @unchecked Sendable {
     private let processingQueue: OperationQueue = {
         let queue = OperationQueue()
         queue.maxConcurrentOperationCount = 1
-        queue.name = "io.fluxhaus.GT3Companion.roughness"
+        queue.name = "org.davidjensenius.GT3Companion.roughness"
         return queue
     }()
     private nonisolated(unsafe) var zValues: [Double] = []
