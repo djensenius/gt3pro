@@ -228,16 +228,10 @@ extension ButtonStyle where Self == GT3ButtonStyle {
 /// a solid Catppuccin surface on older versions.
 struct GlassCard: ViewModifier {
     func body(content: Content) -> some View {
-        if #available(iOS 26.0, macOS 26.0, visionOS 26.0, *) {
-            content
-                .padding()
-                .glassEffect(.regular.tint(Theme.Colors.accent), in: .rect(cornerRadius: Theme.cornerRadius))
-        } else {
-            content
-                .padding()
-                .background(Theme.Colors.secondaryBackground)
-                .cornerRadius(Theme.cornerRadius)
-        }
+        content
+            .padding()
+            .background(Theme.Colors.secondaryBackground)
+            .cornerRadius(Theme.cornerRadius)
     }
 }
 

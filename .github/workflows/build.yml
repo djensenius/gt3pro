@@ -19,7 +19,7 @@ jobs:
           xcodebuild build \
             -project GT3Companion.xcodeproj \
             -scheme "GT3Companion" \
-            -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+            -destination 'generic/platform=iOS Simulator' \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO \
             2>&1 | tail -20

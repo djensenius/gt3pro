@@ -2,9 +2,9 @@ name: GT3Companion
 options:
   bundleIdPrefix: io.fluxhaus
   deploymentTarget:
-    iOS: "26.0"
-    watchOS: "13.0"
-    macOS: "26.0"
+    iOS: "18.0"
+    watchOS: "11.0"
+    macOS: "15.0"
     visionOS: "2.0"
   xcodeVersion: "16.3"
   createIntermediateGroups: true
