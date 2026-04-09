@@ -92,9 +92,6 @@ targets:
       - path: GT3CompanionTests
         excludes:
           - "**/.DS_Store"
-      - path: Shared
-        excludes:
-          - "**/.DS_Store"
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.fluxhaus.GT3Companion.tests

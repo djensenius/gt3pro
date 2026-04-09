@@ -7,6 +7,7 @@
 
 import XCTest
 import SwiftUI
+@testable import GT3Companion
 
 final class GT3CompanionTests: XCTestCase {
     func testThemeColorsExist() {
