@@ -29,12 +29,16 @@
 		8A23628C545F836287E58ECC /* KeyDerivation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8934033CB09959903D59EF5C /* KeyDerivation.swift */; };
 		928A708482AF1A011B59847B /* GT3CompanionMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 047BB1B09415CC35C15712AE /* GT3CompanionMacApp.swift */; };
 		9DB54D1BF352F6D0EF538E5F /* AESHelperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D8302BED52B6CDA212C08A /* AESHelperTests.swift */; };
+		A022DE3920811B71E141BB0F /* NinebotAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58F5E78620013EA4336A56E9 /* NinebotAuth.swift */; };
+		AD9AE97BEBC7105939F36C3A /* NinebotAuthTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45160E9C4AC8147D2A6D6029 /* NinebotAuthTests.swift */; };
 		BCD9B0A7ABA989E446832078 /* GT3RideAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0BC7212A2BD252D996C21B /* GT3RideAttributes.swift */; };
 		BE07B60042098A1ADCB739A6 /* NinebotCryptoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0533325A4BB52BAE271F38E0 /* NinebotCryptoTests.swift */; };
 		C40F2CFE5E4ED5602CA09F32 /* AESHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 661067C3865CBF095F1EF85B /* AESHelper.swift */; };
+		CD3CFFE66FCAD787FA6DAFD4 /* NinebotTransportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83460368F60A53C5A30952A7 /* NinebotTransportTests.swift */; };
 		DF6A88BD36CBAB7FA8DEC557 /* BLEConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD7FB93A05065AD29C9B23A0 /* BLEConstants.swift */; };
 		E849A2BAB32AACC0A8D08C37 /* MacContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA58425277ED9CA3252868B8 /* MacContentView.swift */; };
 		EB5A30564B4E37F9D8F36416 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE53582C2CC4F2EFA20AD815 /* Theme.swift */; };
+		F2CD2B1D502623C41495B602 /* NinebotTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4E04531F9A6C7BD543444A1 /* NinebotTransport.swift */; };
 		F3E43A2E9CD4321FFDF4AB01 /* NinebotFrameBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5312D85AD3849B1B86711DF6 /* NinebotFrameBuilderTests.swift */; };
 		FC2180F4FEED50A0B0C5F60F /* GT3RideAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0BC7212A2BD252D996C21B /* GT3RideAttributes.swift */; };
 /* End PBXBuildFile section */
@@ -77,11 +81,14 @@
 		2CFA6EEC6FC4981ACF73576B /* GT3CompanionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3CompanionTests.swift; sourceTree = "<group>"; };
 		2D0BC7212A2BD252D996C21B /* GT3RideAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3RideAttributes.swift; sourceTree = "<group>"; };
 		35AB36E7D729C0D68B6B3A03 /* GT3LiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3LiveActivity.swift; sourceTree = "<group>"; };
+		45160E9C4AC8147D2A6D6029 /* NinebotAuthTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NinebotAuthTests.swift; sourceTree = "<group>"; };
 		5312D85AD3849B1B86711DF6 /* NinebotFrameBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NinebotFrameBuilderTests.swift; sourceTree = "<group>"; };
 		58211C5A6E89A9919BDE331B /* GT3CompanionVisionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3CompanionVisionApp.swift; sourceTree = "<group>"; };
+		58F5E78620013EA4336A56E9 /* NinebotAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NinebotAuth.swift; sourceTree = "<group>"; };
 		5CA73CFF555039D3094FDDBF /* GT3CompanionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3CompanionApp.swift; sourceTree = "<group>"; };
 		5FA2314681A86349911C2B0F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		661067C3865CBF095F1EF85B /* AESHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AESHelper.swift; sourceTree = "<group>"; };
+		83460368F60A53C5A30952A7 /* NinebotTransportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NinebotTransportTests.swift; sourceTree = "<group>"; };
 		86B8226EFDA7D34866B48B2E /* GT3CompanionVision.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GT3CompanionVision.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8934033CB09959903D59EF5C /* KeyDerivation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyDerivation.swift; sourceTree = "<group>"; };
 		8FC8DF5E472D510C6DDEDF69 /* GT3Companion.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GT3Companion.entitlements; sourceTree = "<group>"; };
@@ -100,6 +107,7 @@
 		D8D8302BED52B6CDA212C08A /* AESHelperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AESHelperTests.swift; sourceTree = "<group>"; };
 		DEE7C3B06D5FF3708534DD86 /* JavaLCG.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JavaLCG.swift; sourceTree = "<group>"; };
 		EF41BC7A131F7835D3D5FC88 /* KeyDerivationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyDerivationTests.swift; sourceTree = "<group>"; };
+		F4E04531F9A6C7BD543444A1 /* NinebotTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NinebotTransport.swift; sourceTree = "<group>"; };
 		FA58425277ED9CA3252868B8 /* MacContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacContentView.swift; sourceTree = "<group>"; };
 		FA8F629FF9561B10531DA56F /* BLEConstantsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEConstantsTests.swift; sourceTree = "<group>"; };
 		FD7FB93A05065AD29C9B23A0 /* BLEConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEConstants.swift; sourceTree = "<group>"; };
@@ -135,6 +143,7 @@
 			children = (
 				FD7FB93A05065AD29C9B23A0 /* BLEConstants.swift */,
 				8FDD78758A79865ACE4CE701 /* NinebotFrameBuilder.swift */,
+				F4E04531F9A6C7BD543444A1 /* NinebotTransport.swift */,
 			);
 			path = BLE;
 			sourceTree = "<group>";
@@ -155,8 +164,10 @@
 				2CFA6EEC6FC4981ACF73576B /* GT3CompanionTests.swift */,
 				BEEE5678757A80552FB8CD6E /* JavaLCGTests.swift */,
 				EF41BC7A131F7835D3D5FC88 /* KeyDerivationTests.swift */,
+				45160E9C4AC8147D2A6D6029 /* NinebotAuthTests.swift */,
 				0533325A4BB52BAE271F38E0 /* NinebotCryptoTests.swift */,
 				5312D85AD3849B1B86711DF6 /* NinebotFrameBuilderTests.swift */,
+				83460368F60A53C5A30952A7 /* NinebotTransportTests.swift */,
 			);
 			path = GT3CompanionTests;
 			sourceTree = "<group>";
@@ -177,6 +188,7 @@
 				661067C3865CBF095F1EF85B /* AESHelper.swift */,
 				DEE7C3B06D5FF3708534DD86 /* JavaLCG.swift */,
 				8934033CB09959903D59EF5C /* KeyDerivation.swift */,
+				58F5E78620013EA4336A56E9 /* NinebotAuth.swift */,
 				FE1DF0B6837DF0A29239682E /* NinebotCrypto.swift */,
 			);
 			path = Crypto;
@@ -392,8 +404,10 @@
 				7A925BD6B53F8E6668D072C8 /* GT3CompanionTests.swift in Sources */,
 				667C96D36D8A1492900AE4FE /* JavaLCGTests.swift in Sources */,
 				8129DDC3E23E43B303E71586 /* KeyDerivationTests.swift in Sources */,
+				AD9AE97BEBC7105939F36C3A /* NinebotAuthTests.swift in Sources */,
 				BE07B60042098A1ADCB739A6 /* NinebotCryptoTests.swift in Sources */,
 				F3E43A2E9CD4321FFDF4AB01 /* NinebotFrameBuilderTests.swift in Sources */,
+				CD3CFFE66FCAD787FA6DAFD4 /* NinebotTransportTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -430,8 +444,10 @@
 				FC2180F4FEED50A0B0C5F60F /* GT3RideAttributes.swift in Sources */,
 				72F93EB94912607D21E5FE6F /* JavaLCG.swift in Sources */,
 				8A23628C545F836287E58ECC /* KeyDerivation.swift in Sources */,
+				A022DE3920811B71E141BB0F /* NinebotAuth.swift in Sources */,
 				1B3980D421AC54B23ADC469A /* NinebotCrypto.swift in Sources */,
 				377A07118A0C2F41F0A40D31 /* NinebotFrameBuilder.swift in Sources */,
+				F2CD2B1D502623C41495B602 /* NinebotTransport.swift in Sources */,
 				640DEBB3F6A29329AE8ADAE3 /* Theme.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
