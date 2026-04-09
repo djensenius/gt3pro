@@ -15,12 +15,12 @@ jobs:
         run: sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
       - name: Build iOS App
         run: |
-          set -o pipefail
           xcodebuild build \
             -project GT3Companion.xcodeproj \
             -scheme "GT3Companion" \
-            -destination 'generic/platform=iOS Simulator' \
+            -sdk iphonesimulator \
+            -arch arm64 \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO \
-            EXCLUDED_ARCHS=x86_64 \
-            ASSETCATALOG_COMPILER_SKIP_VALIDATIONS=YES
+            SKIP_INSTALL=YES \
+            ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS=NO
