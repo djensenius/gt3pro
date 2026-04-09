@@ -10,7 +10,7 @@ GT3 Companion is a native Swift/SwiftUI iOS app that connects to a Segway SuperS
 - **macOS with Xcode 16+** required for building
 - **Apple Developer Account** needed for testing on physical devices (BLE requires real hardware)
 - **SwiftLint** installed (`brew install swiftlint`)
-- The app connects to api.fluxhaus.io for data upload (OIDC authentication)
+- The app uploads data to api.fluxhaus.io (OIDC authentication)
 
 ### Building the Application
 The application uses Xcode with multiple targets:
@@ -21,8 +21,11 @@ The application uses Xcode with multiple targets:
 open GT3Companion.xcodeproj
 
 # Command line builds
-xcodebuild -project GT3Companion.xcodeproj -scheme "GT3Companion" -destination 'platform=iOS Simulator,name=iPhone 16' -configuration Debug build CODE_SIGNING_ALLOWED=NO
-xcodebuild -project GT3Companion.xcodeproj -scheme "GT3CompanionWatch" -destination 'platform=watchOS Simulator,name=Apple Watch Series 10 (46mm)' -configuration Debug build CODE_SIGNING_ALLOWED=NO
+xcodebuild -project GT3Companion.xcodeproj -scheme "GT3Companion" -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -configuration Debug build CODE_SIGNING_ALLOWED=NO
+xcodebuild -project GT3Companion.xcodeproj -scheme "GT3CompanionMac" -configuration Debug build CODE_SIGNING_ALLOWED=NO
+
+# watchOS target (added in a later PR)
+# xcodebuild -project GT3Companion.xcodeproj -scheme "GT3CompanionWatch" -destination 'platform=watchOS Simulator,name=Apple Watch Series 10 (46mm)' -configuration Debug build CODE_SIGNING_ALLOWED=NO
 ```
 
 **CRITICAL BUILD TIMING:**
@@ -33,7 +36,7 @@ xcodebuild -project GT3Companion.xcodeproj -scheme "GT3CompanionWatch" -destinat
 ### Testing
 ```bash
 # Run unit tests (takes 5-10 minutes)
-xcodebuild test -project GT3Companion.xcodeproj -scheme "GT3Companion" -destination 'platform=iOS Simulator,name=iPhone 16' CODE_SIGNING_ALLOWED=NO
+xcodebuild test -project GT3Companion.xcodeproj -scheme "GT3Companion" -destination 'platform=iOS Simulator,name=iPhone 17 Pro' CODE_SIGNING_ALLOWED=NO
 ```
 
 **Important**: BLE and HealthKit functionality cannot be tested in the simulator. Unit tests cover crypto, frame parsing, telemetry parsing, and data models. Integration testing requires a real GT3 Pro scooter.

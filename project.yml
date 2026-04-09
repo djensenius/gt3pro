@@ -58,6 +58,9 @@ targets:
       properties:
         com.apple.developer.healthkit: true
         com.apple.developer.healthkit.access: []
+    dependencies:
+      - target: GT3CompanionWidgets
+        embed: true
 
   GT3CompanionWidgets:
     type: app-extension
@@ -81,9 +84,6 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: io.fluxhaus.GT3Companion.widgets
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
-    dependencies:
-      - target: GT3Companion
-        embed: false
 
   GT3CompanionTests:
     type: bundle.unit-test

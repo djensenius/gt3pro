@@ -15,10 +15,11 @@ jobs:
         run: sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
       - name: Build iOS App
         run: |
+          set -o pipefail
           xcodebuild build \
             -project GT3Companion.xcodeproj \
             -scheme "GT3Companion" \
             -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO \
-            | tail -20
+            2>&1 | tail -20
