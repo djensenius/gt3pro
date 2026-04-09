@@ -1,0 +1,184 @@
+name: GT3Companion
+options:
+  bundleIdPrefix: io.fluxhaus
+  deploymentTarget:
+    iOS: "18.0"
+    watchOS: "11.0"
+    macOS: "15.0"
+    visionOS: "2.0"
+  xcodeVersion: "16.3"
+  createIntermediateGroups: true
+  defaultConfig: Debug
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+
+targets:
+  GT3Companion:
+    type: application
+    platform: iOS
+    sources:
+      - path: GT3Companion
+        excludes:
+          - "**/.DS_Store"
+      - path: Shared
+        excludes:
+          - "**/.DS_Store"
+    info:
+      path: GT3Companion/Info.plist
+      properties:
+        CFBundleDisplayName: GT3 Companion
+        CFBundleName: GT3Companion
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UIBackgroundModes:
+          - bluetooth-central
+          - location
+        NSBluetoothAlwaysUsageDescription: GT3 Companion connects to your Segway GT3 Pro to read ride telemetry and sync data.
+        NSBluetoothPeripheralUsageDescription: GT3 Companion needs Bluetooth to communicate with your Segway GT3 Pro.
+        NSLocationWhenInUseUsageDescription: GT3 Companion records your GPS route during rides.
+        NSLocationAlwaysAndWhenInUseUsageDescription: GT3 Companion needs background location to track rides when your phone is in your pocket.
+        NSMotionUsageDescription: GT3 Companion uses motion sensors to detect road surface quality.
+        NSHealthShareUsageDescription: GT3 Companion reads heart rate data from your Apple Watch during rides.
+        NSHealthUpdateUsageDescription: GT3 Companion saves ride workouts to Apple Health.
+        NSSupportsLiveActivities: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.fluxhaus.GT3Companion
+        TARGETED_DEVICE_FAMILY: "1,2"
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: false
+    entitlements:
+      path: GT3Companion/GT3Companion.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
+    dependencies:
+      - target: GT3CompanionWidgets
+        embed: true
+
+  GT3CompanionWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: GT3CompanionWidgets
+        excludes:
+          - "**/.DS_Store"
+      - path: Shared
+        excludes:
+          - "**/.DS_Store"
+    info:
+      path: GT3CompanionWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: GT3 Widgets
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+        NSSupportsLiveActivities: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.fluxhaus.GT3Companion.widgets
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: false
+
+  GT3CompanionTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: GT3CompanionTests
+        excludes:
+          - "**/.DS_Store"
+      - path: Shared
+        excludes:
+          - "**/.DS_Store"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.fluxhaus.GT3Companion.tests
+    dependencies:
+      - target: GT3Companion
+        embed: false
+
+  GT3CompanionMac:
+    type: application
+    platform: macOS
+    sources:
+      - path: GT3CompanionMac
+        excludes:
+          - "**/.DS_Store"
+      - path: Shared
+        excludes:
+          - "**/.DS_Store"
+    info:
+      path: GT3CompanionMac/Info.plist
+      properties:
+        CFBundleDisplayName: GT3 Companion
+        CFBundleName: GT3CompanionMac
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.fluxhaus.GT3Companion.mac
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: false
+
+  GT3CompanionVision:
+    type: application
+    platform: visionOS
+    sources:
+      - path: GT3CompanionVision
+        excludes:
+          - "**/.DS_Store"
+      - path: Shared
+        excludes:
+          - "**/.DS_Store"
+    info:
+      path: GT3CompanionVision/Info.plist
+      properties:
+        CFBundleDisplayName: GT3 Companion
+        CFBundleName: GT3CompanionVision
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.fluxhaus.GT3Companion.vision
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: false
+
+schemes:
+  GT3Companion:
+    build:
+      targets:
+        GT3Companion: all
+        GT3CompanionWidgets: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - GT3CompanionTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+
+  GT3CompanionMac:
+    build:
+      targets:
+        GT3CompanionMac: all
+    run:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+
+  GT3CompanionVision:
+    build:
+      targets:
+        GT3CompanionVision: all
+    run:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug

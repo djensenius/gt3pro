@@ -1,0 +1,25 @@
+name: Build
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
+      - name: Build iOS App
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project GT3Companion.xcodeproj \
+            -scheme "GT3Companion" \
+            -destination 'generic/platform=iOS Simulator' \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO \
+            2>&1 | tail -20
