@@ -12,8 +12,7 @@ options:
 
 settings:
   base:
-    SWIFT_VERSION: "6.0"
-    SWIFT_STRICT_CONCURRENCY: targeted
+    SWIFT_VERSION: "5"
 
 targets:
   GT3Companion:
