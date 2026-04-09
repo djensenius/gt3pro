@@ -181,7 +181,7 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         }
     }
 
-    private func sendFrame(_ frame: Data) {
+    func sendFrame(_ frame: Data) {
         guard let characteristic = writeCharacteristic, let peripheral = peripheral else {
             logger.error("Cannot send: write characteristic not available")
             return

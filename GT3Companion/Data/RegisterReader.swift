@@ -127,4 +127,11 @@ actor RegisterReader {
     func isSnapshotEmpty() -> Bool { snapshotValues.isEmpty }
 
     func clearTelemetry() { telemetryValues.removeAll() }
+
+    /// Return snapshot values as a string dictionary for upload.
+    func getDiagnosticSnapshot() -> [String: String] {
+        snapshotValues.reduce(into: [String: String]()) { result, pair in
+            result[pair.key] = "\(pair.value)"
+        }
+    }
 }
