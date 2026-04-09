@@ -13,14 +13,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
-      - name: Build iOS App
+      - name: Compile Swift sources
         run: |
           xcodebuild build \
             -project GT3Companion.xcodeproj \
             -scheme "GT3Companion" \
-            -sdk iphonesimulator \
-            -arch arm64 \
+            -destination 'generic/platform=iOS' \
             -configuration Debug \
-            CODE_SIGNING_ALLOWED=NO \
-            SKIP_INSTALL=YES \
-            ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS=NO
+            CODE_SIGNING_ALLOWED=NO
