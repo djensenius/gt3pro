@@ -22,5 +22,4 @@ jobs:
             -destination 'generic/platform=iOS Simulator' \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO \
-            EXCLUDED_ARCHS=x86_64 \
-            2>&1 | grep -E "error:|BUILD (SUCCEEDED|FAILED)" | tail -30
+            EXCLUDED_ARCHS=x86_64
