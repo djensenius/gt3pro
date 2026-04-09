@@ -23,6 +23,7 @@
 		301CE4D692028486F466BF18 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE53582C2CC4F2EFA20AD815 /* Theme.swift */; };
 		31572ECF63F373A2BCAC326E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB87773429ACD607F25A8BF3 /* ContentView.swift */; };
 		377A07118A0C2F41F0A40D31 /* NinebotFrameBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FDD78758A79865ACE4CE701 /* NinebotFrameBuilder.swift */; };
+		37CF00D5FFFA017AA1C2B81A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7EA8C9B9596FCD2188B27DCB /* Assets.xcassets */; };
 		3F9E66D56F8851A8BF3A7C56 /* RegisterReaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FC63A3A2D8799086BC58523 /* RegisterReaderTests.swift */; };
 		4015788E36F5E39F65B91E0A /* RideWorkoutManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8D580E2A873BE70E1F49EE /* RideWorkoutManager.swift */; };
 		442A1FD606975DF3B90BB12E /* GT3CompanionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CA73CFF555039D3094FDDBF /* GT3CompanionApp.swift */; };
@@ -51,12 +52,14 @@
 		7BCA1A87C3E4288C37743552 /* AggregateAnalyticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAEBB62130BDD68B0D3B2695 /* AggregateAnalyticsView.swift */; };
 		8129DDC3E23E43B303E71586 /* KeyDerivationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF41BC7A131F7835D3D5FC88 /* KeyDerivationTests.swift */; };
 		8193ABBD8A123282200926E7 /* GT3RideAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0BC7212A2BD252D996C21B /* GT3RideAttributes.swift */; };
+		81D7BA3C931E113898DD539C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2E6E068D2FFD52B5C440C611 /* Assets.xcassets */; };
 		8A23628C545F836287E58ECC /* KeyDerivation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8934033CB09959903D59EF5C /* KeyDerivation.swift */; };
 		8F085638E5D961EC00DE31CE /* RegisterReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 424F02984953C13821C555EE /* RegisterReader.swift */; };
 		91F3CB9E0228FA0D0AFB59B7 /* UploadQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44F46F784FC8CE9B05A670EC /* UploadQueue.swift */; };
 		923ECACC43B67071CB146A14 /* RideHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05FA94F2A81DC172E483E5B4 /* RideHistoryView.swift */; };
 		928A708482AF1A011B59847B /* GT3CompanionMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 047BB1B09415CC35C15712AE /* GT3CompanionMacApp.swift */; };
 		94B14C917ABE8C56450D9E5B /* GT3APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C894222A35BFDE918279DBCA /* GT3APIClient.swift */; };
+		97E261DC233D81C256FB28B9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C96A0466670E6039D58C90A6 /* Assets.xcassets */; };
 		99D0979A5462CB8336CBFE30 /* MapRouteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBEE3BF0C58F8ABAFF006549 /* MapRouteView.swift */; };
 		9DB54D1BF352F6D0EF538E5F /* AESHelperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D8302BED52B6CDA212C08A /* AESHelperTests.swift */; };
 		A022DE3920811B71E141BB0F /* NinebotAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58F5E78620013EA4336A56E9 /* NinebotAuth.swift */; };
@@ -72,6 +75,7 @@
 		CD3CFFE66FCAD787FA6DAFD4 /* NinebotTransportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83460368F60A53C5A30952A7 /* NinebotTransportTests.swift */; };
 		D941EC95DE6544512A52074A /* GT3RegistersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ABE49BC4B627FB608831639 /* GT3RegistersTests.swift */; };
 		D9FF1C381FA92E582C8C9EC8 /* WatchRideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0B48C9C3F689A08A9DF0FDE /* WatchRideView.swift */; };
+		DC91D3C3BDAD54F8A83ABE0D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 076C636C181D531B39F21178 /* Assets.xcassets */; };
 		DC91FD896EFB9747551A8451 /* GPXExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19905BAB58FB3DB581F8B592 /* GPXExporter.swift */; };
 		DD0BB71491A4F8A8611160FA /* SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81A024883426B8B0C84F3D7E /* SwiftDataModels.swift */; };
 		DF6A88BD36CBAB7FA8DEC557 /* BLEConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD7FB93A05065AD29C9B23A0 /* BLEConstants.swift */; };
@@ -120,6 +124,7 @@
 		047BB1B09415CC35C15712AE /* GT3CompanionMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3CompanionMacApp.swift; sourceTree = "<group>"; };
 		0533325A4BB52BAE271F38E0 /* NinebotCryptoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NinebotCryptoTests.swift; sourceTree = "<group>"; };
 		05FA94F2A81DC172E483E5B4 /* RideHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideHistoryView.swift; sourceTree = "<group>"; };
+		076C636C181D531B39F21178 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0856E72AC9FBE6ED37B60387 /* InfoRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoRow.swift; sourceTree = "<group>"; };
 		0901B8C6458BCC78713A6A9C /* ScooterConnectionManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScooterConnectionManagerTests.swift; sourceTree = "<group>"; };
 		0B3AAFD381FF70FD11643480 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
@@ -133,6 +138,7 @@
 		1E34BA6710E1650D5275870E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		2CFA6EEC6FC4981ACF73576B /* GT3CompanionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3CompanionTests.swift; sourceTree = "<group>"; };
 		2D0BC7212A2BD252D996C21B /* GT3RideAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3RideAttributes.swift; sourceTree = "<group>"; };
+		2E6E068D2FFD52B5C440C611 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		35AB36E7D729C0D68B6B3A03 /* GT3LiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3LiveActivity.swift; sourceTree = "<group>"; };
 		3ABE49BC4B627FB608831639 /* GT3RegistersTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3RegistersTests.swift; sourceTree = "<group>"; };
 		3D6E8F36E6C056415E4BB47A /* TelemetryParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelemetryParserTests.swift; sourceTree = "<group>"; };
@@ -152,6 +158,7 @@
 		661067C3865CBF095F1EF85B /* AESHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AESHelper.swift; sourceTree = "<group>"; };
 		71C4965BA8E974E0A6B214CF /* RouteNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteNavigationView.swift; sourceTree = "<group>"; };
 		75D7EC839B4E3F7B106C2E6C /* ComplicationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComplicationProvider.swift; sourceTree = "<group>"; };
+		7EA8C9B9596FCD2188B27DCB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7FC63A3A2D8799086BC58523 /* RegisterReaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterReaderTests.swift; sourceTree = "<group>"; };
 		81A024883426B8B0C84F3D7E /* SwiftDataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataModels.swift; sourceTree = "<group>"; };
 		83460368F60A53C5A30952A7 /* NinebotTransportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NinebotTransportTests.swift; sourceTree = "<group>"; };
@@ -176,6 +183,7 @@
 		C76AE1C74BD9FB056599493D /* SurfaceRoughnessTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurfaceRoughnessTracker.swift; sourceTree = "<group>"; };
 		C822EB76A11042B82719F773 /* GT3Companion.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GT3Companion.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C894222A35BFDE918279DBCA /* GT3APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3APIClient.swift; sourceTree = "<group>"; };
+		C96A0466670E6039D58C90A6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		CA0670D4CC9E61B989E835AC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		CB87773429ACD607F25A8BF3 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		CE53582C2CC4F2EFA20AD815 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
@@ -212,6 +220,7 @@
 		0DE1ADF533323F50B81D357F /* GT3CompanionVision */ = {
 			isa = PBXGroup;
 			children = (
+				C96A0466670E6039D58C90A6 /* Assets.xcassets */,
 				58211C5A6E89A9919BDE331B /* GT3CompanionVisionApp.swift */,
 				5FA2314681A86349911C2B0F /* Info.plist */,
 				1DCD3F4E090513234E3E93D4 /* VisionContentView.swift */,
@@ -222,6 +231,7 @@
 		1D5E70F7D9DCE658B083FF39 /* GT3CompanionWatch */ = {
 			isa = PBXGroup;
 			children = (
+				076C636C181D531B39F21178 /* Assets.xcassets */,
 				75D7EC839B4E3F7B106C2E6C /* ComplicationProvider.swift */,
 				891BD92EAAEA3BFE7C483FEA /* GT3CompanionWatchApp.swift */,
 				1E34BA6710E1650D5275870E /* Info.plist */,
@@ -244,6 +254,7 @@
 		21095628F71C2695BA153843 /* GT3Companion */ = {
 			isa = PBXGroup;
 			children = (
+				2E6E068D2FFD52B5C440C611 /* Assets.xcassets */,
 				8FC8DF5E472D510C6DDEDF69 /* GT3Companion.entitlements */,
 				CA0670D4CC9E61B989E835AC /* Info.plist */,
 				B725655AD3100EA482466C21 /* App */,
@@ -333,6 +344,7 @@
 		5E0816D35C639C775E670EDD /* GT3CompanionMac */ = {
 			isa = PBXGroup;
 			children = (
+				7EA8C9B9596FCD2188B27DCB /* Assets.xcassets */,
 				047BB1B09415CC35C15712AE /* GT3CompanionMacApp.swift */,
 				ADC13C5A39D3483D8EEDD04B /* Info.plist */,
 				FA58425277ED9CA3252868B8 /* MacContentView.swift */,
@@ -432,6 +444,7 @@
 			buildConfigurationList = D2867066613F32D0850AB272 /* Build configuration list for PBXNativeTarget "GT3CompanionVision" */;
 			buildPhases = (
 				9BF6145826C6D4C78C815141 /* Sources */,
+				2BF92100F1D2EF79953FE608 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -467,6 +480,7 @@
 			buildConfigurationList = E78FAFB76BD29B247C70FF65 /* Build configuration list for PBXNativeTarget "GT3CompanionMac" */;
 			buildPhases = (
 				547A25B58848AD63FB9C7748 /* Sources */,
+				A3C0B161748D5406CEA07539 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -484,6 +498,7 @@
 			buildConfigurationList = 3B8F51E557609D01DBC93BCF /* Build configuration list for PBXNativeTarget "GT3Companion" */;
 			buildPhases = (
 				C17BE4C51F76B1E68B910D09 /* Sources */,
+				935C4F7B3C77F195DED9A15F /* Resources */,
 				1D0A8F457FE77AD5C45A3969 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
@@ -503,6 +518,7 @@
 			buildConfigurationList = 8F1A7E81A551649E75933476 /* Build configuration list for PBXNativeTarget "GT3CompanionWatch" */;
 			buildPhases = (
 				C78ED7DE041B3B52823A64F0 /* Sources */,
+				3D11EBD81E4ABF61ACEE104B /* Resources */,
 			);
 			buildRules = (
 			);
@@ -581,6 +597,41 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		2BF92100F1D2EF79953FE608 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				97E261DC233D81C256FB28B9 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3D11EBD81E4ABF61ACEE104B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DC91D3C3BDAD54F8A83ABE0D /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		935C4F7B3C77F195DED9A15F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				81D7BA3C931E113898DD539C /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A3C0B161748D5406CEA07539 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				37CF00D5FFFA017AA1C2B81A /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		2288948FAE9B5D75953D00B5 /* Sources */ = {
