@@ -16,22 +16,11 @@ jobs:
       - name: Build iOS App
         run: |
           set -o pipefail
-          DEST=$(xcrun simctl list devices available -j | python3 -c "
-          import sys, json
-          devices = json.load(sys.stdin)['devices']
-          for runtime, devs in sorted(devices.items(), reverse=True):
-              if 'iOS' in runtime or 'SimRuntime.iOS' in runtime:
-                  for d in devs:
-                      if 'iPhone' in d['name'] and d['isAvailable']:
-                          print(f\"platform=iOS Simulator,id={d['udid']}\")
-                          sys.exit(0)
-          print('generic/platform=iOS Simulator')
-          ")
-          echo "Using destination: $DEST"
           xcodebuild build \
             -project GT3Companion.xcodeproj \
             -scheme "GT3Companion" \
-            -destination "$DEST" \
+            -destination 'generic/platform=iOS Simulator' \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO \
+            EXCLUDED_ARCHS=x86_64 \
             2>&1 | tail -50
