@@ -13,11 +13,16 @@ jobs:
       - uses: actions/checkout@v4
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
-      - name: List available simulators
-        run: xcrun simctl list devices available --json | python3 -c "import sys,json; devices=json.load(sys.stdin)['devices']; [print(f'{r}: {[d[\"name\"] for d in ds]}') for r,ds in devices.items() if ds and 'iOS' in r]"
+      - name: Install iOS simulator if needed
+        run: |
+          if ! xcrun simctl list runtimes | grep -q "iOS.*Available"; then
+            echo "Installing iOS simulator runtime..."
+            xcodebuild -downloadPlatform iOS
+          else
+            echo "iOS simulator runtime already available"
+          fi
       - name: Run Tests
         run: |
-          set -o pipefail
           DEST=$(xcrun simctl list devices available -j | python3 -c "
           import sys, json
           devices = json.load(sys.stdin)['devices']
@@ -29,11 +34,10 @@ jobs:
                           sys.exit(0)
           sys.exit(1)
           ")
-          echo "Using destination: $DEST"
+          echo "Testing with destination: $DEST"
           xcodebuild test \
             -project GT3Companion.xcodeproj \
             -scheme "GT3Companion" \
             -destination "$DEST" \
             -configuration Debug \
-            CODE_SIGNING_ALLOWED=NO \
-            2>&1 | tail -30
+            CODE_SIGNING_ALLOWED=NO
