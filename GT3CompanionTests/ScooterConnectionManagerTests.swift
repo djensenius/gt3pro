@@ -11,19 +11,15 @@ import XCTest
 final class ScooterConnectionManagerTests: XCTestCase {
     func testInitialStateIsDisconnected() {
         let manager = ScooterConnectionManager()
-        XCTAssertEqual(
-            String(describing: manager.connectionState),
-            String(describing: ConnectionState.disconnected)
-        )
+        XCTAssertEqual(manager.connectionState, .disconnected)
     }
 
-    func testConnectionStateEnum() {
-        // Verify all states exist and are distinct
-        let states: [ConnectionState] = [
-            .disconnected, .scanning, .connecting,
-            .discovering, .authenticating, .connected, .reconnecting
-        ]
-        let descriptions = states.map { String(describing: $0) }
-        XCTAssertEqual(Set(descriptions).count, 7)
+    func testConnectionStateIsEquatable() {
+        XCTAssertEqual(ConnectionState.disconnected, ConnectionState.disconnected)
+        XCTAssertNotEqual(ConnectionState.disconnected, ConnectionState.connected)
+    }
+
+    func testAllConnectionStates() {
+        XCTAssertEqual(ConnectionState.allCases.count, 7)
     }
 }

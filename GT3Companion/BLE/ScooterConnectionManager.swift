@@ -13,7 +13,7 @@ import os
 private let logger = Logger(subsystem: "io.fluxhaus.GT3Companion", category: "BLE")
 
 /// Connection states for the BLE lifecycle.
-enum ConnectionState: Sendable {
+enum ConnectionState: Sendable, Equatable, CaseIterable {
     case disconnected
     case scanning
     case connecting
@@ -24,25 +24,21 @@ enum ConnectionState: Sendable {
 }
 
 /// Delegate protocol for ScooterConnectionManager events.
-protocol ScooterConnectionDelegate: AnyObject, Sendable {
+/// Callbacks are dispatched to the main actor for safe UI updates.
+@MainActor
+protocol ScooterConnectionDelegate: AnyObject {
     func connectionStateChanged(_ state: ConnectionState)
     func didReceiveTelemetry(_ frame: NinebotFrameBuilder.ParsedFrame)
     func didAuthenticate(serialNumber: String)
     func didDisconnect(error: Error?)
 }
 
-/// Actor wrapping CBCentralManager for the full GT3 Pro BLE lifecycle.
+/// CBCentralManager wrapper managing the full GT3 Pro BLE lifecycle.
 ///
-/// Responsibilities:
-/// - Scanning for GT3 Pro by service UUID
-/// - Connecting with state restoration
-/// - Service/characteristic discovery
-/// - MTU negotiation
-/// - Frame I/O via NinebotTransport
-/// - Authentication via NinebotAuth
-/// - Bonded device workarounds (CCCD toggle, echo detection)
+/// All CoreBluetooth interactions are serialized on `bleQueue`.
+/// Uses NinebotAuth for handshake and NinebotTransport for encrypted frame I/O.
 final class ScooterConnectionManager: NSObject, @unchecked Sendable {
-    private var centralManager: CBCentralManager!
+    private var centralManager: CBCentralManager?
     private var peripheral: CBPeripheral?
     private var writeCharacteristic: CBCharacteristic?
     private var notifyCharacteristic: CBCharacteristic?
@@ -50,15 +46,19 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     private var transport: NinebotTransport?
     private var auth: NinebotAuth?
     private var mtu: Int = BLEConstants.defaultMTU
+    private var intentionalDisconnect = false
 
     private(set) var connectionState: ConnectionState = .disconnected {
         didSet {
             logger.info("Connection state: \(String(describing: self.connectionState))")
-            delegate?.connectionStateChanged(connectionState)
+            let state = connectionState
+            Task { @MainActor [weak self] in
+                self?.delegate?.connectionStateChanged(state)
+            }
         }
     }
 
-    weak var delegate: ScooterConnectionDelegate?
+    weak var delegate: (any ScooterConnectionDelegate)?
 
     private var btName: String?
     private var storedPassword: Data?
@@ -83,33 +83,35 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
 
     /// Start scanning for GT3 Pro devices.
     func scan() {
-        guard centralManager.state == .poweredOn else {
-            logger.warning("Cannot scan: Bluetooth not powered on")
+        guard let central = centralManager, central.state == .poweredOn else {
+            logger.warning("Cannot scan: Bluetooth not ready (centralManager not started or not powered on)")
             return
         }
 
         // Check for already-connected (bonded) peripherals first
-        let connected = centralManager.retrieveConnectedPeripherals(
+        let connected = central.retrieveConnectedPeripherals(
             withServices: [BLEConstants.serviceUUID]
         )
         if let existing = connected.first {
-            logger.info("Found bonded peripheral: \(existing.name ?? "unknown")")
+            btName = existing.name ?? existing.identifier.uuidString
+            logger.info("Found bonded peripheral: \(self.btName ?? "unknown")")
             connectToPeripheral(existing)
             return
         }
 
         connectionState = .scanning
-        centralManager.scanForPeripherals(
+        central.scanForPeripherals(
             withServices: [BLEConstants.serviceUUID],
             options: [CBCentralManagerScanOptionAllowDuplicatesKey: false]
         )
         logger.info("Scanning for GT3 Pro...")
     }
 
-    /// Disconnect from the peripheral.
+    /// Disconnect from the peripheral intentionally (no auto-reconnect).
     func disconnect() {
+        intentionalDisconnect = true
         if let peripheral = peripheral {
-            centralManager.cancelPeripheralConnection(peripheral)
+            centralManager?.cancelPeripheralConnection(peripheral)
         }
         connectionState = .disconnected
     }
@@ -120,8 +122,9 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         self.peripheral = peripheral
         peripheral.delegate = self
         connectionState = .connecting
-        centralManager.stopScan()
-        centralManager.connect(peripheral, options: nil)
+        intentionalDisconnect = false
+        centralManager?.stopScan()
+        centralManager?.connect(peripheral, options: nil)
         logger.info("Connecting to \(peripheral.name ?? "unknown")...")
     }
 
@@ -130,17 +133,28 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         peripheral?.discoverServices([BLEConstants.serviceUUID])
     }
 
+    /// Try to begin auth if both characteristics are discovered.
+    private func checkReadyForAuth() {
+        guard writeCharacteristic != nil, notifyCharacteristic != nil else { return }
+        toggleNotifications()
+    }
+
     /// CCCD toggle workaround for iOS stale notifications on reconnect.
+    /// All CB calls stay on bleQueue for proper serialization.
     private func toggleNotifications() {
         guard let peripheral = peripheral, let characteristic = notifyCharacteristic else { return }
 
-        peripheral.setNotifyValue(false, for: characteristic)
-        DispatchQueue.global().asyncAfter(deadline: .now() + .milliseconds(Int(BLEConstants.cccdToggleOffDelayMs))) {
-            peripheral.setNotifyValue(true, for: characteristic)
-            DispatchQueue.global().asyncAfter(
-                deadline: .now() + .milliseconds(Int(BLEConstants.cccdDrainDelayMs))
+        bleQueue.async { [weak self] in
+            peripheral.setNotifyValue(false, for: characteristic)
+            self?.bleQueue.asyncAfter(
+                deadline: .now() + .milliseconds(Int(BLEConstants.cccdToggleOffDelayMs))
             ) { [weak self] in
-                self?.beginAuthentication()
+                peripheral.setNotifyValue(true, for: characteristic)
+                self?.bleQueue.asyncAfter(
+                    deadline: .now() + .milliseconds(Int(BLEConstants.cccdDrainDelayMs))
+                ) { [weak self] in
+                    self?.beginAuthentication()
+                }
             }
         }
     }
@@ -152,11 +166,13 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         }
 
         connectionState = .authenticating
-        let authActor = NinebotAuth(btName: name, storedPassword: storedPassword)
-        self.auth = authActor
 
+        // Single shared crypto instance for both auth and transport
         let key = KeyDerivation.deriveKey(key1: Data(name.utf8), key2: nil)
         let crypto = NinebotCrypto(key: key, counter: 0)
+
+        let authActor = NinebotAuth(btName: name, storedPassword: storedPassword)
+        self.auth = authActor
         self.transport = NinebotTransport(crypto: crypto, mtu: mtu)
 
         Task {
@@ -167,7 +183,7 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
 
     private func sendFrame(_ frame: Data) {
         guard let characteristic = writeCharacteristic, let peripheral = peripheral else {
-            logger.error("Cannot send: no write characteristic")
+            logger.error("Cannot send: write characteristic not available")
             return
         }
 
@@ -175,10 +191,13 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
             guard let transport = self.transport else { return }
             do {
                 let chunks = try await transport.prepareOutbound(plaintextFrame: frame)
-                for (index, chunk) in chunks.enumerated() {
-                    peripheral.writeValue(chunk, for: characteristic, type: .withResponse)
-                    if index < chunks.count - 1 {
-                        try await Task.sleep(for: .milliseconds(BLEConstants.fragmentDelayMs))
+                // Dispatch writes back to bleQueue for CB serialization
+                self.bleQueue.async {
+                    for (index, chunk) in chunks.enumerated() {
+                        peripheral.writeValue(chunk, for: characteristic, type: .withResponse)
+                        if index < chunks.count - 1 {
+                            Thread.sleep(forTimeInterval: Double(BLEConstants.fragmentDelayMs) / 1000.0)
+                        }
                     }
                 }
             } catch {
@@ -199,7 +218,9 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
                 let serial = await auth.getSerialNumber() ?? "unknown"
                 logger.info("Authenticated with GT3 Pro (SN: \(serial))")
                 connectionState = .connected
-                delegate?.didAuthenticate(serialNumber: serial)
+                Task { @MainActor [weak self] in
+                    self?.delegate?.didAuthenticate(serialNumber: serial)
+                }
 
             case .failed(let reason):
                 logger.error("Auth failed: \(reason)")
@@ -209,7 +230,6 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
             default:
                 if let frame = nextFrame {
                     if case .setPwd = state {
-                        // Wait 2s between SET_PWD retries
                         try? await Task.sleep(for: .seconds(2))
                     }
                     sendFrame(frame)
@@ -218,33 +238,11 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         }
     }
 
-    /// Detect echo bug: device echoes back writes instead of processing them.
-    private func isEcho(sent: Data, received: Data) -> Bool {
-        sent == received
-    }
-
-    private func handleEchoRetry() {
-        guard echoRetryCount < BLEConstants.echoRetryDelays.count else {
-            logger.error("Echo detection: max retries exceeded")
-            connectionState = .disconnected
-            return
-        }
-
-        let delay = BLEConstants.echoRetryDelays[echoRetryCount]
-        echoRetryCount += 1
-        logger.warning("Echo detected, retrying in \(delay)ms (attempt \(self.echoRetryCount))")
-
-        disconnect()
-        DispatchQueue.global().asyncAfter(deadline: .now() + .milliseconds(Int(delay))) { [weak self] in
-            self?.scan()
-        }
-    }
-
     /// Issue a persistent connection request for background reconnection.
     func watchForReconnection() {
         guard let peripheral = peripheral else { return }
         connectionState = .reconnecting
-        centralManager.connect(peripheral, options: nil)
+        centralManager?.connect(peripheral, options: nil)
         logger.info("Watching for GT3 Pro reconnection...")
     }
 }
@@ -267,6 +265,7 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
         if let peripherals = dict[CBCentralManagerRestoredStatePeripheralsKey] as? [CBPeripheral],
            let restored = peripherals.first {
             self.peripheral = restored
+            self.btName = restored.name ?? restored.identifier.uuidString
             restored.delegate = self
             if restored.state == .connected {
                 discoverServices()
@@ -285,10 +284,9 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
         let name = peripheral.name ?? advertisementData[CBAdvertisementDataLocalNameKey] as? String ?? ""
         logger.info("Discovered: \(name) RSSI: \(RSSI)")
 
-        if name.hasPrefix(BLEConstants.advertisingNamePrefix) || !name.isEmpty {
-            btName = name
-            connectToPeripheral(peripheral)
-        }
+        guard name.hasPrefix(BLEConstants.advertisingNamePrefix) else { return }
+        btName = name
+        connectToPeripheral(peripheral)
     }
 
     func centralManager(
@@ -298,7 +296,6 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
         logger.info("Connected to \(peripheral.name ?? "unknown")")
         echoRetryCount = 0
 
-        // Negotiate MTU
         let negotiatedMTU = peripheral.maximumWriteValueLength(for: .withResponse) + 3
         if negotiatedMTU > BLEConstants.defaultMTU {
             mtu = negotiatedMTU
@@ -323,8 +320,17 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
         error: Error?
     ) {
         logger.info("Disconnected: \(error?.localizedDescription ?? "clean")")
-        delegate?.didDisconnect(error: error)
-        watchForReconnection()
+        let err = error
+        Task { @MainActor [weak self] in
+            self?.delegate?.didDisconnect(error: err)
+        }
+
+        // Only auto-reconnect if disconnect was unexpected
+        if !intentionalDisconnect {
+            watchForReconnection()
+        } else {
+            connectionState = .disconnected
+        }
     }
 }
 
@@ -355,10 +361,11 @@ extension ScooterConnectionManager: CBPeripheralDelegate {
             case BLEConstants.writeCharUUID:
                 writeCharacteristic = characteristic
                 logger.info("Found write characteristic")
+                checkReadyForAuth()
             case BLEConstants.notifyCharUUID:
                 notifyCharacteristic = characteristic
                 logger.info("Found notify characteristic (0004)")
-                toggleNotifications()
+                checkReadyForAuth()
             default:
                 break
             }
@@ -381,7 +388,9 @@ extension ScooterConnectionManager: CBPeripheralDelegate {
                     if connectionState == .authenticating {
                         handleAuthResponse(parsed)
                     } else if connectionState == .connected {
-                        delegate?.didReceiveTelemetry(parsed)
+                        Task { @MainActor [weak self] in
+                            self?.delegate?.didReceiveTelemetry(parsed)
+                        }
                     }
                 }
             } catch {
