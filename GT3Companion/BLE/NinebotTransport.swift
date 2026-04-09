@@ -15,7 +15,7 @@ enum ReassemblyState {
 }
 
 /// BLE transport layer: fragmentation for outbound frames, reassembly for inbound.
-final class NinebotTransport: @unchecked Sendable {
+actor NinebotTransport {
     private let crypto: NinebotCrypto
     private var mtu: Int
 

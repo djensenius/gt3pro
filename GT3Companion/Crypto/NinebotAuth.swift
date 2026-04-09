@@ -87,11 +87,12 @@ actor NinebotAuth {
         crypto.updateAuthParam(authParam!)
         crypto.enableSNMode()
 
-        // If we have a stored password AND device has one, skip SET_PWD
+        // If we have a stored password AND device has one, skip SET_PWD.
+        // Normal handshake consumes counter=1 for SET_PWD, so AUTH expects counter=2.
         if let stored = storedPassword, deviceHasStoredPassword {
             password = stored
             let authKey = KeyDerivation.deriveKey(key1: stored, key2: authParam!)
-            crypto.updateKey(authKey)
+            crypto = NinebotCrypto(key: authKey, authParam: authParam!, counter: 2)
             state = .auth
             return buildAuthFrame()
         }
@@ -188,7 +189,11 @@ actor NinebotAuth {
         password
     }
 
-    func getCrypto() -> NinebotCrypto {
-        crypto
+    /// Perform a crypto operation while keeping the mutable crypto engine
+    /// encapsulated inside actor isolation.
+    func withCrypto<T: Sendable>(
+        _ operation: (NinebotCrypto) throws -> T
+    ) rethrows -> T {
+        try operation(crypto)
     }
 }
