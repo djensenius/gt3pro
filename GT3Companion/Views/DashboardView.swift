@@ -8,16 +8,24 @@
 import SwiftUI
 
 struct DashboardView: View {
-    // swiftlint:disable:next todo
-    // TODO: Will be driven by ScooterConnectionManager once BLE layer lands.
-    @State private var isConnected = false
-    @State private var speed: Double = 0
-    @State private var battery: Int = 0
-    @State private var tripDistance: Double = 0
-    @State private var estimatedRange: Double = 0
-    @State private var gearMode: Int = 2
-    @State private var bms1Temp: Double = 0
-    @State private var bms2Temp: Double = 0
+    #if os(iOS)
+    @EnvironmentObject private var coordinator: AppCoordinator
+
+    private var isConnected: Bool { coordinator.connectionState == .connected }
+    private var speed: Double { coordinator.currentSpeed }
+    private var battery: Int { coordinator.currentBattery }
+    private var tripDistance: Double { coordinator.tripDistance }
+    private var estimatedRange: Double { coordinator.estimatedRange }
+    #else
+    private let isConnected = false
+    private let speed: Double = 0
+    private let battery: Int = 0
+    private let tripDistance: Double = 0
+    private let estimatedRange: Double = 0
+    #endif
+    private let gearMode: Int = 2
+    private let bms1Temp: Double = 0
+    private let bms2Temp: Double = 0
 
     var body: some View {
         NavigationStack {
@@ -30,15 +38,6 @@ struct DashboardView: View {
             }
             .background(Theme.Colors.background)
             .navigationTitle("GT3 Companion")
-            #if DEBUG
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Toggle("Connected", isOn: $isConnected)
-                        .toggleStyle(.switch)
-                        .labelsHidden()
-                }
-            }
-            #endif
         }
     }
 
@@ -145,3 +144,14 @@ struct DashboardView: View {
         }
     }
 }
+
+#if DEBUG
+#Preview {
+    #if os(iOS)
+    DashboardView()
+        .environmentObject(AppCoordinator.shared)
+    #else
+    DashboardView()
+    #endif
+}
+#endif
