@@ -13,13 +13,13 @@ import os
 private let logger = Logger(subsystem: "io.fluxhaus.GT3Companion", category: "Navigation")
 
 /// Navigation state for turn-by-turn directions.
-struct NavigationState: Sendable {
+struct NavigationState {
     let isNavigating: Bool
     let nextInstruction: String?
     let nextDistance: Double?
     let eta: Date?
     let remainingDistance: Double?
-    let routePolyline: [CLLocationCoordinate2D]
+    let routeCoordinates: [(latitude: Double, longitude: Double)]
 }
 
 /// MapKit-based turn-by-turn navigation manager.
@@ -28,7 +28,7 @@ class NavigationManager: ObservableObject {
     @Published var state = NavigationState(
         isNavigating: false, nextInstruction: nil,
         nextDistance: nil, eta: nil, remainingDistance: nil,
-        routePolyline: []
+        routeCoordinates: []
     )
     @Published var searchResults: [MKMapItem] = []
 
@@ -68,9 +68,10 @@ class NavigationManager: ObservableObject {
             let firstStep = route.steps.first
             let polylinePoints = route.polyline.points()
             let pointCount = route.polyline.pointCount
-            var coords: [CLLocationCoordinate2D] = []
+            var coords: [(latitude: Double, longitude: Double)] = []
             for idx in 0..<pointCount {
-                coords.append(polylinePoints[idx].coordinate)
+                let coord = polylinePoints[idx].coordinate
+                coords.append((latitude: coord.latitude, longitude: coord.longitude))
             }
 
             state = NavigationState(
@@ -80,7 +81,7 @@ class NavigationManager: ObservableObject {
                 eta: route.expectedTravelTime > 0
                     ? Date().addingTimeInterval(route.expectedTravelTime) : nil,
                 remainingDistance: route.distance,
-                routePolyline: coords
+                routeCoordinates: coords
             )
             logger.info("Route calculated: \(route.distance)m, ETA: \(route.expectedTravelTime)s")
         } catch {
@@ -95,7 +96,7 @@ class NavigationManager: ObservableObject {
         state = NavigationState(
             isNavigating: false, nextInstruction: nil,
             nextDistance: nil, eta: nil, remainingDistance: nil,
-            routePolyline: []
+            routeCoordinates: []
         )
     }
 }

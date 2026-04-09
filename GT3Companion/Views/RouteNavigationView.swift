@@ -78,7 +78,9 @@ struct RouteNavigationView: View {
             }
 
             Map {
-                MapPolyline(coordinates: navManager.state.routePolyline)
+                MapPolyline(coordinates: navManager.state.routeCoordinates.map {
+                    CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude)
+                })
                     .stroke(Theme.Colors.accent, lineWidth: 4)
                 UserAnnotation()
             }
