@@ -1,6 +1,6 @@
 name: GT3Companion
 options:
-  bundleIdPrefix: io.fluxhaus
+  bundleIdPrefix: org.davidjensenius
   deploymentTarget:
     iOS: "18.0"
     watchOS: "11.0"
@@ -48,7 +48,7 @@ targets:
         NSSupportsLiveActivities: true
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: io.fluxhaus.GT3Companion
+        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion
         TARGETED_DEVICE_FAMILY: "1,2"
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
@@ -80,7 +80,7 @@ targets:
         NSSupportsLiveActivities: true
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: io.fluxhaus.GT3Companion.widgets
+        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.widgets
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
 
@@ -99,7 +99,7 @@ targets:
         WKApplication: true
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: io.fluxhaus.GT3Companion.watch
+        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.watch
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
 
@@ -112,7 +112,7 @@ targets:
           - "**/.DS_Store"
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: io.fluxhaus.GT3Companion.tests
+        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.tests
     dependencies:
       - target: GT3Companion
         embed: false
@@ -134,7 +134,7 @@ targets:
         CFBundleName: GT3CompanionMac
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: io.fluxhaus.GT3Companion.mac
+        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.mac
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
 
@@ -155,7 +155,7 @@ targets:
         CFBundleName: GT3CompanionVision
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: io.fluxhaus.GT3Companion.vision
+        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.vision
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
 

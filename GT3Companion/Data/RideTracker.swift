@@ -9,7 +9,7 @@
 import Foundation
 import os
 
-private let logger = Logger(subsystem: "io.fluxhaus.GT3Companion", category: "RideTracker")
+private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", category: "RideTracker")
 
 /// A complete telemetry sample with GPS and roughness data.
 struct TelemetrySample: Codable, Sendable {
