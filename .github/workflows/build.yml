@@ -22,4 +22,4 @@ jobs:
             -destination 'generic/platform=iOS Simulator' \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO \
-            2>&1 | tail -20
+            2>&1 | tail -50
