@@ -17,6 +17,7 @@ struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var rides: [PersistedRide]
     @StateObject private var logStore = DebugLogStore.shared
+    @ObservedObject private var auth = AuthManager.shared
 
     @State private var showForgetScooterAlert = false
     @State private var showClearDataAlert = false
@@ -51,14 +52,25 @@ struct SettingsView: View {
 
     private var accountSection: some View {
         Section("Account") {
-            HStack {
-                Label("Signed In", systemImage: "person.circle.fill")
-                    .foregroundStyle(Theme.Colors.success)
-                Spacer()
-                Button("Sign Out") { showSignOutAlert = true }
-                    .foregroundStyle(Theme.Colors.error)
+            if auth.isDemoMode {
+                HStack {
+                    Label("Demo Mode", systemImage: "play.circle")
+                        .foregroundStyle(Theme.Colors.accent)
+                    Spacer()
+                    Button("Exit Demo") { auth.exitDemoMode() }
+                        .foregroundStyle(Theme.Colors.error)
+                }
+                .listRowBackground(Theme.Colors.elevatedBackground)
+            } else {
+                HStack {
+                    Label("Signed In", systemImage: "person.circle.fill")
+                        .foregroundStyle(Theme.Colors.success)
+                    Spacer()
+                    Button("Sign Out") { showSignOutAlert = true }
+                        .foregroundStyle(Theme.Colors.error)
+                }
+                .listRowBackground(Theme.Colors.elevatedBackground)
             }
-            .listRowBackground(Theme.Colors.elevatedBackground)
         }
         .confirmationDialog("Sign Out", isPresented: $showSignOutAlert) {
             Button("Sign Out", role: .destructive) { AuthManager.shared.signOut() }

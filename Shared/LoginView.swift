@@ -52,6 +52,14 @@ struct LoginView: View {
             .disabled(isSigningIn)
             .padding(.horizontal, 40)
 
+            Button {
+                auth.enterDemoMode()
+            } label: {
+                Label("Try Demo", systemImage: "play.circle")
+            }
+            .foregroundStyle(Theme.Colors.textSecondary)
+            .disabled(isSigningIn)
+
             Spacer()
         }
         .background(Theme.Colors.background)

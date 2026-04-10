@@ -18,7 +18,11 @@ struct GT3CompanionMacApp: App {
             case .unknown:
                 ProgressView()
             case .signedOut:
-                LoginView()
+                if auth.isDemoMode {
+                    MacContentView()
+                } else {
+                    LoginView()
+                }
             case .signedIn:
                 MacContentView()
                     .onAppear {

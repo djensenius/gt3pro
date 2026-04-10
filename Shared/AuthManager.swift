@@ -149,6 +149,7 @@ class AuthManager: ObservableObject, @unchecked Sendable {
     }
 
     @Published var authState: AuthState = .unknown
+    @Published var isDemoMode: Bool = false
 
     private var currentSession: ASWebAuthenticationSession?
     private var anchorProvider: AuthAnchorProvider?
@@ -157,6 +158,18 @@ class AuthManager: ObservableObject, @unchecked Sendable {
     var isSignedIn: Bool {
         if case .signedIn = authState { return true }
         return false
+    }
+
+    // MARK: - Demo Mode
+
+    @MainActor func enterDemoMode() {
+        isDemoMode = true
+        logger.info("Entered demo mode")
+    }
+
+    @MainActor func exitDemoMode() {
+        isDemoMode = false
+        logger.info("Exited demo mode")
     }
 
     private init() {
