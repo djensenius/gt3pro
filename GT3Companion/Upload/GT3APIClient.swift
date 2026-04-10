@@ -62,6 +62,9 @@ actor GT3APIClient {
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.addValue("application/json", forHTTPHeaderField: "Accept")
+        if let auth = AuthManager.shared.authorizationHeader() {
+            request.setValue(auth, forHTTPHeaderField: "Authorization")
+        }
         request.httpBody = body
 
         let (data, response) = try await session.data(for: request)
@@ -80,6 +83,9 @@ actor GT3APIClient {
         }
         var request = URLRequest(url: url)
         request.addValue("application/json", forHTTPHeaderField: "Accept")
+        if let auth = AuthManager.shared.authorizationHeader() {
+            request.setValue(auth, forHTTPHeaderField: "Authorization")
+        }
 
         let (data, response) = try await session.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse,

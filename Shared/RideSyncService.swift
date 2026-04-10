@@ -69,6 +69,9 @@ final class RideSyncService {
         }
         var request = URLRequest(url: url)
         request.addValue("application/json", forHTTPHeaderField: "Accept")
+        if let auth = AuthManager.shared.authorizationHeader() {
+            request.setValue(auth, forHTTPHeaderField: "Authorization")
+        }
         let (data, _) = try await URLSession.shared.data(for: request)
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601

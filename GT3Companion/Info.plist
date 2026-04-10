@@ -18,6 +18,15 @@
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>gt3companion</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
@@ -36,6 +45,10 @@
 	<string>GT3 Companion uses motion sensors to detect road surface quality.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>OIDCClientID</key>
+	<string>gt3companion</string>
+	<key>OIDCIssuerBase</key>
+	<string>https://auth.fluxhaus.io/application/o/fluxhaus-server</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>bluetooth-central</string>

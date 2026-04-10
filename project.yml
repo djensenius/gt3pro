@@ -46,6 +46,11 @@ targets:
         NSHealthShareUsageDescription: GT3 Companion reads heart rate data from your Apple Watch during rides.
         NSHealthUpdateUsageDescription: GT3 Companion saves ride workouts to Apple Health.
         NSSupportsLiveActivities: true
+        CFBundleURLTypes:
+          - CFBundleURLSchemes:
+              - gt3companion
+        OIDCIssuerBase: https://auth.fluxhaus.io/application/o/fluxhaus-server
+        OIDCClientID: gt3companion
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion
