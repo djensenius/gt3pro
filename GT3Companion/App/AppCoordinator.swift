@@ -190,8 +190,28 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
 
     private func handleRideComplete(_ rideLog: RideLog) async {
         logger.info("Ride complete: \(rideLog.totalDistance) km")
+
+        let context = PersistenceController.shared.context
+        let persisted = PersistedRide(
+            rideId: rideLog.rideId,
+            startTime: rideLog.startTime,
+            startBattery: rideLog.startBattery
+        )
+        persisted.endTime = rideLog.endTime
+        persisted.totalDistance = rideLog.totalDistance
+        persisted.maxSpeed = rideLog.maxSpeed
+        persisted.avgSpeed = rideLog.avgSpeed
+        persisted.batteryUsed = rideLog.batteryUsed
+        persisted.endBattery = rideLog.endBattery
+        context.insert(persisted)
+        try? context.save()
+
         await uploadQueue.flushSamples()
-        await uploadQueue.uploadRide(rideLog)
+        if let serverId = await uploadQueue.uploadRide(rideLog) {
+            persisted.rideId = serverId
+            persisted.uploaded = true
+            try? context.save()
+        }
     }
 }
 

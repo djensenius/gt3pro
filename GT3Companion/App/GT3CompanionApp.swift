@@ -22,6 +22,7 @@ struct GT3CompanionApp: App {
                     .environmentObject(coordinator)
                     .onAppear {
                         coordinator.start()
+                        Task { await RideSyncService.shared.syncRides() }
                     }
             } else {
                 OnboardingView(isComplete: $onboardingComplete)
@@ -30,5 +31,6 @@ struct GT3CompanionApp: App {
             ContentView()
             #endif
         }
+        .modelContainer(PersistenceController.shared.container)
     }
 }

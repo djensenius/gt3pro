@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct RideDetailView: View {
-    let ride: RideHistoryItem
+    let ride: PersistedRide
 
     var body: some View {
         ScrollView {
@@ -16,7 +16,7 @@ struct RideDetailView: View {
                 HStack(spacing: Theme.Spacing.medium) {
                     StatCard(
                         title: "Distance",
-                        value: String(format: "%.1f km", ride.distance),
+                        value: String(format: "%.1f km", ride.totalDistance),
                         icon: "point.topleft.down.to.point.bottomright.curvepath",
                         color: Theme.Colors.accent
                     )
@@ -52,7 +52,7 @@ struct RideDetailView: View {
                     )
                     StatCard(
                         title: "End",
-                        value: "\(ride.endBattery)%",
+                        value: "\(ride.endBattery ?? 0)%",
                         icon: "battery.25percent",
                         color: Theme.Colors.warning
                     )
@@ -64,7 +64,7 @@ struct RideDetailView: View {
             .padding()
         }
         .background(Theme.Colors.background)
-        .navigationTitle(ride.date.formatted(date: .abbreviated, time: .omitted))
+        .navigationTitle(ride.startTime.formatted(date: .abbreviated, time: .omitted))
     }
 
     private var routePlaceholder: some View {
