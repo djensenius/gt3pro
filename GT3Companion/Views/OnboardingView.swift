@@ -10,45 +10,53 @@ import SwiftUI
 struct OnboardingView: View {
     @State private var currentStep = 0
     @Binding var isComplete: Bool
+    @StateObject private var permissions = PermissionsManager()
+    @State private var isRequesting = false
 
     private let steps: [OnboardingStep] = [
         OnboardingStep(
             icon: "antenna.radiowaves.left.and.right",
             title: "Bluetooth",
             description: "GT3 Companion uses Bluetooth to connect to your scooter and read ride data.",
-            isRequired: true
+            isRequired: true,
+            permission: .bluetooth
         ),
         OnboardingStep(
             icon: "location.fill",
             title: "Location",
             description: "We record your GPS route during rides to map your trips and calculate distance.",
-            isRequired: true
+            isRequired: true,
+            permission: .locationWhenInUse
         ),
         OnboardingStep(
             icon: "location.fill.viewfinder",
             title: "Background Location",
             description: "To track rides automatically when your phone is in your pocket, "
                 + "we need 'Always' location access. This only activates during rides.",
-            isRequired: true
+            isRequired: true,
+            permission: .locationAlways
         ),
         OnboardingStep(
             icon: "heart.fill",
             title: "Health Data",
             description: "Connect your Apple Watch to track heart rate during rides "
                 + "and save workouts to Apple Health.",
-            isRequired: false
+            isRequired: false,
+            permission: .health
         ),
         OnboardingStep(
             icon: "waveform.path",
             title: "Motion Sensors",
             description: "We use your phone's motion sensors to detect road surface quality during rides.",
-            isRequired: false
+            isRequired: false,
+            permission: .motion
         ),
         OnboardingStep(
             icon: "bell.fill",
             title: "Notifications",
             description: "Get a summary notification when your ride ends.",
-            isRequired: false
+            isRequired: false,
+            permission: .notifications
         )
     ]
 
@@ -96,13 +104,16 @@ struct OnboardingView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
 
-            // swiftlint:disable:next todo
-            // TODO: Wire up actual permission requests (CLLocationManager, CBCentralManager, etc.)
-            // in the integration PR. For now the button simply advances the step.
-            Button("Continue") {
-                withAnimation { currentStep += 1 }
+            Button(step.permission == .none ? "Continue" : "Allow Access") {
+                Task {
+                    isRequesting = true
+                    await permissions.request(step.permission)
+                    isRequesting = false
+                    withAnimation { currentStep += 1 }
+                }
             }
             .buttonStyle(.gt3Primary)
+            .disabled(isRequesting)
             .padding(.horizontal, 40)
 
             if !step.isRequired {
@@ -110,6 +121,7 @@ struct OnboardingView: View {
                     withAnimation { currentStep += 1 }
                 }
                 .foregroundStyle(Theme.Colors.textSecondary)
+                .disabled(isRequesting)
             }
         }
     }
@@ -144,4 +156,5 @@ struct OnboardingStep {
     let title: String
     let description: String
     let isRequired: Bool
+    let permission: PermissionRequest
 }
