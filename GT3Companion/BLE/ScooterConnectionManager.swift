@@ -88,7 +88,18 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
             return
         }
 
-        // Check for already-connected (bonded) peripherals first
+        // Try previously-seen peripheral UUID first (fastest path)
+        if let savedUUID = ScooterConnectionManager.loadPeripheralUUID() {
+            let known = central.retrievePeripherals(withIdentifiers: [savedUUID])
+            if let existing = known.first {
+                btName = existing.name ?? existing.identifier.uuidString
+                logger.info("Reconnecting to saved peripheral: \(self.btName ?? "unknown")")
+                connectToPeripheral(existing)
+                return
+            }
+        }
+
+        // Check for already-connected (bonded) peripherals
         let connected = central.retrieveConnectedPeripherals(
             withServices: [BLEConstants.serviceUUID]
         )
@@ -105,6 +116,19 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
             options: [CBCentralManagerScanOptionAllowDuplicatesKey: false]
         )
         logger.info("Scanning for GT3 Pro...")
+    }
+
+    // MARK: - Peripheral UUID Persistence
+
+    private static let peripheralUUIDKey = "GT3Companion.peripheralUUID"
+
+    static func savePeripheralUUID(_ uuid: UUID) {
+        UserDefaults.standard.set(uuid.uuidString, forKey: peripheralUUIDKey)
+    }
+
+    static func loadPeripheralUUID() -> UUID? {
+        guard let str = UserDefaults.standard.string(forKey: peripheralUUIDKey) else { return nil }
+        return UUID(uuidString: str)
     }
 
     /// Disconnect from the peripheral intentionally (no auto-reconnect).
@@ -168,6 +192,7 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         connectionState = .authenticating
 
         // Single shared crypto instance for both auth and transport
+        logger.info("Auth using BT name: \(name) (bytes: \(Data(name.utf8).count))")
         let key = KeyDerivation.deriveKey(key1: Data(name.utf8), key2: nil)
         let crypto = NinebotCrypto(key: key, counter: 0)
 
@@ -284,7 +309,8 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
         let name = peripheral.name ?? advertisementData[CBAdvertisementDataLocalNameKey] as? String ?? ""
         logger.info("Discovered: \(name) RSSI: \(RSSI)")
 
-        guard name.hasPrefix(BLEConstants.advertisingNamePrefix) else { return }
+        // Service UUID filter in scanForPeripherals is sufficient —
+        // device names vary by firmware ("NB-...", "Segway Scooter...", may include emoji)
         btName = name
         connectToPeripheral(peripheral)
     }
@@ -295,6 +321,9 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
     ) {
         logger.info("Connected to \(peripheral.name ?? "unknown")")
         echoRetryCount = 0
+
+        // Save peripheral UUID for fast reconnection next launch
+        ScooterConnectionManager.savePeripheralUUID(peripheral.identifier)
 
         let negotiatedMTU = peripheral.maximumWriteValueLength(for: .withResponse) + 3
         if negotiatedMTU > BLEConstants.defaultMTU {
