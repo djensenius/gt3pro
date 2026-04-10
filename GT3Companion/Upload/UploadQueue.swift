@@ -37,12 +37,13 @@ actor UploadQueue {
         isFlushing = false
     }
 
-    /// Upload a completed ride.
-    func uploadRide(_ ride: RideLog) async {
+    /// Upload a completed ride. Returns the server-assigned ride ID if successful.
+    func uploadRide(_ ride: RideLog) async -> String? {
         do {
-            _ = try await apiClient.uploadRide(ride)
+            return try await apiClient.uploadRide(ride)
         } catch {
-            logger.error("Failed to upload ride: \(error). Failed, data lost (persistence not yet implemented).")
+            logger.error("Failed to upload ride: \(error)")
+            return nil
         }
     }
 

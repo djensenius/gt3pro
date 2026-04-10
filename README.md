@@ -22,11 +22,10 @@ GT3 Pro ←—BLE—→ iPhone ←—WCSession—→ Apple Watch
 
 ## Building
 
-Requires macOS with Xcode 16+. Uses [xcodegen](https://github.com/yonaskolb/XcodeGen) for project generation.
+Requires macOS with Xcode 16+.
 
 ```bash
-brew install xcodegen swiftlint
-xcodegen generate
+brew install swiftlint
 open GT3Companion.xcodeproj
 ```
 

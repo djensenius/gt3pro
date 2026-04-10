@@ -8,6 +8,21 @@
 import Foundation
 import SwiftData
 
+// MARK: - PersistedRide view helpers
+
+extension PersistedRide {
+    var duration: TimeInterval {
+        guard let end = endTime else { return 0 }
+        return end.timeIntervalSince(startTime)
+    }
+
+    var formattedDuration: String {
+        let minutes = Int(duration) / 60
+        let seconds = Int(duration) % 60
+        return String(format: "%d:%02d", minutes, seconds)
+    }
+}
+
 @Model
 class PersistedRide {
     var rideId: String

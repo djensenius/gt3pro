@@ -5,10 +5,11 @@
 //  Created by David Jensenius.
 //
 
+import SwiftData
 import SwiftUI
 
 struct RideHistoryView: View {
-    @State private var rides: [RideHistoryItem] = []
+    @Query(sort: \PersistedRide.startTime, order: .reverse) private var rides: [PersistedRide]
 
     var body: some View {
         NavigationStack {
@@ -17,6 +18,8 @@ struct RideHistoryView: View {
                     RideRowView(ride: ride)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Theme.Colors.background.ignoresSafeArea())
             .navigationTitle("Ride History")
             .overlay {
                 if rides.isEmpty {
@@ -32,17 +35,17 @@ struct RideHistoryView: View {
 }
 
 struct RideRowView: View {
-    let ride: RideHistoryItem
+    let ride: PersistedRide
 
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(ride.date, style: .date)
+                Text(ride.startTime, style: .date)
                     .font(Theme.Fonts.bodyMedium)
                     .foregroundStyle(Theme.Colors.textPrimary)
                 Text(String(
                     format: "%.1f km · %@ · %d%% battery used",
-                    ride.distance,
+                    ride.totalDistance,
                     ride.formattedDuration,
                     ride.batteryUsed
                 ))
@@ -58,54 +61,6 @@ struct RideRowView: View {
                 .foregroundStyle(Theme.Colors.textSecondary)
         }
         .padding(.vertical, 4)
+        .listRowBackground(Theme.Colors.elevatedBackground)
     }
 }
-
-// swiftlint:disable:next todo
-// TODO: Migrate to PersistedRide once Core Data / SwiftData models land.
-// RideHistoryItem remains as the view-model layer between persistence and UI.
-struct RideHistoryItem: Identifiable {
-    let id = UUID()
-    let date: Date
-    let distance: Double
-    let duration: TimeInterval
-    let maxSpeed: Double
-    let avgSpeed: Double
-    let batteryUsed: Int
-    let startBattery: Int
-    let endBattery: Int
-
-    var formattedDuration: String {
-        let minutes = Int(duration) / 60
-        let seconds = Int(duration) % 60
-        return String(format: "%d:%02d", minutes, seconds)
-    }
-
-}
-
-#if DEBUG
-extension RideHistoryItem {
-    static let sampleData: [RideHistoryItem] = [
-        RideHistoryItem(
-            date: Date().addingTimeInterval(-86400),
-            distance: 12.4,
-            duration: 1455,
-            maxSpeed: 78.2,
-            avgSpeed: 42.1,
-            batteryUsed: 34,
-            startBattery: 95,
-            endBattery: 61
-        ),
-        RideHistoryItem(
-            date: Date().addingTimeInterval(-172800),
-            distance: 8.7,
-            duration: 980,
-            maxSpeed: 65.0,
-            avgSpeed: 38.5,
-            batteryUsed: 22,
-            startBattery: 88,
-            endBattery: 66
-        )
-    ]
-}
-#endif

@@ -16,27 +16,32 @@ struct DashboardView: View {
     private var battery: Int { coordinator.currentBattery }
     private var tripDistance: Double { coordinator.tripDistance }
     private var estimatedRange: Double { coordinator.estimatedRange }
+    private var gearMode: Int { coordinator.gearMode }
+    private var bms1Temp: Double { coordinator.bms1Temp }
+    private var bms2Temp: Double { coordinator.bms2Temp }
     #else
     private let isConnected = false
     private let speed: Double = 0
     private let battery: Int = 0
     private let tripDistance: Double = 0
     private let estimatedRange: Double = 0
-    #endif
-    private let gearMode: Int = 2
+    private let gearMode: Int = 0
     private let bms1Temp: Double = 0
     private let bms2Temp: Double = 0
+    #endif
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                if isConnected {
-                    connectedView
-                } else {
-                    disconnectedView
+            ZStack {
+                Theme.Colors.background.ignoresSafeArea()
+                ScrollView {
+                    if isConnected {
+                        connectedView
+                    } else {
+                        disconnectedView
+                    }
                 }
             }
-            .background(Theme.Colors.background)
             .navigationTitle("GT3 Companion")
         }
     }
@@ -54,12 +59,9 @@ struct DashboardView: View {
                 .font(Theme.Fonts.bodyMedium)
                 .foregroundStyle(Theme.Colors.textSecondary)
                 .multilineTextAlignment(.center)
-            Button("Scan for Scooter (Coming soon)") { }
-                .buttonStyle(.gt3Primary)
-                .padding(.horizontal, 40)
-                .disabled(true)
             Spacer()
         }
+        .frame(maxWidth: .infinity)
         .padding()
     }
 

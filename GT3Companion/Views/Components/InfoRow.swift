@@ -19,5 +19,6 @@ struct InfoRow: View {
             Text(value)
                 .foregroundStyle(Theme.Colors.textPrimary)
         }
+        .listRowBackground(Theme.Colors.elevatedBackground)
     }
 }
