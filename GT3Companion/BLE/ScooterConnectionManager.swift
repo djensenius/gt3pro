@@ -121,12 +121,15 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         }
 
         connectionState = .scanning
+        // Scan without service filter — the GT3 Pro does not include the Ninebot service UUID
+        // in its advertisement packet (it only exposes it post-connection). Filter by name instead.
         central.scanForPeripherals(
-            withServices: [BLEConstants.serviceUUID],
+            withServices: nil,
             options: [CBCentralManagerScanOptionAllowDuplicatesKey: false]
         )
-        logger.info("Scanning for GT3 Pro...")
-        bleLog("Scanning for GT3 Pro (service \(BLEConstants.serviceUUID.uuidString))…")
+        let prefixes = BLEConstants.advertisingNamePrefixes.joined(separator: ", ")
+        logger.info("Scanning for GT3 Pro (name prefixes: \(prefixes))...")
+        bleLog("Scanning for GT3 Pro (name prefixes: \(prefixes))…")
     }
 
     // MARK: - Peripheral UUID Persistence
@@ -369,13 +372,17 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
         bleLog("Discovered peripheral: \"\(name ?? "(no name)")\" RSSI: \(RSSI)")
 
         guard let name, !name.isEmpty else {
-            logger.warning("Skipping device with no name — key derivation requires a valid BT name")
             bleLog("Skipped device — no name (key derivation requires a name)", level: .warning)
             return
         }
 
-        // Service UUID filter in scanForPeripherals is sufficient —
-        // device names vary by firmware ("NB-...", "Segway Scooter...", may include emoji)
+        // Filter by known GT3 Pro advertising name prefixes
+        let sanitized = ScooterConnectionManager.sanitizeBLEName(name)
+        guard BLEConstants.advertisingNamePrefixes.contains(where: { sanitized.hasPrefix($0) }) else {
+            bleLog("Skipped \"\(name)\" — not a GT3 Pro (expected prefix: \(BLEConstants.advertisingNamePrefixes))",
+                   level: .debug)
+            return
+        }
         rawBtName = name
         btName = name
         connectToPeripheral(peripheral)
