@@ -25,11 +25,9 @@ extension ScooterConnectionManager: CBPeripheralDelegate {
         }
         bleLog("Discovered \(services.count) service(s) — looking for Ninebot service")
         for service in services where service.uuid == BLEConstants.serviceUUID {
-            bleLog("Found Ninebot service — discovering characteristics…")
-            peripheral.discoverCharacteristics(
-                [BLEConstants.writeCharUUID, BLEConstants.notifyCharUUID],
-                for: service
-            )
+            bleLog("Found Ninebot service — discovering ALL characteristics…")
+            // Discover all characteristics to catch any notify channel (0003 or 0004)
+            peripheral.discoverCharacteristics(nil, for: service)
         }
     }
 
@@ -39,7 +37,17 @@ extension ScooterConnectionManager: CBPeripheralDelegate {
         error: Error?
     ) {
         guard let characteristics = service.characteristics else { return }
+        bleLog("Discovered \(characteristics.count) characteristic(s):")
         for characteristic in characteristics {
+            let props = characteristic.properties
+            var propStr: [String] = []
+            if props.contains(.read) { propStr.append("read") }
+            if props.contains(.write) { propStr.append("write") }
+            if props.contains(.writeWithoutResponse) { propStr.append("writeNoAck") }
+            if props.contains(.notify) { propStr.append("notify") }
+            if props.contains(.indicate) { propStr.append("indicate") }
+            print("[GT3] [BLE] Char \(characteristic.uuid) props=[\(propStr.joined(separator: ","))]")
+
             switch characteristic.uuid {
             case BLEConstants.writeCharUUID:
                 writeCharacteristic = characteristic
@@ -52,6 +60,14 @@ extension ScooterConnectionManager: CBPeripheralDelegate {
             default:
                 break
             }
+
+            // Subscribe to ANY characteristic that supports notify or indicate,
+            // except 0004 which is handled by toggleNotifications before auth.
+            if props.contains(.notify) || props.contains(.indicate),
+               characteristic.uuid != BLEConstants.notifyCharUUID {
+                print("[GT3] [BLE] Subscribing to extra notify char \(characteristic.uuid)")
+                peripheral.setNotifyValue(true, for: characteristic)
+            }
         }
     }
 
@@ -60,12 +76,19 @@ extension ScooterConnectionManager: CBPeripheralDelegate {
         didUpdateValueFor characteristic: CBCharacteristic,
         error: Error?
     ) {
-        guard characteristic.uuid == BLEConstants.notifyCharUUID,
-              let data = characteristic.value else { return }
+        // Log raw bytes immediately, before ANY guard — catch silent drops
+        if let data = characteristic.value {
+            print("[GT3] [BLE] <<< RAW notify on \(characteristic.uuid): \(data.hexString)")
+        } else {
+            print("[GT3] [BLE] <<< RAW notify on \(characteristic.uuid): (no data)")
+        }
 
-        guard let transport = self.transport else { return }
+        guard let data = characteristic.value else { return }
+        guard let transport = self.transport else {
+            print("[GT3] [BLE] <<< transport=nil, dropping \(data.hexString)")
+            return
+        }
 
-        print("[GT3] [BLE] didUpdateValueFor (notify): \(data.hexString)")
         Task {
             do {
                 if let parsed = try await transport.processInbound(chunk: data) {
