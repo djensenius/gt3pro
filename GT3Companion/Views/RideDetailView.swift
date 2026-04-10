@@ -21,6 +21,20 @@ struct RideDetailView: View {
         (ride.samples ?? []).map { ($0.timestamp, $0.speed) }
     }
 
+    private struct TempSample {
+        let timestamp: Date
+        let bms1: Double
+        let bms2: Double
+    }
+
+    private var batterySamples: [(Date, Int)] {
+        (ride.samples ?? []).map { ($0.timestamp, $0.battery) }
+    }
+
+    private var tempSamples: [TempSample] {
+        (ride.samples ?? []).map { TempSample(timestamp: $0.timestamp, bms1: $0.bms1Temp, bms2: $0.bms2Temp) }
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: Theme.Spacing.large) {
@@ -71,6 +85,8 @@ struct RideDetailView: View {
 
                 routeSection
                 speedChartSection
+                batteryChartSection
+                tempChartSection
             }
             .padding()
         }
@@ -124,5 +140,81 @@ struct RideDetailView: View {
                 .padding(.horizontal)
             }
         }
+    }
+
+    private var batteryChartSection: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.small) {
+            Text("Battery")
+                .font(Theme.Fonts.headerLarge())
+                .foregroundStyle(Theme.Colors.textPrimary)
+                .padding(.horizontal)
+
+            if batterySamples.isEmpty {
+                noDataPlaceholder(label: "No battery data")
+            } else {
+                Chart {
+                    ForEach(batterySamples, id: \.0) { timestamp, battery in
+                        LineMark(
+                            x: .value("Time", timestamp),
+                            y: .value("Battery", battery)
+                        )
+                        .foregroundStyle(Theme.Colors.success)
+                        .interpolationMethod(.catmullRom)
+                    }
+                }
+                .chartXAxis(.hidden)
+                .chartYAxisLabel("%")
+                .chartYScale(domain: 0...100)
+                .frame(height: 150)
+                .padding(.horizontal)
+            }
+        }
+    }
+
+    private var tempChartSection: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.small) {
+            Text("BMS Temperature")
+                .font(Theme.Fonts.headerLarge())
+                .foregroundStyle(Theme.Colors.textPrimary)
+                .padding(.horizontal)
+
+            let hasTempData = tempSamples.contains { $0.bms1 > 0 || $0.bms2 > 0 }
+            if !hasTempData {
+                noDataPlaceholder(label: "No temperature data")
+            } else {
+                Chart {
+                    ForEach(tempSamples, id: \.timestamp) { sample in
+                        LineMark(
+                            x: .value("Time", sample.timestamp),
+                            y: .value("BMS 1", sample.bms1),
+                            series: .value("Series", "BMS 1")
+                        )
+                        .foregroundStyle(Theme.Colors.warning)
+                        .interpolationMethod(.catmullRom)
+
+                        LineMark(
+                            x: .value("Time", sample.timestamp),
+                            y: .value("BMS 2", sample.bms2),
+                            series: .value("Series", "BMS 2")
+                        )
+                        .foregroundStyle(Theme.Colors.error)
+                        .interpolationMethod(.catmullRom)
+                    }
+                }
+                .chartLegend(position: .topTrailing)
+                .chartXAxis(.hidden)
+                .chartYAxisLabel("°C")
+                .frame(height: 150)
+                .padding(.horizontal)
+            }
+        }
+    }
+
+    private func noDataPlaceholder(label: String) -> some View {
+        RoundedRectangle(cornerRadius: Theme.cornerRadius)
+            .fill(Theme.Colors.secondaryBackground)
+            .frame(height: 150)
+            .overlay { Text(label).foregroundStyle(Theme.Colors.textSecondary) }
+            .padding(.horizontal)
     }
 }

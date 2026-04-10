@@ -17,6 +17,7 @@ struct SettingsView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Query private var rides: [PersistedRide]
+    @StateObject private var logStore = DebugLogStore.shared
 
     @State private var showForgetScooterAlert = false
     @State private var showClearDataAlert = false
@@ -31,6 +32,7 @@ struct SettingsView: View {
                 rideTrackingSection
                 liveActivitySection
                 dataSection
+                debugSection
                 aboutSection
             }
             .scrollContentBackground(.hidden)
@@ -116,6 +118,29 @@ struct SettingsView: View {
             Button("Cancel", role: .cancel) { }
         } message: {
             Text("All locally cached rides will be removed. Your data on the server is unaffected.")
+        }
+    }
+
+    private var debugSection: some View {
+        Section {
+            Toggle("Verbose Logging", isOn: $logStore.verboseLoggingEnabled)
+            if !logStore.entries.isEmpty {
+                NavigationLink("View Logs (\(logStore.entries.count))") {
+                    DebugLogView()
+                }
+                ShareLink(
+                    item: logStore.export(),
+                    preview: SharePreview("gt3-debug.log")
+                ) {
+                    Label("Export Logs", systemImage: "square.and.arrow.up")
+                }
+                Button("Clear Logs", role: .destructive) { logStore.clear() }
+            }
+        } header: {
+            Text("Diagnostics")
+        } footer: {
+            Text("Verbose logging captures BLE, auth, and upload events to help diagnose connection issues.")
+                .font(Theme.Fonts.caption)
         }
     }
 
@@ -231,5 +256,62 @@ struct LicensesView: View {
         .scrollContentBackground(.hidden)
         .background(Theme.Colors.background.ignoresSafeArea())
         .navigationTitle("Licenses")
+    }
+}
+
+struct DebugLogView: View {
+    @StateObject private var logStore = DebugLogStore.shared
+
+    var body: some View {
+        List(logStore.entries.reversed()) { entry in
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 4) {
+                    Text(entry.level.symbol)
+                    Text(entry.category)
+                        .font(Theme.Fonts.caption)
+                        .foregroundStyle(levelColor(entry.level))
+                    Spacer()
+                    Text(entry.timestamp, style: .time)
+                        .font(Theme.Fonts.caption)
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                }
+                Text(entry.message)
+                    .font(Theme.Fonts.bodySmall)
+                    .foregroundStyle(Theme.Colors.textPrimary)
+            }
+            .padding(.vertical, 2)
+        }
+        .scrollContentBackground(.hidden)
+        .background(Theme.Colors.background.ignoresSafeArea())
+        .navigationTitle("Debug Logs")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                ShareLink(
+                    item: logStore.export(),
+                    preview: SharePreview("gt3-debug.log")
+                ) {
+                    Image(systemName: "square.and.arrow.up")
+                }
+            }
+        }
+        .overlay {
+            if logStore.entries.isEmpty {
+                ContentUnavailableView(
+                    "No Logs",
+                    systemImage: "doc.text",
+                    description: Text("Enable Verbose Logging to capture events.")
+                )
+            }
+        }
+    }
+
+    private func levelColor(_ level: LogEntry.Level) -> Color {
+        switch level {
+        case .debug:   return Theme.Colors.textSecondary
+        case .info:    return Theme.Colors.info
+        case .warning: return Theme.Colors.warning
+        case .error:   return Theme.Colors.error
+        }
     }
 }

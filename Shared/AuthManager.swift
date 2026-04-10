@@ -55,6 +55,10 @@ enum AuthError: Error, LocalizedError {
     case tokenExchangeFailed(String)
     case cancelled
     case unknown
+    /// Server explicitly rejected the refresh token (4xx). The session is dead and the user must re-authenticate.
+    case refreshTokenInvalid(String)
+    /// The refresh request failed for a transient reason (network down, DNS, 5xx). Session is kept alive.
+    case transientRefreshFailure(Error)
 
     var errorDescription: String? {
         switch self {
@@ -62,6 +66,8 @@ enum AuthError: Error, LocalizedError {
         case .tokenExchangeFailed(let msg): return "Token exchange failed: \(msg)"
         case .cancelled: return "Sign in was cancelled"
         case .unknown: return "An unknown error occurred"
+        case .refreshTokenInvalid(let msg): return "Session expired: \(msg)"
+        case .transientRefreshFailure(let err): return "Temporary refresh failure: \(err.localizedDescription)"
         }
     }
 }
@@ -259,17 +265,15 @@ class AuthManager: ObservableObject, @unchecked Sendable {
     /// Ensures the access token is valid, refreshing proactively if near expiry.
     /// Returns `true` if a valid token is available afterward.
     ///
-    /// Does **not** sign the user out on a failed refresh — a transient network error
-    /// should not end the session. The caller is responsible for handling 401 responses
-    /// from API calls if the token truly becomes invalid.
+    /// Signs the user out only if the server **definitively rejects** the refresh token
+    /// (4xx response — token has been revoked or has truly expired server-side).
+    /// Transient network failures are tolerated silently — the user stays signed in.
     func ensureValidToken() async -> Bool {
         await restoreStateIfNeeded()
         guard getAccessToken() != nil else { return false }
         guard isTokenExpiringSoon() else { return true }
         logger.debug("ensureValidToken: refreshing proactively")
-        let success = await refreshTokenIfNeeded()
-        if !success { logger.warning("ensureValidToken: refresh failed — keeping session alive") }
-        return success
+        return await refreshTokenIfNeeded()
     }
 
     @MainActor func restoreStateIfNeeded() {
@@ -290,8 +294,15 @@ class AuthManager: ObservableObject, @unchecked Sendable {
             logger.info("Token refreshed (expiresIn=\(tokens.expiresIn ?? -1))")
             await refreshCoordinator.complete(success: true)
             return true
+        } catch AuthError.refreshTokenInvalid(let reason) {
+            // Server explicitly rejected the token — the session is definitively dead.
+            logger.error("Refresh token rejected by server — signing out: \(reason)")
+            await refreshCoordinator.complete(success: false)
+            await MainActor.run { signOut() }
+            return false
         } catch {
-            logger.error("Token refresh failed: \(error.localizedDescription)")
+            // Transient failure (no network, DNS, 5xx). Keep the session alive.
+            logger.warning("Refresh failed transiently, keeping session: \(error.localizedDescription)")
             await refreshCoordinator.complete(success: false)
             return false
         }
@@ -331,12 +342,35 @@ class AuthManager: ObservableObject, @unchecked Sendable {
             ("scope", Self.scopes)
         ]
         request.httpBody = Self.formEncode(params).data(using: .utf8)
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
-            let body = String(data: data, encoding: .utf8) ?? "unknown"
-            throw AuthError.tokenExchangeFailed(body)
+
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await URLSession.shared.data(for: request)
+        } catch {
+            // Network-level failure (no connectivity, DNS, timeout). Session should survive.
+            throw AuthError.transientRefreshFailure(error)
         }
-        return try JSONDecoder().decode(OIDCTokens.self, from: data)
+
+        guard let http = response as? HTTPURLResponse else {
+            throw AuthError.transientRefreshFailure(URLError(.badServerResponse))
+        }
+
+        if http.statusCode == 200 {
+            return try JSONDecoder().decode(OIDCTokens.self, from: data)
+        }
+
+        let body = String(data: data, encoding: .utf8) ?? "unknown"
+
+        // 4xx means the server explicitly rejected our refresh token — the session is dead.
+        // 5xx / other are transient server issues — keep the session alive and retry later.
+        if (400...499).contains(http.statusCode) {
+            logger.error("Refresh token rejected by server (\(http.statusCode)): \(body)")
+            throw AuthError.refreshTokenInvalid(body)
+        } else {
+            logger.warning("Refresh request failed transiently (\(http.statusCode)): \(body)")
+            throw AuthError.transientRefreshFailure(URLError(.badServerResponse))
+        }
     }
 
     private func storeTokens(_ tokens: OIDCTokens) {

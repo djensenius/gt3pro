@@ -5,6 +5,7 @@
 //  Created by David Jensenius.
 //
 
+import SwiftData
 import SwiftUI
 
 @main
@@ -32,6 +33,7 @@ struct GT3CompanionApp: App {
                             coordinator.start(storedPassword: ScooterKeychain.loadPassword())
                             Task { await RideSyncService.shared.syncRides() }
                         }
+                        .task { await finalizeOrphanedRides() }
                 } else {
                     OnboardingView(isComplete: $onboardingComplete)
                 }
@@ -45,5 +47,26 @@ struct GT3CompanionApp: App {
             guard phase == .active else { return }
             Task { _ = await AuthManager.shared.ensureValidToken() }
         }
+    }
+
+    /// Finds rides that were never closed (app was killed mid-ride) and finalises them
+    /// using the timestamp of the last recorded sample as the end time.
+    @MainActor private func finalizeOrphanedRides() async {
+        let context = PersistenceController.shared.container.mainContext
+        let descriptor = FetchDescriptor<PersistedRide>(
+            predicate: #Predicate { $0.endTime == nil }
+        )
+        guard let orphans = try? context.fetch(descriptor), !orphans.isEmpty else { return }
+        for ride in orphans {
+            let lastSample = (ride.samples ?? []).map(\.timestamp).max()
+            ride.endTime = lastSample ?? ride.startTime.addingTimeInterval(60)
+            ride.uploaded = false
+        }
+        try? context.save()
+        DebugLogStore.shared.log(
+            "Finalized \(orphans.count) orphaned ride(s) on launch",
+            category: "Launch",
+            level: .warning
+        )
     }
 }

@@ -72,7 +72,7 @@ struct AggregateAnalyticsView: View {
                 }
                 .padding()
             }
-            .background(Theme.Colors.background)
+            .background(Theme.Colors.background.ignoresSafeArea())
             .navigationTitle("Analytics")
         }
     }

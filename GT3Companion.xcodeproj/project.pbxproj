@@ -86,6 +86,7 @@
 		C40F2CFE5E4ED5602CA09F32 /* AESHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 661067C3865CBF095F1EF85B /* AESHelper.swift */; };
 		C5C2A7ADE84A9F51A41D04A0 /* HROverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11CCA802EAEB244E26A00839 /* HROverlayView.swift */; };
 		C5F7EF20D2B4BF78C81B9E13 /* PermissionsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2457DD0E36F44181C0211AD /* PermissionsManager.swift */; };
+		4CB1E20836A641BB827D8362 /* DebugLogStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DE3905710F4415FA9327B5D /* DebugLogStore.swift */; };
 		CF66ED61703E435BBEB75042 /* ScooterKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7F69807DE7E46638ABD5D45 /* ScooterKeychain.swift */; };
 		C99CB1DBA6D4E3FC4BAAD86C /* ScooterInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55D4452F70F7EF550BC5F879 /* ScooterInfoView.swift */; };
 		CA89B23819A601DD7DF53246 /* TelemetryParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3EA3E613117DC3CB9BF72A9 /* TelemetryParser.swift */; };
@@ -228,6 +229,7 @@
 		EF41BC7A131F7835D3D5FC88 /* KeyDerivationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyDerivationTests.swift; sourceTree = "<group>"; };
 		F0B48C9C3F689A08A9DF0FDE /* WatchRideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRideView.swift; sourceTree = "<group>"; };
 		F2457DD0E36F44181C0211AD /* PermissionsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsManager.swift; sourceTree = "<group>"; };
+		8DE3905710F4415FA9327B5D /* DebugLogStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugLogStore.swift; sourceTree = "<group>"; };
 		C7F69807DE7E46638ABD5D45 /* ScooterKeychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScooterKeychain.swift; sourceTree = "<group>"; };
 		F4E04531F9A6C7BD543444A1 /* NinebotTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NinebotTransport.swift; sourceTree = "<group>"; };
 		F79C0E11316D08F40945E24B /* ScooterConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScooterConnectionManager.swift; sourceTree = "<group>"; };
@@ -432,6 +434,7 @@
 			isa = PBXGroup;
 			children = (
 				C578ACBA36D95C48E179455A /* AppCoordinator.swift */,
+				8DE3905710F4415FA9327B5D /* DebugLogStore.swift */,
 				5CA73CFF555039D3094FDDBF /* GT3CompanionApp.swift */,
 				F2457DD0E36F44181C0211AD /* PermissionsManager.swift */,
 				C7F69807DE7E46638ABD5D45 /* ScooterKeychain.swift */,
@@ -774,6 +777,7 @@
 				4B64A2934B55DA32034D29E3 /* OnboardingView.swift in Sources */,
 				F8CCDB6EEDE70D23A759D87E /* PairingView.swift in Sources */,
 				C5F7EF20D2B4BF78C81B9E13 /* PermissionsManager.swift in Sources */,
+				4CB1E20836A641BB827D8362 /* DebugLogStore.swift in Sources */,
 				CF66ED61703E435BBEB75042 /* ScooterKeychain.swift in Sources */,
 				B65484A304ECCDC5B631F91C /* PersistenceController.swift in Sources */,
 				8F085638E5D961EC00DE31CE /* RegisterReader.swift in Sources */,
