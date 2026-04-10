@@ -29,7 +29,7 @@ struct GT3CompanionApp: App {
                     ContentView()
                         .environmentObject(coordinator)
                         .onAppear {
-                            coordinator.start()
+                            coordinator.start(storedPassword: ScooterKeychain.loadPassword())
                             Task { await RideSyncService.shared.syncRides() }
                         }
                 } else {

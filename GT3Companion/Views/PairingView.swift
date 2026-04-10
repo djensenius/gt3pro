@@ -12,6 +12,7 @@ struct PairingView: View {
     @State private var recoveredPassword = ""
     @State private var isPairing = false
     @State private var pairingStatus = ""
+    @State private var passwordSaved = false
 
     enum PairingMode {
         case selection
@@ -112,10 +113,24 @@ struct PairingView: View {
                 .textFieldStyle(.roundedBorder)
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.never)
+                .onChange(of: recoveredPassword) { _, newValue in
+                    let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if trimmed != newValue { recoveredPassword = trimmed }
+                }
 
-            Button("Save Password") { }
-                .buttonStyle(.gt3Primary)
-                .disabled(!Self.isValidHex(recoveredPassword))
+            if passwordSaved {
+                Label("Password saved!", systemImage: "checkmark.circle.fill")
+                    .foregroundStyle(Theme.Colors.success)
+                    .font(Theme.Fonts.bodyMedium)
+            }
+
+            Button("Save Password") {
+                if ScooterKeychain.savePassword(hex: recoveredPassword) {
+                    passwordSaved = true
+                }
+            }
+            .buttonStyle(.gt3Primary)
+            .disabled(!Self.isValidHex(recoveredPassword))
         }
     }
 
