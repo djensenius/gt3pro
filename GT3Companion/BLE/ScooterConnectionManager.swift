@@ -61,6 +61,7 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     weak var delegate: (any ScooterConnectionDelegate)?
 
     private var btName: String?
+    private var rawBtName: String?
     private var storedPassword: Data?
     private var echoRetryCount = 0
     private let bleQueue = DispatchQueue(label: "org.davidjensenius.GT3Companion.ble", qos: .userInitiated)
@@ -191,12 +192,16 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
 
         connectionState = .authenticating
 
+        // Strip leading emoji/whitespace — iOS may decorate the name (e.g. "🛴 Segway Scooter0023")
+        // but the scooter firmware uses the plain name for key derivation
+        let authName = ScooterConnectionManager.sanitizeBLEName(name)
+        logger.info("Raw BT name: \(name) → auth name: \(authName) (bytes: \(Data(authName.utf8).count))")
+
         // Single shared crypto instance for both auth and transport
-        logger.info("Auth using BT name: \(name) (bytes: \(Data(name.utf8).count))")
-        let key = KeyDerivation.deriveKey(key1: Data(name.utf8), key2: nil)
+        let key = KeyDerivation.deriveKey(key1: Data(authName.utf8), key2: nil)
         let crypto = NinebotCrypto(key: key, counter: 0)
 
-        let authActor = NinebotAuth(btName: name, storedPassword: storedPassword)
+        let authActor = NinebotAuth(btName: authName, storedPassword: storedPassword)
         self.auth = authActor
         self.transport = NinebotTransport(crypto: crypto, mtu: mtu)
 
@@ -204,6 +209,17 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
             let frame = await authActor.startAuth()
             sendFrame(frame)
         }
+    }
+
+    /// Strips leading emoji and whitespace from a BLE device name.
+    /// iOS may prepend decorative emoji (e.g. 🛴) to the advertised name.
+    static func sanitizeBLEName(_ name: String) -> String {
+        let stripped = String(name.drop { char in
+            char.isWhitespace || char.unicodeScalars.allSatisfy { scalar in
+                scalar.properties.isEmoji && !scalar.properties.isASCIIHexDigit
+            }
+        })
+        return stripped.isEmpty ? name : stripped
     }
 
     func sendFrame(_ frame: Data) {
@@ -311,6 +327,7 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
 
         // Service UUID filter in scanForPeripherals is sufficient —
         // device names vary by firmware ("NB-...", "Segway Scooter...", may include emoji)
+        rawBtName = name
         btName = name
         connectToPeripheral(peripheral)
     }
