@@ -102,6 +102,6 @@ enum BLEConstants {
     /// GT3 server ID
     static let serverID: UInt16 = 10257
 
-    /// BLE advertising name pattern
-    static let advertisingNamePrefix = "NB-"
+    /// BLE advertising name patterns (varies by firmware version)
+    static let advertisingNamePrefixes = ["NB-", "Segway Scooter"]
 }

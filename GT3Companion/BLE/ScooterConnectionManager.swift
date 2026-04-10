@@ -61,6 +61,7 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     weak var delegate: (any ScooterConnectionDelegate)?
 
     private var btName: String?
+    private var rawBtName: String?
     private var storedPassword: Data?
     private var echoRetryCount = 0
     private let bleQueue = DispatchQueue(label: "org.davidjensenius.GT3Companion.ble", qos: .userInitiated)
@@ -88,12 +89,24 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
             return
         }
 
-        // Check for already-connected (bonded) peripherals first
+        // Try previously-seen peripheral UUID first (fastest path), but only
+        // short-circuit when CoreBluetooth already reports it as connected.
+        if let savedUUID = ScooterConnectionManager.loadPeripheralUUID() {
+            let known = central.retrievePeripherals(withIdentifiers: [savedUUID])
+            if let existing = known.first, existing.state == .connected {
+                btName = existing.name
+                logger.info("Reconnecting to saved connected peripheral: \(self.btName ?? "unknown")")
+                connectToPeripheral(existing)
+                return
+            }
+        }
+
+        // Check for already-connected (bonded) peripherals
         let connected = central.retrieveConnectedPeripherals(
             withServices: [BLEConstants.serviceUUID]
         )
         if let existing = connected.first {
-            btName = existing.name ?? existing.identifier.uuidString
+            btName = existing.name
             logger.info("Found bonded peripheral: \(self.btName ?? "unknown")")
             connectToPeripheral(existing)
             return
@@ -105,6 +118,19 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
             options: [CBCentralManagerScanOptionAllowDuplicatesKey: false]
         )
         logger.info("Scanning for GT3 Pro...")
+    }
+
+    // MARK: - Peripheral UUID Persistence
+
+    private static let peripheralUUIDKey = "GT3Companion.peripheralUUID"
+
+    static func savePeripheralUUID(_ uuid: UUID, defaults: UserDefaults = .standard) {
+        defaults.set(uuid.uuidString, forKey: peripheralUUIDKey)
+    }
+
+    static func loadPeripheralUUID(defaults: UserDefaults = .standard) -> UUID? {
+        guard let str = defaults.string(forKey: peripheralUUIDKey) else { return nil }
+        return UUID(uuidString: str)
     }
 
     /// Disconnect from the peripheral intentionally (no auto-reconnect).
@@ -167,11 +193,16 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
 
         connectionState = .authenticating
 
+        // Strip leading emoji/whitespace — iOS may decorate the name (e.g. "🛴 Segway Scooter0023")
+        // but the scooter firmware uses the plain name for key derivation
+        let authName = ScooterConnectionManager.sanitizeBLEName(name)
+        logger.info("Raw BT name: \(name) → auth name: \(authName) (bytes: \(Data(authName.utf8).count))")
+
         // Single shared crypto instance for both auth and transport
-        let key = KeyDerivation.deriveKey(key1: Data(name.utf8), key2: nil)
+        let key = KeyDerivation.deriveKey(key1: Data(authName.utf8), key2: nil)
         let crypto = NinebotCrypto(key: key, counter: 0)
 
-        let authActor = NinebotAuth(btName: name, storedPassword: storedPassword)
+        let authActor = NinebotAuth(btName: authName, storedPassword: storedPassword)
         self.auth = authActor
         self.transport = NinebotTransport(crypto: crypto, mtu: mtu)
 
@@ -179,6 +210,17 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
             let frame = await authActor.startAuth()
             sendFrame(frame)
         }
+    }
+
+    /// Strips leading emoji and whitespace from a BLE device name.
+    /// iOS may prepend decorative emoji (e.g. 🛴) to the advertised name.
+    static func sanitizeBLEName(_ name: String) -> String {
+        let stripped = String(name.drop { char in
+            char.isWhitespace || char.unicodeScalars.allSatisfy { scalar in
+                scalar.properties.isEmoji && !scalar.properties.isASCIIHexDigit
+            }
+        })
+        return stripped.isEmpty ? name : stripped
     }
 
     func sendFrame(_ frame: Data) {
@@ -218,6 +260,10 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
                 let serial = await auth.getSerialNumber() ?? "unknown"
                 logger.info("Authenticated with GT3 Pro (SN: \(serial))")
                 connectionState = .connected
+                // Persist peripheral UUID only after successful auth
+                if let peripheralID = self.peripheral?.identifier {
+                    ScooterConnectionManager.savePeripheralUUID(peripheralID)
+                }
                 Task { @MainActor [weak self] in
                     self?.delegate?.didAuthenticate(serialNumber: serial)
                 }
@@ -265,7 +311,7 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
         if let peripherals = dict[CBCentralManagerRestoredStatePeripheralsKey] as? [CBPeripheral],
            let restored = peripherals.first {
             self.peripheral = restored
-            self.btName = restored.name ?? restored.identifier.uuidString
+            self.btName = restored.name
             restored.delegate = self
             if restored.state == .connected {
                 discoverServices()
@@ -281,10 +327,17 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
         advertisementData: [String: Any],
         rssi RSSI: NSNumber
     ) {
-        let name = peripheral.name ?? advertisementData[CBAdvertisementDataLocalNameKey] as? String ?? ""
-        logger.info("Discovered: \(name) RSSI: \(RSSI)")
+        let name = peripheral.name ?? advertisementData[CBAdvertisementDataLocalNameKey] as? String
+        logger.info("Discovered: \(name ?? "(no name)") RSSI: \(RSSI)")
 
-        guard name.hasPrefix(BLEConstants.advertisingNamePrefix) else { return }
+        guard let name, !name.isEmpty else {
+            logger.warning("Skipping device with no name — key derivation requires a valid BT name")
+            return
+        }
+
+        // Service UUID filter in scanForPeripherals is sufficient —
+        // device names vary by firmware ("NB-...", "Segway Scooter...", may include emoji)
+        rawBtName = name
         btName = name
         connectToPeripheral(peripheral)
     }
@@ -295,6 +348,11 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
     ) {
         logger.info("Connected to \(peripheral.name ?? "unknown")")
         echoRetryCount = 0
+
+        // Update btName from peripheral.name if we didn't have it from discovery
+        if btName == nil, let name = peripheral.name {
+            btName = name
+        }
 
         let negotiatedMTU = peripheral.maximumWriteValueLength(for: .withResponse) + 3
         if negotiatedMTU > BLEConstants.defaultMTU {
