@@ -115,4 +115,10 @@ struct RouteNavigationView: View {
         }
     }
 }
+
+#if DEBUG
+#Preview {
+    RouteNavigationView()
+}
+#endif
 #endif

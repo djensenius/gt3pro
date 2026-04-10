@@ -64,3 +64,14 @@ struct ScooterInfoView: View {
         }
     }
 }
+
+#if DEBUG
+#Preview {
+    #if os(iOS)
+    ScooterInfoView()
+        .environmentObject(AppCoordinator.shared)
+    #else
+    ScooterInfoView()
+    #endif
+}
+#endif

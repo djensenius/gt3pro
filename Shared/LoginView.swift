@@ -70,3 +70,9 @@ struct LoginView: View {
         isSigningIn = false
     }
 }
+
+#if DEBUG
+#Preview {
+    LoginView()
+}
+#endif

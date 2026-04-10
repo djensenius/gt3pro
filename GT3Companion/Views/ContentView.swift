@@ -38,6 +38,15 @@ struct ContentView: View {
     }
 }
 
+#if DEBUG
 #Preview {
+    #if os(iOS)
     ContentView()
+        .environmentObject(AppCoordinator.shared)
+        .modelContainer(PreviewData.container)
+    #else
+    ContentView()
+        .modelContainer(PreviewData.container)
+    #endif
 }
+#endif

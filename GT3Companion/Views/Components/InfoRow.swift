@@ -22,3 +22,13 @@ struct InfoRow: View {
         .listRowBackground(Theme.Colors.elevatedBackground)
     }
 }
+
+#if DEBUG
+#Preview {
+    List {
+        InfoRow(label: "Model", value: "GT3 Pro")
+        InfoRow(label: "Serial", value: "N4GSD1234567890")
+        InfoRow(label: "Odometer", value: "1,234 km")
+    }
+}
+#endif

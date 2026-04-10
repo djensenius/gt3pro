@@ -60,4 +60,16 @@ struct MapRouteView: View {
         }
     }
 }
+
+#if DEBUG
+#Preview("With Route") {
+    MapRouteView(coordinates: PreviewData.sampleRouteCoordinates)
+        .padding()
+}
+
+#Preview("Empty") {
+    MapRouteView(coordinates: [])
+        .padding()
+}
+#endif
 #endif

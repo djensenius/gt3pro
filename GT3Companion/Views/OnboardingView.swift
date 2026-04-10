@@ -216,3 +216,9 @@ struct OnboardingStep {
     let isRequired: Bool
     let permission: PermissionRequest
 }
+
+#if DEBUG
+#Preview {
+    OnboardingView(isComplete: .constant(false))
+}
+#endif

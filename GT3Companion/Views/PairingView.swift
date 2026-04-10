@@ -146,3 +146,11 @@ struct PairingView: View {
         return value.wholeMatch(of: hexPattern) != nil
     }
 }
+
+#if DEBUG
+#Preview {
+    NavigationStack {
+        PairingView()
+    }
+}
+#endif
