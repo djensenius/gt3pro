@@ -240,6 +240,19 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         return stripped.isEmpty ? name : stripped
     }
 
+    /// Returns true if `name` looks like a raw Ninebot serial number advertised directly over BLE.
+    /// Ninebot serials are 12–16 uppercase alphanumeric characters, starting with a digit.
+    /// Example: "03GGG2539C0023"
+    static func looksLikeNinebotSerial(_ name: String) -> Bool {
+        let chars = name.unicodeScalars
+        guard (12...16).contains(chars.count) else { return false }
+        guard let first = chars.first, first.value >= 48 && first.value <= 57 else { return false } // starts with digit
+        return chars.allSatisfy { scalar in
+            (scalar.value >= 48 && scalar.value <= 57) ||   // 0-9
+            (scalar.value >= 65 && scalar.value <= 90)        // A-Z
+        }
+    }
+
     static func btStateDescription(_ state: CBManagerState) -> String {
         switch state {
         case .poweredOn:     return "powered on"
@@ -376,13 +389,21 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
             return
         }
 
-        // Filter by known GT3 Pro advertising name prefixes
+        // Check if the advertisement includes the Ninebot service UUID (some firmware versions)
+        let advertisedServices = advertisementData[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID] ?? []
+        let hasNinebotService = advertisedServices.contains(BLEConstants.serviceUUID)
+
+        // Filter: accept if Ninebot service UUID is advertised, name matches known prefixes,
+        // or name looks like a raw Ninebot serial (all-caps alphanumeric, 12–16 chars, starts with digit)
         let sanitized = ScooterConnectionManager.sanitizeBLEName(name)
-        guard BLEConstants.advertisingNamePrefixes.contains(where: { sanitized.hasPrefix($0) }) else {
-            bleLog("Skipped \"\(name)\" — not a GT3 Pro (expected prefix: \(BLEConstants.advertisingNamePrefixes))",
-                   level: .debug)
+        let hasKnownPrefix = BLEConstants.advertisingNamePrefixes.contains(where: { sanitized.hasPrefix($0) })
+        let looksLikeSerial = ScooterConnectionManager.looksLikeNinebotSerial(sanitized)
+        guard hasNinebotService || hasKnownPrefix || looksLikeSerial else {
+            bleLog("Skipped \"\(name)\" — not a GT3 Pro", level: .debug)
             return
         }
+        bleLog("Matched GT3 Pro: \"\(name)\"" +
+               " (service=\(hasNinebotService) prefix=\(hasKnownPrefix) serial=\(looksLikeSerial))")
         rawBtName = name
         btName = name
         connectToPeripheral(peripheral)
