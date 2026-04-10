@@ -59,6 +59,8 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     private var peripheral: CBPeripheral?
     var writeCharacteristic: CBCharacteristic?
     var notifyCharacteristic: CBCharacteristic?
+    /// 006E-0003: second write in Ninebot service (purpose unknown — tested as auth channel)
+    var rctpWriteCharacteristic: CBCharacteristic?
     /// Secondary write channel — tested as auth write (0005)
     var authWriteCharacteristic: CBCharacteristic?
     /// Secondary notify channel — tested as auth response (0006)
@@ -67,6 +69,12 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     var oldWriteCharacteristic: CBCharacteristic?
     /// Old Nordic UART service notify (B5A3-0003) — the Segway app listens here for auth response
     var oldNotifyCharacteristic: CBCharacteristic?
+
+    /// Cycles 0→3 across reconnects (never reset) to rotate write channel for diagnostics.
+    /// 0=006E-0005, 1=006E-0002, 2=006E-0003, 3=B5A3-0002
+    var authAttemptCount = 0
+    /// The write characteristic chosen for this connection's auth attempt.
+    private var currentAuthWriteChar: CBCharacteristic?
 
     var transport: NinebotTransport?
     private var auth: NinebotAuth?
@@ -212,22 +220,30 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     }
 
     /// CCCD toggle workaround for iOS stale notifications on reconnect.
-    /// ALWAYS toggles 006E-0004. Never touches B5A3-0003 or 006E-0006 (passive subs).
+    /// Toggles 006E-0004 (auth trigger) AND B5A3-0003 (legacy — toggling this appeared
+    /// to trigger the scooter's auth mode in prior testing, giving an 8s auth timeout
+    /// instead of the 20-55s supervision timeout we get without it).
     /// beginAuthentication fires on the 006E-0004 CCCD ON ACK + drain delay.
     private func toggleNotifications() {
-        // Always toggle 006E-0004 — the passive subs (B5A3-0003, 006E-0006) must
-        // stay continuously subscribed so we don't miss any incoming challenge frame.
-        guard let characteristic = notifyCharacteristic, let peripheral = peripheral else { return }
+        guard let notifyChar = notifyCharacteristic, let peripheral = peripheral else { return }
 
         // Set the guard synchronously before any async work.
         pendingBeginAuthOnCCCDOn = true
 
+        let oldNotify = oldNotifyCharacteristic  // capture before async dispatch
+
         bleQueue.async {
-            peripheral.setNotifyValue(false, for: characteristic)
+            peripheral.setNotifyValue(false, for: notifyChar)
+            if let old = oldNotify {
+                peripheral.setNotifyValue(false, for: old)
+            }
             self.bleQueue.asyncAfter(
                 deadline: .now() + .milliseconds(Int(BLEConstants.cccdToggleOffDelayMs))
             ) {
-                peripheral.setNotifyValue(true, for: characteristic)
+                peripheral.setNotifyValue(true, for: notifyChar)
+                if let old = oldNotify {
+                    peripheral.setNotifyValue(true, for: old)
+                }
             }
         }
     }
@@ -247,15 +263,30 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         logger.info("Raw BT name: \(name) → auth name: \(authName) (bytes: \(Data(authName.utf8).count))")
         bleLog("Auth start — raw name: \"\(name)\" → sanitized: \"\(authName)\" (\(Data(authName.utf8).count) bytes)")
         bleLog("Stored password in keychain: \(storedPassword != nil ? "YES (\(storedPassword!.count) bytes)" : "NO")")
-        let writeDesc: String
-        if authWriteCharacteristic != nil {
-            writeDesc = "006E-0005 (new dedicated auth channel)"
-        } else if oldWriteCharacteristic != nil {
-            writeDesc = "B5A3-0002 (old Nordic UART — Segway app channel)"
-        } else {
-            writeDesc = "006E-0002 (new primary channel)"
+
+        // Rotate through all write characteristics on successive reconnects to discover
+        // which channel the scooter expects PRE_COMM on.
+        // Order: 006E-0005 → 006E-0002 → 006E-0003 → B5A3-0002 → repeat
+        let channelCandidates: [(CBCharacteristic?, String)] = [
+            (authWriteCharacteristic, "006E-0005"),
+            (writeCharacteristic, "006E-0002"),
+            (rctpWriteCharacteristic, "006E-0003"),
+            (oldWriteCharacteristic, "B5A3-0002")
+        ]
+        var selectedChannel: CBCharacteristic?
+        var selectedChannelName = "none"
+        for offset in 0..<channelCandidates.count {
+            let (char, chanName) = channelCandidates[(authAttemptCount + offset) % channelCandidates.count]
+            if let char {
+                selectedChannel = char
+                selectedChannelName = chanName
+                break
+            }
         }
-        bleLog("Auth write channel: \(writeDesc)")
+        currentAuthWriteChar = selectedChannel
+        authAttemptCount += 1
+        bleLog("Auth attempt \(authAttemptCount) — write channel: \(selectedChannelName)")
+        print("[GT3] [AUTH] Attempt \(authAttemptCount): PRE_COMM → \(selectedChannelName)")
 
         // Single shared crypto instance — auth and transport MUST share the same object
         // so that key/counter updates during the handshake are visible to both sides.
@@ -338,10 +369,13 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     }
 
     /// Send a plain (unencrypted) frame with trailing 2-byte checksum — used for PRE_COMM.
-    /// Priority: new auth-write 006E-0005 > old service B5A3-0002 > new primary 006E-0002.
-    /// 006E-0005 is the dedicated auth channel added in the GT3 Pro Ninebot service.
+    /// Uses currentAuthWriteChar (set per-attempt by beginAuthentication for channel rotation),
+    /// falling back to any available write char.
     private func sendFramePlain(_ frame: Data) {
-        guard let char = authWriteCharacteristic ?? oldWriteCharacteristic ?? writeCharacteristic,
+        guard let char = currentAuthWriteChar
+                ?? authWriteCharacteristic
+                ?? oldWriteCharacteristic
+                ?? writeCharacteristic,
               let periph = peripheral, frame.count > 3 else { return }
         let chksum = UInt16(truncatingIfNeeded: ~Data(frame[2...]).reduce(UInt32(0)) { $0 + UInt32($1) })
         var outFrame = frame

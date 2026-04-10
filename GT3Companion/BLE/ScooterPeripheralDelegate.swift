@@ -95,6 +95,10 @@ extension ScooterConnectionManager: CBPeripheralDelegate {
             authWriteCharacteristic = characteristic
             bleLog("Found auth-write characteristic (0005)")
             checkReadyForAuth()
+        case BLEConstants.rctpWriteCharUUID where isNinebot:
+            rctpWriteCharacteristic = characteristic
+            bleLog("Found rctp-write characteristic (0003) — candidate auth channel")
+            checkReadyForAuth()
         case BLEConstants.authNotifyCharUUID where isNinebot:
             authNotifyCharacteristic = characteristic
             bleLog("Found auth-notify characteristic (0006)")
@@ -169,10 +173,7 @@ extension ScooterConnectionManager: CBPeripheralDelegate {
         print("[GT3] \(bleTS()) [BLE] CCCD \(state) for \(characteristic.uuid)")
 
         // Fire beginAuthentication after the 006E-0004 CCCD toggle ON is ACK'd + drain delay.
-        // Only 006E-0004 is toggled — B5A3-0003 and 006E-0006 are passive subscriptions.
-        // If we accepted B5A3-0003 here, we'd trigger auth on its initial subscription
-        // before the 006E-0004 toggle starts, meaning 006E-0004 would still be unsubscribed
-        // when PRE_COMM is sent and we'd miss any challenge on that channel.
+        // 006E-0004 and B5A3-0003 are both toggled, but auth fires only on 006E-0004 ON.
         let isToggledNotify = characteristic.uuid == BLEConstants.notifyCharUUID
         if characteristic.isNotifying, isToggledNotify, pendingBeginAuthOnCCCDOn {
             pendingBeginAuthOnCCCDOn = false
