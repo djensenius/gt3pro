@@ -4,6 +4,7 @@
 //
 //  Created by David Jensenius.
 //
+// swiftlint:disable file_length
 
 #if os(iOS)
 @preconcurrency import CoreBluetooth
@@ -51,6 +52,10 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     var authWriteCharacteristic: CBCharacteristic?
     /// Secondary notify channel — tested as auth response (0006)
     var authNotifyCharacteristic: CBCharacteristic?
+    /// Old Nordic UART service write (B5A3-0002) — the Segway app uses this for auth
+    var oldWriteCharacteristic: CBCharacteristic?
+    /// Old Nordic UART service notify (B5A3-0003) — the Segway app listens here for auth response
+    var oldNotifyCharacteristic: CBCharacteristic?
 
     var transport: NinebotTransport?
     private var auth: NinebotAuth?
@@ -172,24 +177,35 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
 
     private func discoverServices() {
         connectionState = .discovering
-        peripheral?.discoverServices([BLEConstants.serviceUUID])
+        // Discover both the new Ninebot service and the old Nordic UART service (B5A3).
+        // The old service is present only on first connect; asking for both is harmless.
+        peripheral?.discoverServices([BLEConstants.serviceUUID, BLEConstants.oldServiceUUID])
     }
 
     // Set to true after CCCD ON is sent; beginAuthentication fires on the ACK
     var pendingBeginAuthOnCCCDOn = false
 
-    /// Try to begin auth if write + notify characteristics are discovered.
-    /// Prefers authWriteCharacteristic (0005) over writeCharacteristic (0002).
+    /// Try to begin auth when both a write and notify characteristic are discovered.
+    /// Priority order: old service (B5A3) > new service (006E).
+    /// Only fires once per connection — guard prevents multiple toggles.
     func checkReadyForAuth() {
-        let hasWrite = authWriteCharacteristic != nil || writeCharacteristic != nil
-        guard hasWrite, notifyCharacteristic != nil else { return }
+        let hasWrite = oldWriteCharacteristic != nil
+            || authWriteCharacteristic != nil
+            || writeCharacteristic != nil
+        let hasNotify = oldNotifyCharacteristic != nil || notifyCharacteristic != nil
+        guard hasWrite, hasNotify else { return }
+        // Only start the CCCD toggle if we haven't already for this connection
+        guard !pendingBeginAuthOnCCCDOn else { return }
         toggleNotifications()
     }
 
     /// CCCD toggle workaround for iOS stale notifications on reconnect.
-    /// Sends OFF then ON; beginAuthentication fires when the ON is ACK'd by the scooter.
+    /// Toggles the notify characteristic OFF then ON; beginAuthentication fires on the ON ACK.
+    /// Prefers old service (B5A3-0003); falls back to new service (006E-0004).
     private func toggleNotifications() {
-        guard let peripheral = peripheral, let characteristic = notifyCharacteristic else { return }
+        // Prefer old-service notify for CCCD toggle (Segway app uses B5A3-0003)
+        let characteristic = oldNotifyCharacteristic ?? notifyCharacteristic
+        guard let characteristic, let peripheral = peripheral else { return }
 
         bleQueue.async { [weak self] in
             peripheral.setNotifyValue(false, for: characteristic)
@@ -217,7 +233,14 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         logger.info("Raw BT name: \(name) → auth name: \(authName) (bytes: \(Data(authName.utf8).count))")
         bleLog("Auth start — raw name: \"\(name)\" → sanitized: \"\(authName)\" (\(Data(authName.utf8).count) bytes)")
         bleLog("Stored password in keychain: \(storedPassword != nil ? "YES (\(storedPassword!.count) bytes)" : "NO")")
-        let writeDesc = authWriteCharacteristic != nil ? "0005 (auth channel)" : "0002 (telemetry fallback)"
+        let writeDesc: String
+        if oldWriteCharacteristic != nil {
+            writeDesc = "B5A3-0002 (old Nordic UART — Segway app channel)"
+        } else if authWriteCharacteristic != nil {
+            writeDesc = "006E-0005 (new secondary channel)"
+        } else {
+            writeDesc = "006E-0002 (new primary channel)"
+        }
         bleLog("Auth write channel: \(writeDesc)")
 
         // Single shared crypto instance — auth and transport MUST share the same object
@@ -272,8 +295,8 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     }
 
     func sendFrame(_ frame: Data) {
-        // Prefer 0005 (auth channel); fall back to 0002
-        guard let characteristic = authWriteCharacteristic ?? writeCharacteristic,
+        // Prefer old Nordic UART service, then new auth char, then new primary
+        guard let characteristic = oldWriteCharacteristic ?? authWriteCharacteristic ?? writeCharacteristic,
               let peripheral = peripheral else {
             logger.error("Cannot send: write characteristic not available")
             return
@@ -299,10 +322,10 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     }
 
     /// Send a plain (unencrypted) frame with trailing 2-byte checksum — used for PRE_COMM.
-    /// Uses authWriteCharacteristic (0005) if available, falls back to writeCharacteristic (0002).
+    /// Priority: old service B5A3-0002 > new 006E-0005 > new 006E-0002.
     private func sendFramePlain(_ frame: Data) {
-        // Prefer 0005 (secondary auth channel); fall back to 0002
-        guard let char = authWriteCharacteristic ?? writeCharacteristic,
+        // Prefer old Nordic UART service (Segway app channel), then new auth, then new primary
+        guard let char = oldWriteCharacteristic ?? authWriteCharacteristic ?? writeCharacteristic,
               let periph = peripheral, frame.count > 3 else { return }
         let chksum = UInt16(truncatingIfNeeded: ~Data(frame[2...]).reduce(UInt32(0)) { $0 + UInt32($1) })
         var outFrame = frame
@@ -496,6 +519,8 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
         notifyCharacteristic = nil
         authWriteCharacteristic = nil
         authNotifyCharacteristic = nil
+        oldWriteCharacteristic = nil
+        oldNotifyCharacteristic = nil
         pendingBeginAuthOnCCCDOn = false
         auth = nil
         transport = nil

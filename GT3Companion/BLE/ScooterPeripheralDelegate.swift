@@ -27,7 +27,10 @@ extension ScooterConnectionManager: CBPeripheralDelegate {
         for service in services {
             print("[GT3] [BLE] Service: \(service.uuid)")
             if service.uuid == BLEConstants.serviceUUID {
-                bleLog("Found Ninebot service — discovering ALL characteristics…")
+                bleLog("Found Ninebot service (006E) — discovering ALL characteristics…")
+                peripheral.discoverCharacteristics(nil, for: service)
+            } else if service.uuid == BLEConstants.oldServiceUUID {
+                bleLog("Found OLD Nordic UART service (B5A3) — discovering characteristics…")
                 peripheral.discoverCharacteristics(nil, for: service)
             } else {
                 // Discover chars on other services too so we can log them
@@ -43,7 +46,9 @@ extension ScooterConnectionManager: CBPeripheralDelegate {
     ) {
         guard let characteristics = service.characteristics else { return }
         let isNinebot = service.uuid == BLEConstants.serviceUUID
-        print("[GT3] [BLE] Chars for service \(service.uuid) (\(isNinebot ? "NINEBOT" : "other")):")
+        let isOldUART = service.uuid == BLEConstants.oldServiceUUID
+        let svcLabel = isNinebot ? "NINEBOT" : (isOldUART ? "OLD-UART" : "other")
+        print("[GT3] [BLE] Chars for service \(service.uuid) (\(svcLabel)):")
         for characteristic in characteristics {
             let props = characteristic.properties
             var propStr: [String] = []
@@ -54,34 +59,60 @@ extension ScooterConnectionManager: CBPeripheralDelegate {
             if props.contains(.indicate) { propStr.append("indicate") }
             print("[GT3] [BLE] Char \(characteristic.uuid) props=[\(propStr.joined(separator: ","))]")
 
-            switch characteristic.uuid {
-            case BLEConstants.writeCharUUID where isNinebot:
-                writeCharacteristic = characteristic
-                bleLog("Found write characteristic (0002)")
-                checkReadyForAuth()
-            case BLEConstants.notifyCharUUID where isNinebot:
-                notifyCharacteristic = characteristic
-                bleLog("Found notify characteristic (0004)")
-                checkReadyForAuth()
-            case BLEConstants.authWriteCharUUID where isNinebot:
-                authWriteCharacteristic = characteristic
-                bleLog("Found auth-write characteristic (0005)")
-                checkReadyForAuth()
-            case BLEConstants.authNotifyCharUUID where isNinebot:
-                authNotifyCharacteristic = characteristic
-                bleLog("Found auth-notify characteristic (0006)")
-                checkReadyForAuth()
-            default:
-                break
-            }
+            let didSubscribe = handleDiscoveredCharacteristic(
+                characteristic,
+                peripheral: peripheral,
+                isNinebot: isNinebot,
+                isOldUART: isOldUART
+            )
 
-            // Subscribe to ANY notify/indicate char (except 0004, handled by toggleNotifications)
-            if props.contains(.notify) || props.contains(.indicate),
-               characteristic.uuid != BLEConstants.notifyCharUUID {
+            // Subscribe to any OTHER notify/indicate char not already explicitly handled
+            let alreadyHandled = characteristic.uuid == BLEConstants.notifyCharUUID
+                || (isOldUART && characteristic.uuid == BLEConstants.oldNotifyCharUUID)
+            if (props.contains(.notify) || props.contains(.indicate)) && !alreadyHandled && !didSubscribe {
                 print("[GT3] [BLE] Subscribing to extra notify char \(characteristic.uuid)")
                 peripheral.setNotifyValue(true, for: characteristic)
             }
         }
+    }
+
+    private func handleDiscoveredCharacteristic(
+        _ characteristic: CBCharacteristic,
+        peripheral: CBPeripheral,
+        isNinebot: Bool,
+        isOldUART: Bool
+    ) -> Bool {
+        switch characteristic.uuid {
+        case BLEConstants.writeCharUUID where isNinebot:
+            writeCharacteristic = characteristic
+            bleLog("Found write characteristic (0002)")
+            checkReadyForAuth()
+        case BLEConstants.notifyCharUUID where isNinebot:
+            notifyCharacteristic = characteristic
+            bleLog("Found notify characteristic (0004)")
+            checkReadyForAuth()
+        case BLEConstants.authWriteCharUUID where isNinebot:
+            authWriteCharacteristic = characteristic
+            bleLog("Found auth-write characteristic (0005)")
+            checkReadyForAuth()
+        case BLEConstants.authNotifyCharUUID where isNinebot:
+            authNotifyCharacteristic = characteristic
+            bleLog("Found auth-notify characteristic (0006)")
+            checkReadyForAuth()
+        case BLEConstants.oldWriteCharUUID where isOldUART:
+            oldWriteCharacteristic = characteristic
+            bleLog("Found OLD-UART write (B5A3-0002) — will use for auth")
+            checkReadyForAuth()
+        case BLEConstants.oldNotifyCharUUID where isOldUART:
+            oldNotifyCharacteristic = characteristic
+            bleLog("Found OLD-UART notify (B5A3-0003) — subscribing")
+            peripheral.setNotifyValue(true, for: characteristic)
+            checkReadyForAuth()
+            return true
+        default:
+            return false
+        }
+        return false
     }
 
     func peripheral(
@@ -137,12 +168,13 @@ extension ScooterConnectionManager: CBPeripheralDelegate {
         bleLog("CCCD \(state) for \(characteristic.uuid)")
         print("[GT3] [BLE] CCCD \(state) for \(characteristic.uuid)")
 
-        // Fire beginAuthentication as soon as CCCD ON is ACK'd (event-driven, not timer)
-        if characteristic.isNotifying,
-           characteristic.uuid == BLEConstants.notifyCharUUID,
-           pendingBeginAuthOnCCCDOn {
+        // Fire beginAuthentication as soon as CCCD ON is ACK'd (event-driven, not timer).
+        // Accept confirmation from either: old-service notify (B5A3-0003) or new-service 0004.
+        let isAuthNotify = characteristic.uuid == BLEConstants.oldNotifyCharUUID
+            || characteristic.uuid == BLEConstants.notifyCharUUID
+        if characteristic.isNotifying, isAuthNotify, pendingBeginAuthOnCCCDOn {
             pendingBeginAuthOnCCCDOn = false
-            print("[GT3] [BLE] CCCD ON confirmed — starting auth now")
+            print("[GT3] [BLE] CCCD ON confirmed on \(characteristic.uuid) — starting auth now")
             beginAuthentication()
         }
     }

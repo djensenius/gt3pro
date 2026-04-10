@@ -40,6 +40,26 @@ enum BLEConstants {
         string: "6E400006-0000-0000-006E-696E65626F74"
     )
 
+    // MARK: - Classic Nordic UART Service (6E400001-B5A3-...)
+    // The Segway Mobility app uses this older service for its auth+telemetry protocol.
+    // On first connect the scooter advertises BOTH services; after reconnect only the
+    // ninebot (006E-...) service remains.
+
+    /// Legacy Nordic UART service — present on initial advertising
+    nonisolated(unsafe) static let oldServiceUUID = CBUUID(
+        string: "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
+    )
+
+    /// Legacy UART_RX — write from app to scooter (old service)
+    nonisolated(unsafe) static let oldWriteCharUUID = CBUUID(
+        string: "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
+    )
+
+    /// Legacy UART_TX — notify from scooter to app (old service)
+    nonisolated(unsafe) static let oldNotifyCharUUID = CBUUID(
+        string: "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
+    )
+
     // MARK: - Board Target IDs
 
     enum Board: UInt8 {
