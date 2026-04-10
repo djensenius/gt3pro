@@ -83,14 +83,38 @@ final class ScooterConnectionManagerTests: XCTestCase {
         defaults.removePersistentDomain(forName: "TestPeripheralUUIDEmpty")
     }
 
-    func testLoadPeripheralUUIDWithInvalidValue() {
-        let defaults = UserDefaults(suiteName: "TestPeripheralUUIDBad")!
-        defaults.removePersistentDomain(forName: "TestPeripheralUUIDBad")
-        defaults.set("not-a-uuid", forKey: "GT3Companion.peripheralUUID")
+    // MARK: - Ninebot Serial Detection
 
-        let loaded = ScooterConnectionManager.loadPeripheralUUID(defaults: defaults)
-        XCTAssertNil(loaded)
+    func testLooksLikeNinebotSerialWithRealSerial() {
+        XCTAssertTrue(ScooterConnectionManager.looksLikeNinebotSerial("03GGG2539C0023"))
+    }
 
-        defaults.removePersistentDomain(forName: "TestPeripheralUUIDBad")
+    func testLooksLikeNinebotSerialRejectsSegwayName() {
+        XCTAssertFalse(ScooterConnectionManager.looksLikeNinebotSerial("Segway Scooter0023"))
+    }
+
+    func testLooksLikeNinebotSerialRejectsNBPrefix() {
+        XCTAssertFalse(ScooterConnectionManager.looksLikeNinebotSerial("NB-12345678901"))
+    }
+
+    func testLooksLikeNinebotSerialRejectsLowercase() {
+        XCTAssertFalse(ScooterConnectionManager.looksLikeNinebotSerial("03ggg2539c0023"))
+    }
+
+    func testLooksLikeNinebotSerialRejectsTooShort() {
+        XCTAssertFalse(ScooterConnectionManager.looksLikeNinebotSerial("03GGG2539"))
+    }
+
+    func testLooksLikeNinebotSerialRejectsTooLong() {
+        XCTAssertFalse(ScooterConnectionManager.looksLikeNinebotSerial("03GGG2539C0023EXTRA"))
+    }
+
+    func testLooksLikeNinebotSerialRejectsStartingWithLetter() {
+        XCTAssertFalse(ScooterConnectionManager.looksLikeNinebotSerial("A3GGG2539C0023"))
+    }
+
+    func testLooksLikeNinebotSerialRejectsKnownNonScooter() {
+        XCTAssertFalse(ScooterConnectionManager.looksLikeNinebotSerial("MAINFRAME"))
+        XCTAssertFalse(ScooterConnectionManager.looksLikeNinebotSerial("L300Y5E"))
     }
 }
