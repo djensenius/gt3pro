@@ -23,6 +23,7 @@ actor NinebotTransport {
     private var reassemblyState: ReassemblyState = .idle
     private var reassemblyBuffer = Data()
     private var expectedLength: Int = 0
+    private var inboundIsEncrypted = false
 
     init(crypto: NinebotCrypto, mtu: Int = BLEConstants.defaultMTU) {
         self.crypto = crypto
@@ -100,6 +101,7 @@ actor NinebotTransport {
 
         case .haveHead:
             if byte == BLEConstants.syncByte2Plain || byte == BLEConstants.syncByte2Encrypted {
+                inboundIsEncrypted = byte == BLEConstants.syncByte2Encrypted
                 reassemblyBuffer.append(byte)
                 reassemblyState = .haveBegin
             } else {
@@ -110,9 +112,11 @@ actor NinebotTransport {
         case .haveBegin:
             reassemblyBuffer.append(byte)
 
-            // Third byte after sync is the length
+            // Third byte after sync is the length.
+            // Plain frames include a 2-byte checksum after the payload (outside LEN).
             if reassemblyBuffer.count == 3 {
-                expectedLength = Int(byte) + 3 // total = header(3) + payload(length)
+                let checksumExtra = inboundIsEncrypted ? 0 : 2
+                expectedLength = Int(byte) + 3 + checksumExtra
             }
 
             if reassemblyBuffer.count >= expectedLength && expectedLength > 3 {
@@ -144,7 +148,10 @@ actor NinebotTransport {
 
             return NinebotFrameBuilder.parseFrame(plainFrame)
         } else {
-            return NinebotFrameBuilder.parseFrame(frame)
+            // Strip the trailing 2-byte checksum before parsing.
+            guard frame.count >= 5 else { return nil }
+            let stripped = Data(frame[..<(frame.count - 2)])
+            return NinebotFrameBuilder.parseFrame(stripped)
         }
     }
 
@@ -152,5 +159,6 @@ actor NinebotTransport {
         reassemblyState = .idle
         reassemblyBuffer = Data()
         expectedLength = 0
+        inboundIsEncrypted = false
     }
 }

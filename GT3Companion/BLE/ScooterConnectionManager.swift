@@ -289,26 +289,26 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         }
     }
 
-    /// Send a plain (unencrypted) frame directly — used for PRE_COMM.
-    /// PRE_COMM carries no secrets; encryption begins with SET_PWD/AUTH.
+    /// Send a plain (unencrypted) frame with trailing 2-byte checksum — used for PRE_COMM.
     private func sendFramePlain(_ frame: Data) {
-        guard let characteristic = writeCharacteristic, let peripheral = peripheral else {
-            logger.error("Cannot send plain frame: write characteristic not available")
-            return
-        }
-        print("[GT3] [TRANSPORT] sendFramePlain: \(frame.hexString)")
+        guard let char = writeCharacteristic, let periph = peripheral, frame.count > 3 else { return }
+        let chksum = UInt16(truncatingIfNeeded: ~Data(frame[3...]).reduce(UInt32(0)) { $0 + UInt32($1) })
+        var outFrame = frame
+        outFrame.append(UInt8(chksum & 0xFF))
+        outFrame.append(UInt8(chksum >> 8))
+        print("[GT3] [TRANSPORT] sendFramePlain: \(outFrame.hexString)")
         let chunkSize = max(1, mtu - 3)
         var chunks: [Data] = []
         var offset = 0
-        while offset < frame.count {
-            let end = min(offset + chunkSize, frame.count)
-            chunks.append(Data(frame[offset..<end]))
+        while offset < outFrame.count {
+            let end = min(offset + chunkSize, outFrame.count)
+            chunks.append(Data(outFrame[offset..<end]))
             offset = end
         }
         bleQueue.async {
-            for (index, chunk) in chunks.enumerated() {
-                peripheral.writeValue(chunk, for: characteristic, type: .withResponse)
-                if index < chunks.count - 1 {
+            for (idx, chunk) in chunks.enumerated() {
+                periph.writeValue(chunk, for: char, type: .withResponse)
+                if idx < chunks.count - 1 {
                     Thread.sleep(forTimeInterval: Double(BLEConstants.fragmentDelayMs) / 1000.0)
                 }
             }
