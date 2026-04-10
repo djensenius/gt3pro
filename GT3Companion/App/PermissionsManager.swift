@@ -24,6 +24,7 @@ enum PermissionRequest {
     case motion
     case notifications
     case none
+    case pair
 }
 
 /// Requests system permissions on behalf of the onboarding flow.
@@ -45,6 +46,7 @@ final class PermissionsManager: NSObject, ObservableObject {
         case .motion:              await requestMotion()
         case .notifications:       await requestNotifications()
         case .none:                break
+        case .pair:                break
         }
     }
 

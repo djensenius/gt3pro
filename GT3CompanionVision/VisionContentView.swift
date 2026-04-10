@@ -17,10 +17,10 @@ struct VisionContentView: View {
                 NavigationLink(destination: VisionRideHistoryView(rides: rides)) {
                     Label("Rides", systemImage: "point.topleft.down.to.point.bottomright.curvepath")
                 }
-                NavigationLink(destination: Text("Analytics")) {
+                NavigationLink(destination: AggregateAnalyticsView()) {
                     Label("Analytics", systemImage: "chart.xyaxis.line")
                 }
-                NavigationLink(destination: Text("Scooter Info")) {
+                NavigationLink(destination: ScooterInfoView()) {
                     Label("Scooter", systemImage: "scooter")
                 }
             }
@@ -33,9 +33,11 @@ struct VisionContentView: View {
 
                 Text("GT3 Companion")
                     .font(Theme.Fonts.headerXL())
+                    .foregroundStyle(Theme.Colors.textPrimary)
 
                 Text("Explore your ride data in space")
                     .font(Theme.Fonts.bodyMedium)
+                    .foregroundStyle(Theme.Colors.textSecondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
@@ -100,8 +102,10 @@ struct VisionRideDetailView: View {
         VStack(spacing: 4) {
             Text(value)
                 .font(Theme.Fonts.headerLarge())
+                .foregroundStyle(Theme.Colors.textPrimary)
             Text(label)
                 .font(Theme.Fonts.caption)
+                .foregroundStyle(Theme.Colors.textSecondary)
         }
     }
 }

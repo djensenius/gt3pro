@@ -22,6 +22,17 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     @Published var currentBattery: Int = 0
     @Published var tripDistance: Double = 0
     @Published var estimatedRange: Double = 0
+    @Published var gearMode: Int = 0
+    @Published var bms1Temp: Double = 0
+    @Published var bms2Temp: Double = 0
+    @Published var serialNumber: String?
+    @Published var odometer: Double = 0
+    @Published var totalRideTime: Int = 0
+    @Published var controllerFirmware: String = "—"
+    @Published var mcuFirmware: String = "—"
+    @Published var bms1Firmware: String = "—"
+    @Published var bms2Firmware: String = "—"
+    @Published var bleFirmware: String = "—"
 
     private let connectionManager = ScooterConnectionManager()
     private let registerReader = RegisterReader()
@@ -62,6 +73,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
 
     func didAuthenticate(serialNumber: String) {
         logger.info("Authenticated: \(serialNumber)")
+        self.serialNumber = serialNumber
         Task { await self.onConnected() }
     }
 
@@ -118,23 +130,27 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
 
     private func handleTelemetryFrame(_ frame: NinebotFrameBuilder.ParsedFrame) async {
         guard let result = await registerReader.processResponse(frame) else { return }
-
-        switch result.name {
-        case "rSpeed":
-            currentSpeed = result.doubleValue ?? 0
-        case "rBattery":
-            currentBattery = result.intValue ?? 0
-        case "rSingleMileage":
-            tripDistance = result.doubleValue ?? 0
-        case "rLeftMileage":
-            estimatedRange = result.doubleValue ?? 0
-        default:
-            break
-        }
-
-        // Only emit a full sample when speed arrives (one per polling cycle)
+        updatePublishedValue(for: result)
         guard result.name == "rSpeed" else { return }
+        await emitSample()
+    }
 
+    private func updatePublishedValue(for result: RegisterReadResult) {
+        switch result.name {
+        case "rSpeed":            currentSpeed = result.doubleValue ?? 0
+        case "rBattery":          currentBattery = result.intValue ?? 0
+        case "rSingleMileage":    tripDistance = result.doubleValue ?? 0
+        case "rLeftMileage":      estimatedRange = result.doubleValue ?? 0
+        case "rGearMode":         gearMode = result.intValue ?? 0
+        case "rBmsTmp":           bms1Temp = result.doubleValue ?? 0
+        case "rBmsTmp2":          bms2Temp = result.doubleValue ?? 0
+        case "rTotalMileage":     odometer = result.doubleValue ?? 0
+        case "rTotalRideTime":    totalRideTime = result.intValue ?? 0
+        default:                  break
+        }
+    }
+
+    private func emitSample() async {
         let gpsSample = gpsTracker.latestSample
         let roughness = roughnessTracker.latestSample
 

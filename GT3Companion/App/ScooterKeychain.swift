@@ -46,6 +46,16 @@ enum ScooterKeychain {
     }
 
     static func hasPassword() -> Bool { loadPassword() != nil }
+
+    @discardableResult
+    static func deletePassword() -> Bool {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account
+        ]
+        return SecItemDelete(query as CFDictionary) == errSecSuccess
+    }
 }
 
 private extension Data {

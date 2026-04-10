@@ -7,8 +7,8 @@ struct HROverlayView: View {
             SectionHeader(title: "Heart Rate")
 
             HStack(spacing: Theme.Spacing.medium) {
-                StatCard(title: "Avg HR", value: "—", icon: "heart.fill", color: .red)
-                StatCard(title: "Max HR", value: "—", icon: "heart.circle.fill", color: .orange)
+                StatCard(title: "Avg HR", value: "—", icon: "heart.fill", color: Theme.Colors.error)
+                StatCard(title: "Max HR", value: "—", icon: "heart.circle.fill", color: Theme.Colors.warning)
             }
 
             // HR Zone breakdown placeholder

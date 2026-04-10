@@ -17,10 +17,10 @@ struct MacContentView: View {
                 NavigationLink(destination: MacRideHistoryView(rides: rides)) {
                     Label("Rides", systemImage: "point.topleft.down.to.point.bottomright.curvepath")
                 }
-                NavigationLink(destination: Text("Analytics")) {
+                NavigationLink(destination: AggregateAnalyticsView()) {
                     Label("Analytics", systemImage: "chart.xyaxis.line")
                 }
-                NavigationLink(destination: Text("Scooter Info")) {
+                NavigationLink(destination: ScooterInfoView()) {
                     Label("Scooter", systemImage: "scooter")
                 }
             }

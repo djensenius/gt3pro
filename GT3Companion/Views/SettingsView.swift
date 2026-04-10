@@ -5,6 +5,7 @@
 //  Created by David Jensenius.
 //
 
+import SwiftData
 import SwiftUI
 
 struct SettingsView: View {
@@ -12,69 +13,219 @@ struct SettingsView: View {
     @AppStorage("liveActivityEnabled") private var liveActivityEnabled = true
     @AppStorage("gpsEnabled") private var gpsEnabled = true
     @AppStorage("roughnessEnabled") private var roughnessEnabled = true
+    @AppStorage("onboardingComplete") private var onboardingComplete = true
+
+    @Environment(\.modelContext) private var modelContext
+    @Query private var rides: [PersistedRide]
+
+    @State private var showForgetScooterAlert = false
+    @State private var showClearDataAlert = false
+    @State private var showSignOutAlert = false
+    @State private var scooterForgotten = false
 
     var body: some View {
         NavigationStack {
             Form {
-                Section("Account") {
-                    NavigationLink("Login") {
-                        Text("OIDC Login (coming soon)")
-                    }
-                }
-
-                Section("Scooter") {
-                    NavigationLink("Pair Scooter") { PairingView() }
-                    Button("Forget Scooter (coming soon)", role: .destructive) { }
-                        .disabled(true)
-                }
-
-                Section("Ride Tracking") {
-                    HStack {
-                        Text("Polling Frequency")
-                        Spacer()
-                        Text(String(format: "%.1f Hz", pollingFrequency))
-                            .foregroundStyle(Theme.Colors.textSecondary)
-                    }
-                    Slider(
-                        value: $pollingFrequency,
-                        in: 0.5...2.0,
-                        step: 0.5
-                    )
-                    .tint(Theme.Colors.accent)
-                    Toggle("GPS Recording", isOn: $gpsEnabled)
-                    Toggle("Surface Roughness", isOn: $roughnessEnabled)
-                }
-
-                Section("Live Activity") {
-                    Toggle(
-                        "Show on Dynamic Island",
-                        isOn: $liveActivityEnabled
-                    )
-                }
-
-                Section("Data") {
-                    Button("Export Rides (CSV) — Coming soon") { }
-                        .disabled(true)
-                    Button("Export Rides (JSON) — Coming soon") { }
-                        .disabled(true)
-                    Button("Clear Local Data — Coming soon", role: .destructive) { }
-                        .disabled(true)
-                }
-
-                Section("About") {
-                    InfoRow(
-                        label: "Version",
-                        value: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "–"
-                    )
-                    NavigationLink("Privacy Policy") {
-                        Text("Privacy details")
-                    }
-                    NavigationLink("Licenses") {
-                        Text("Open source licenses")
-                    }
-                }
+                accountSection
+                scooterSection
+                rideTrackingSection
+                liveActivitySection
+                dataSection
+                aboutSection
             }
             .navigationTitle("Settings")
         }
+    }
+
+    // MARK: - Sections
+
+    private var accountSection: some View {
+        Section("Account") {
+            HStack {
+                Label("Signed In", systemImage: "person.circle.fill")
+                    .foregroundStyle(Theme.Colors.success)
+                Spacer()
+                Button("Sign Out") { showSignOutAlert = true }
+                    .foregroundStyle(Theme.Colors.error)
+            }
+        }
+        .confirmationDialog("Sign Out", isPresented: $showSignOutAlert) {
+            Button("Sign Out", role: .destructive) { AuthManager.shared.signOut() }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("You'll need to sign in again to sync rides.")
+        }
+    }
+
+    private var scooterSection: some View {
+        Section("Scooter") {
+            NavigationLink("Pair Scooter") { PairingView() }
+
+            if ScooterKeychain.hasPassword() && !scooterForgotten {
+                Button("Forget Scooter", role: .destructive) { showForgetScooterAlert = true }
+            }
+        }
+        .confirmationDialog("Forget Scooter?", isPresented: $showForgetScooterAlert) {
+            Button("Forget", role: .destructive) {
+                ScooterKeychain.deletePassword()
+                scooterForgotten = true
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("The app will no longer auto-connect. You can re-pair at any time.")
+        }
+    }
+
+    private var rideTrackingSection: some View {
+        Section("Ride Tracking") {
+            HStack {
+                Text("Polling Frequency")
+                Spacer()
+                Text(String(format: "%.1f Hz", pollingFrequency))
+                    .foregroundStyle(Theme.Colors.textSecondary)
+            }
+            Slider(value: $pollingFrequency, in: 0.5...2.0, step: 0.5)
+                .tint(Theme.Colors.accent)
+            Toggle("GPS Recording", isOn: $gpsEnabled)
+            Toggle("Surface Roughness", isOn: $roughnessEnabled)
+        }
+    }
+
+    private var liveActivitySection: some View {
+        Section("Live Activity") {
+            Toggle("Show on Dynamic Island", isOn: $liveActivityEnabled)
+        }
+    }
+
+    private var dataSection: some View {
+        Section("Data") {
+            if !rides.isEmpty {
+                ShareLink(item: exportCSV(), preview: SharePreview("Rides.csv")) {
+                    Label("Export Rides (CSV)", systemImage: "tablecells")
+                }
+                ShareLink(item: exportJSON(), preview: SharePreview("Rides.json")) {
+                    Label("Export Rides (JSON)", systemImage: "curlybraces")
+                }
+            }
+            Button("Clear Local Data", role: .destructive) { showClearDataAlert = true }
+        }
+        .confirmationDialog("Clear Local Data?", isPresented: $showClearDataAlert) {
+            Button("Clear", role: .destructive) { clearLocalData() }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("All locally cached rides will be removed. Your data on the server is unaffected.")
+        }
+    }
+
+    private var aboutSection: some View {
+        Section("About") {
+            InfoRow(
+                label: "Version",
+                value: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "–"
+            )
+            NavigationLink("Privacy Policy") { PrivacyPolicyView() }
+            NavigationLink("Licenses") { LicensesView() }
+        }
+    }
+
+    // MARK: - Data helpers
+
+    private func clearLocalData() {
+        rides.forEach { modelContext.delete($0) }
+        try? modelContext.save()
+    }
+
+    private func exportCSV() -> String {
+        var csv = "Date,Distance (km),Duration,Max Speed (km/h),Avg Speed (km/h),Battery Used (%)\n"
+        for ride in rides {
+            csv += "\(ride.startTime.formatted(.iso8601)),"
+            csv += "\(String(format: "%.2f", ride.totalDistance)),"
+            csv += "\(ride.formattedDuration),"
+            csv += "\(String(format: "%.1f", ride.maxSpeed)),"
+            csv += "\(String(format: "%.1f", ride.avgSpeed)),"
+            csv += "\(ride.batteryUsed)\n"
+        }
+        return csv
+    }
+
+    private func exportJSON() -> String {
+        let dicts: [[String: Any]] = rides.map { ride in
+            [
+                "rideId": ride.rideId,
+                "startTime": ride.startTime.formatted(.iso8601),
+                "endTime": ride.endTime?.formatted(.iso8601) ?? "",
+                "totalDistance": ride.totalDistance,
+                "maxSpeed": ride.maxSpeed,
+                "avgSpeed": ride.avgSpeed,
+                "batteryUsed": ride.batteryUsed,
+                "startBattery": ride.startBattery,
+                "endBattery": ride.endBattery ?? 0
+            ]
+        }
+        if let data = try? JSONSerialization.data(withJSONObject: dicts, options: .prettyPrinted),
+           let string = String(data: data, encoding: .utf8) {
+            return string
+        }
+        return "[]"
+    }
+}
+
+// MARK: - Sub-views
+
+struct PrivacyPolicyView: View {
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: Theme.Spacing.large) {
+                Text("Privacy Policy")
+                    .font(Theme.Fonts.headerXL())
+                    .foregroundStyle(Theme.Colors.textPrimary)
+                Text("""
+GT3 Companion collects ride telemetry (speed, battery, GPS route) and uploads \
+it to your personal FluxHaus server instance at api.fluxhaus.io.
+
+Your data is associated with your FluxHaus account and is never shared with \
+third parties. GPS data is only recorded during active rides.
+
+Heart rate data from your Apple Watch is stored locally and in Apple Health. \
+It is uploaded to your server only with your consent.
+
+You can delete all local data at any time from Settings → Data → Clear Local Data.
+""")
+                    .font(Theme.Fonts.bodyMedium)
+                    .foregroundStyle(Theme.Colors.textSecondary)
+            }
+            .padding()
+        }
+        .background(Theme.Colors.background)
+        .navigationTitle("Privacy Policy")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+struct LicensesView: View {
+    private let licenses: [(String, String)] = [
+        ("Swift", "Apple Inc. — Apache 2.0"),
+        ("SwiftUI", "Apple Inc. — Proprietary"),
+        ("SwiftData", "Apple Inc. — Proprietary"),
+        ("CoreBluetooth", "Apple Inc. — Proprietary"),
+        ("CoreLocation", "Apple Inc. — Proprietary"),
+        ("HealthKit", "Apple Inc. — Proprietary"),
+        ("Charts", "Apple Inc. — Proprietary"),
+        ("GT3 Companion", "David Jensenius — Apache 2.0")
+    ]
+
+    var body: some View {
+        List(licenses, id: \.0) { name, license in
+            VStack(alignment: .leading, spacing: 2) {
+                Text(name)
+                    .font(Theme.Fonts.bodyMedium)
+                    .foregroundStyle(Theme.Colors.textPrimary)
+                Text(license)
+                    .font(Theme.Fonts.caption)
+                    .foregroundStyle(Theme.Colors.textSecondary)
+            }
+            .padding(.vertical, Theme.Spacing.small)
+        }
+        .navigationTitle("Licenses")
     }
 }

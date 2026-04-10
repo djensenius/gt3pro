@@ -5,10 +5,21 @@
 //  Created by David Jensenius.
 //
 
+import Charts
 import SwiftUI
 
 struct RideDetailView: View {
     let ride: PersistedRide
+
+    private var routeCoordinates: [RouteCoordinate] {
+        (ride.samples ?? [])
+            .filter { $0.latitude != nil && $0.longitude != nil }
+            .map { RouteCoordinate(latitude: $0.latitude!, longitude: $0.longitude!, speed: $0.speed) }
+    }
+
+    private var speedSamples: [(Date, Double)] {
+        (ride.samples ?? []).map { ($0.timestamp, $0.speed) }
+    }
 
     var body: some View {
         ScrollView {
@@ -58,8 +69,8 @@ struct RideDetailView: View {
                     )
                 }
 
-                routePlaceholder
-                speedChartPlaceholder
+                routeSection
+                speedChartSection
             }
             .padding()
         }
@@ -67,35 +78,51 @@ struct RideDetailView: View {
         .navigationTitle(ride.startTime.formatted(date: .abbreviated, time: .omitted))
     }
 
-    private var routePlaceholder: some View {
-        VStack(alignment: .leading) {
+    private var routeSection: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.small) {
             Text("Route")
                 .font(Theme.Fonts.headerLarge())
                 .foregroundStyle(Theme.Colors.textPrimary)
-            RoundedRectangle(cornerRadius: Theme.cornerRadius)
-                .fill(Theme.Colors.secondaryBackground)
-                .frame(height: 200)
-                .overlay {
-                    Text("GPS Route Map")
-                        .foregroundStyle(Theme.Colors.textSecondary)
-                }
+                .padding(.horizontal)
+            #if os(iOS)
+            MapRouteView(coordinates: routeCoordinates)
+                .padding(.horizontal)
+            #endif
         }
-        .padding(.horizontal)
     }
 
-    private var speedChartPlaceholder: some View {
-        VStack(alignment: .leading) {
+    private var speedChartSection: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.small) {
             Text("Speed")
                 .font(Theme.Fonts.headerLarge())
                 .foregroundStyle(Theme.Colors.textPrimary)
-            RoundedRectangle(cornerRadius: Theme.cornerRadius)
-                .fill(Theme.Colors.secondaryBackground)
-                .frame(height: 150)
-                .overlay {
-                    Text("Speed over time chart")
-                        .foregroundStyle(Theme.Colors.textSecondary)
+                .padding(.horizontal)
+
+            if speedSamples.isEmpty {
+                RoundedRectangle(cornerRadius: Theme.cornerRadius)
+                    .fill(Theme.Colors.secondaryBackground)
+                    .frame(height: 150)
+                    .overlay {
+                        Text("No speed data")
+                            .foregroundStyle(Theme.Colors.textSecondary)
+                    }
+                    .padding(.horizontal)
+            } else {
+                Chart {
+                    ForEach(speedSamples, id: \.0) { timestamp, speed in
+                        LineMark(
+                            x: .value("Time", timestamp),
+                            y: .value("Speed", speed)
+                        )
+                        .foregroundStyle(Theme.Colors.accent)
+                        .interpolationMethod(.catmullRom)
+                    }
                 }
+                .chartXAxis(.hidden)
+                .chartYAxisLabel("km/h")
+                .frame(height: 150)
+                .padding(.horizontal)
+            }
         }
-        .padding(.horizontal)
     }
 }

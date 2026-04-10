@@ -43,7 +43,7 @@ struct LoginView: View {
             } label: {
                 if isSigningIn {
                     ProgressView()
-                        .tint(.white)
+                        .tint(Theme.Colors.textPrimary)
                 } else {
                     Label("Sign In", systemImage: "person.badge.key")
                 }
