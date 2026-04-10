@@ -168,14 +168,17 @@ extension ScooterConnectionManager: CBPeripheralDelegate {
         bleLog("CCCD \(state) for \(characteristic.uuid)")
         print("[GT3] [BLE] CCCD \(state) for \(characteristic.uuid)")
 
-        // Fire beginAuthentication as soon as CCCD ON is ACK'd (event-driven, not timer).
+        // Fire beginAuthentication after CCCD ON is ACK'd + drain delay.
         // Accept confirmation from either: old-service notify (B5A3-0003) or new-service 0004.
         let isAuthNotify = characteristic.uuid == BLEConstants.oldNotifyCharUUID
             || characteristic.uuid == BLEConstants.notifyCharUUID
         if characteristic.isNotifying, isAuthNotify, pendingBeginAuthOnCCCDOn {
             pendingBeginAuthOnCCCDOn = false
-            print("[GT3] [BLE] CCCD ON confirmed on \(characteristic.uuid) — starting auth now")
-            beginAuthentication()
+            let delayMs = Int(BLEConstants.cccdDrainDelayMs)
+            print("[GT3] [BLE] CCCD ON confirmed on \(characteristic.uuid) — auth in \(delayMs)ms")
+            bleQueue.asyncAfter(deadline: .now() + .milliseconds(delayMs)) { [weak self] in
+                self?.beginAuthentication()
+            }
         }
     }
 

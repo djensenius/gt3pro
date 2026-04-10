@@ -290,7 +290,7 @@ Total encrypted frame = plaintext length + 6 bytes.
 
 | Board | ID |
 |---|---|
-| BLE | 0x04 |
+| BLE | 0x21 |
 | ESC/VCU | 0x02 |
 | BMS1 | 0x06 |
 | BMS2 | 0x07 |
@@ -404,7 +404,7 @@ INITIAL → PRE_COMM → SET_PWD → AUTH → COMM
 
 ```
 Setup:  counter = 0, key = SHA1(bt_name + zeros)
-Send:   cmd=0x5B, index=0x00, data=[] to BLE board (0x04)
+Send:   cmd=0x5B, index=0x00, data=[] to BLE board (0x21)
 Receive: 30+ bytes → auth_param(16B) + serial_number(14B ASCII)
          response INDEX: 0 = no stored password, ≠0 = has stored password
 Then:   store auth_param, enable SN mode (counter starts at 1)
@@ -417,7 +417,7 @@ Setup:  key = SHA1(bt_name + auth_param)
 Generate: 16-byte session password using Java LCG PRNG seeded with
           (currentTimeMillis + f(auth_param))
           → SHA-256 of random bytes → first 16 bytes
-Send:   cmd=0x5C, index=0x00, data=password(16B) to BLE board (0x04)
+Send:   cmd=0x5C, index=0x00, data=password(16B) to BLE board (0x21)
 Receive: INDEX=1 → accepted, INDEX=0 → waiting for physical button press
 Retry:  Every 2s, timeout 60s for user interaction
 ```
@@ -440,7 +440,7 @@ This is one of the trickier parts to port to Swift — the Java int overflow and
 
 ```
 Setup:  key = SHA1(password + auth_param)
-Send:   cmd=0x5D, index=0x00, data=serial_number(14B) to BLE board (0x04)
+Send:   cmd=0x5D, index=0x00, data=serial_number(14B) to BLE board (0x21)
 Receive: INDEX=1 → authenticated (transition to COMM state)
          INDEX=0 → failed (clear stored password, retry from SET_PWD)
 ```
@@ -524,7 +524,7 @@ These don't change during a ride — read once per connection:
 | `rMCUV` | VCU (0x02) | 0x18 | 2B | MCU firmware version |
 | `rBmsV` | VCU (0x02) | 0x19 | 2B | BMS1 firmware version |
 | `rBms2V` | VCU (0x02) | 0x1A | 2B | BMS2 firmware version |
-| `rBleV` | BLE (0x04) | 0x01 | 2B | BLE firmware version |
+| `rBleV` | BLE (0x21) | 0x01 | 2B | BLE firmware version |
 | `rBmsCycleCountLT` | BMS1 (0x06) | 0x59 | 2B | Battery 1 charge cycles |
 | `rBms2CycleCountLT` | BMS2 (0x07) | 0x59 | 2B | Battery 2 charge cycles |
 | `rBmsEnergyThroughputLT` | BMS1 (0x06) | 0xE3 | 4B | Battery 1 total energy throughput |

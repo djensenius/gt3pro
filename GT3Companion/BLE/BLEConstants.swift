@@ -63,9 +63,10 @@ enum BLEConstants {
     // MARK: - Board Target IDs
 
     enum Board: UInt8 {
-        case ble = 0x04
+        /// BLE module (Ninebot standard address for BLE chip = 0x21)
+        case ble = 0x21
         case vcu = 0x02  // ESC / Vehicle Control Unit
-        case mcu = 0x05
+        case mcu = 0x04  // Master Control Unit
         case bms1 = 0x06
         case bms2 = 0x07
         case tft = 0x09

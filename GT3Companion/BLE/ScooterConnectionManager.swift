@@ -78,7 +78,7 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     private var rawBtName: String?
     private var storedPassword: Data?
     private var echoRetryCount = 0
-    private let bleQueue = DispatchQueue(label: "org.davidjensenius.GT3Companion.ble", qos: .userInitiated)
+    let bleQueue = DispatchQueue(label: "org.davidjensenius.GT3Companion.ble", qos: .userInitiated)
 
     override init() {
         super.init()
