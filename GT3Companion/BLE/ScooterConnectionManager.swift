@@ -75,6 +75,10 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     var authAttemptCount = 0
     /// The write characteristic chosen for this connection's auth attempt.
     private var currentAuthWriteChar: CBCharacteristic?
+    /// Last PRE_COMM frame sent — reused by retry loop without re-running startAuth().
+    private var preCommFrame: Data?
+    /// Retries PRE_COMM on successive write channels if no scooter response arrives.
+    private var preCommRetryTask: Task<Void, Never>?
 
     var transport: NinebotTransport?
     private var auth: NinebotAuth?
@@ -304,8 +308,47 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
             let timestamp = bleTS()
             bleLog("Sending PRE_COMM plain (\(frame.count) bytes)")
             print("[GT3] \(timestamp) [AUTH] Sending PRE_COMM plain")
+            self.preCommFrame = frame
             sendFramePlain(frame)
+            startPreCommRetryLoop()
         }
+    }
+
+    /// Retries PRE_COMM on successive write channels every `preCommChannelRetryMs` until
+    /// a response is received (retry task is cancelled by handleAuthResponse) or disconnected.
+    private func startPreCommRetryLoop() {
+        preCommRetryTask?.cancel()
+        preCommRetryTask = Task { [weak self] in
+            for retryIdx in 1...BLEConstants.preCommMaxRetries {
+                let delayNs = BLEConstants.preCommChannelRetryMs * 1_000_000
+                try? await Task.sleep(nanoseconds: delayNs)
+                guard !Task.isCancelled, let self else { break }
+                guard self.connectionState == .authenticating else { break }
+                self.retryPreCommNextChannel(retryIndex: retryIdx)
+            }
+        }
+    }
+
+    /// Advances `currentAuthWriteChar` to the next candidate and resends PRE_COMM.
+    private func retryPreCommNextChannel(retryIndex: Int) {
+        guard let frame = preCommFrame else { return }
+        let candidates: [(CBCharacteristic?, String)] = [
+            (authWriteCharacteristic, "006E-0005"),
+            (writeCharacteristic, "006E-0002"),
+            (rctpWriteCharacteristic, "006E-0003"),
+            (oldWriteCharacteristic, "B5A3-0002")
+        ]
+        // Rotate starting from the channel AFTER the one already tried this connection.
+        let base = (authAttemptCount + retryIndex) % candidates.count
+        for offset in 0..<candidates.count {
+            let (char, name) = candidates[(base + offset) % candidates.count]
+            if let char {
+                currentAuthWriteChar = char
+                print("[GT3] [AUTH] PRE_COMM retry \(retryIndex): → \(name)")
+                break
+            }
+        }
+        sendFramePlain(frame)
     }
 
     /// Strips leading emoji and whitespace from a BLE device name.
@@ -404,6 +447,8 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     }
 
     func handleAuthResponse(_ parsed: NinebotFrameBuilder.ParsedFrame) {
+        preCommRetryTask?.cancel()  // got a response — stop channel cycling
+        preCommRetryTask = nil
         guard let auth = self.auth else { return }
 
         Task {
@@ -573,10 +618,15 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
         // prematurely on the next connection's characteristic discovery.
         writeCharacteristic = nil
         notifyCharacteristic = nil
+        rctpWriteCharacteristic = nil
         authWriteCharacteristic = nil
         authNotifyCharacteristic = nil
         oldWriteCharacteristic = nil
         oldNotifyCharacteristic = nil
+        currentAuthWriteChar = nil
+        preCommFrame = nil
+        preCommRetryTask?.cancel()
+        preCommRetryTask = nil
         pendingBeginAuthOnCCCDOn = false
         auth = nil
         transport = nil
