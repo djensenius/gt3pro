@@ -47,6 +47,12 @@ enum ScooterKeychain {
 
     static func hasPassword() -> Bool { loadPassword() != nil }
 
+    /// Returns the stored password as a lowercase 32-character hex string, or nil if not set.
+    static func loadPasswordHex() -> String? {
+        guard let data = loadPassword() else { return nil }
+        return data.map { String(format: "%02x", $0) }.joined()
+    }
+
     @discardableResult
     static func deletePassword() -> Bool {
         let query: [String: Any] = [

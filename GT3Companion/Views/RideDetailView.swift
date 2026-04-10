@@ -74,7 +74,7 @@ struct RideDetailView: View {
             }
             .padding()
         }
-        .background(Theme.Colors.background)
+        .background(Theme.Colors.background.ignoresSafeArea())
         .navigationTitle(ride.startTime.formatted(date: .abbreviated, time: .omitted))
     }
 

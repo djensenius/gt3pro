@@ -58,7 +58,9 @@ struct ScooterInfoView: View {
                     InfoRow(label: "Time to Full", value: "—")
                 }
             }
+            .scrollContentBackground(.hidden)
             .navigationTitle("Scooter Info")
         }
+        .background(Theme.Colors.background.ignoresSafeArea())
     }
 }

@@ -258,16 +258,17 @@ class AuthManager: ObservableObject, @unchecked Sendable {
 
     /// Ensures the access token is valid, refreshing proactively if near expiry.
     /// Returns `true` if a valid token is available afterward.
+    ///
+    /// Does **not** sign the user out on a failed refresh — a transient network error
+    /// should not end the session. The caller is responsible for handling 401 responses
+    /// from API calls if the token truly becomes invalid.
     func ensureValidToken() async -> Bool {
         await restoreStateIfNeeded()
         guard getAccessToken() != nil else { return false }
         guard isTokenExpiringSoon() else { return true }
         logger.debug("ensureValidToken: refreshing proactively")
         let success = await refreshTokenIfNeeded()
-        if !success {
-            logger.error("ensureValidToken: refresh failed — signing out")
-            await MainActor.run { signOut() }
-        }
+        if !success { logger.warning("ensureValidToken: refresh failed — keeping session alive") }
         return success
     }
 

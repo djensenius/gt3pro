@@ -33,8 +33,10 @@ struct SettingsView: View {
                 dataSection
                 aboutSection
             }
+            .scrollContentBackground(.hidden)
             .navigationTitle("Settings")
         }
+        .background(Theme.Colors.background.ignoresSafeArea())
     }
 
     // MARK: - Sections
@@ -226,6 +228,8 @@ struct LicensesView: View {
             }
             .padding(.vertical, Theme.Spacing.small)
         }
+        .scrollContentBackground(.hidden)
+        .background(Theme.Colors.background.ignoresSafeArea())
         .navigationTitle("Licenses")
     }
 }

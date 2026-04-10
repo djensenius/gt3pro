@@ -34,8 +34,14 @@ struct PairingView: View {
             }
             .padding()
         }
-        .background(Theme.Colors.background)
+        .background(Theme.Colors.background.ignoresSafeArea())
         .navigationTitle("Pair Scooter")
+        .onAppear {
+            if let existingHex = ScooterKeychain.loadPasswordHex(), pairingMode == .selection {
+                recoveredPassword = existingHex
+                pairingMode = .recoverPassword
+            }
+        }
     }
 
     private var selectionView: some View {

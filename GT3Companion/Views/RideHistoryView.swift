@@ -18,6 +18,7 @@ struct RideHistoryView: View {
                     RideRowView(ride: ride)
                 }
             }
+            .scrollContentBackground(.hidden)
             .navigationTitle("Ride History")
             .overlay {
                 if rides.isEmpty {
@@ -29,6 +30,7 @@ struct RideHistoryView: View {
                 }
             }
         }
+        .background(Theme.Colors.background.ignoresSafeArea())
     }
 }
 
