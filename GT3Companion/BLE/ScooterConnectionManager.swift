@@ -292,7 +292,7 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     /// Send a plain (unencrypted) frame with trailing 2-byte checksum — used for PRE_COMM.
     private func sendFramePlain(_ frame: Data) {
         guard let char = writeCharacteristic, let periph = peripheral, frame.count > 3 else { return }
-        let chksum = UInt16(truncatingIfNeeded: ~Data(frame[3...]).reduce(UInt32(0)) { $0 + UInt32($1) })
+        let chksum = UInt16(truncatingIfNeeded: ~Data(frame[2...]).reduce(UInt32(0)) { $0 + UInt32($1) })
         var outFrame = frame
         outFrame.append(UInt8(chksum & 0xFF))
         outFrame.append(UInt8(chksum >> 8))

@@ -113,10 +113,15 @@ actor NinebotTransport {
             reassemblyBuffer.append(byte)
 
             // Third byte after sync is the length.
-            // Plain frames include a 2-byte checksum after the payload (outside LEN).
+            // GT3 Pro plain frames: LEN = data bytes only, total frame = LEN + 9
+            // (5A + A5 + LEN + SRC + DEST + CMD + INDEX + DATA(LEN) + CHK_LO + CHK_HI)
+            // Encrypted frames: LEN = encrypted payload bytes, total frame = LEN + 3
             if reassemblyBuffer.count == 3 {
-                let checksumExtra = inboundIsEncrypted ? 0 : 2
-                expectedLength = Int(byte) + 3 + checksumExtra
+                if inboundIsEncrypted {
+                    expectedLength = Int(byte) + 3
+                } else {
+                    expectedLength = Int(byte) + 9
+                }
             }
 
             if reassemblyBuffer.count >= expectedLength && expectedLength > 3 {

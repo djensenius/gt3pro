@@ -41,9 +41,10 @@ final class NinebotTransportTests: XCTestCase {
         let crypto = NinebotCrypto(key: key, counter: 0)
         let transport = NinebotTransport(crypto: crypto)
 
-        // Plain frames require trailing 2-byte checksum: (~sum(payload)) & 0xFFFF
-        // payload=3e020457023 sum=0xbe checksum=0xff41 → lo=0x41 hi=0xff
-        let frame = Data([0x5A, 0xA5, 0x05, 0x3E, 0x02, 0x04, 0x57, 0x23, 0x41, 0xFF])
+        // New GT3 Pro plain frame format: LEN=data count only.
+        // Frame: 5A A5 01 3E 02 04 57 23 CHK_LO CHK_HI (10 bytes, LEN=1 for 1 data byte)
+        // Checksum covers frame[2..]: 01+3E+02+04+57+23 = 0xBF → ~0xBF = 0xFF40 → [40, FF]
+        let frame = Data([0x5A, 0xA5, 0x01, 0x3E, 0x02, 0x04, 0x57, 0x23, 0x40, 0xFF])
         let parsed = try await transport.processInbound(chunk: frame)
         XCTAssertNotNil(parsed)
         XCTAssertEqual(parsed?.cmd, 0x04)
@@ -55,8 +56,8 @@ final class NinebotTransportTests: XCTestCase {
         let crypto = NinebotCrypto(key: key, counter: 0)
         let transport = NinebotTransport(crypto: crypto)
 
-        // Plain frame with 2-byte checksum (10 bytes total)
-        let frame = Data([0x5A, 0xA5, 0x05, 0x3E, 0x02, 0x04, 0x57, 0x23, 0x41, 0xFF])
+        // New GT3 Pro plain frame (10 bytes, LEN=1)
+        let frame = Data([0x5A, 0xA5, 0x01, 0x3E, 0x02, 0x04, 0x57, 0x23, 0x40, 0xFF])
 
         let partial = try await transport.processInbound(chunk: Data(frame[0..<4]))
         XCTAssertNil(partial)

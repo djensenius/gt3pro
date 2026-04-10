@@ -45,9 +45,9 @@ enum NinebotFrameBuilder {
 
     /// Build a raw Ninebot frame.
     /// Layout: [0x5A, 0xA5, LEN, BT_ID, TARGET, CMD, INDEX, DATA...]
-    /// LEN = data.count + 4 (covers BT_ID, TARGET, CMD, INDEX, and DATA)
+    /// LEN = data.count (GT3 Pro "x3 series" protocol: LEN counts data bytes only)
     private static func buildFrame(target: UInt8, cmd: UInt8, index: UInt8, data: Data) -> Data {
-        let len = UInt8(data.count + 4)
+        let len = UInt8(data.count)
 
         var frame = Data()
         frame.append(BLEConstants.syncByte1)
@@ -71,8 +71,11 @@ enum NinebotFrameBuilder {
             || frame[1] == BLEConstants.syncByte2Encrypted else { return nil }
 
         let length = frame[2]
-        // Validate: frame should be exactly 3 (header) + length bytes
-        guard length >= 4, frame.count == Int(length) + 3 else { return nil }
+        // Accept old format (LEN = SRC+DEST+CMD+INDEX+data, so frame = LEN+3 bytes)
+        // and new GT3 Pro format (LEN = data only, so frame = LEN+7 bytes).
+        let isOldFormat = length >= 4 && frame.count == Int(length) + 3
+        let isNewFormat = frame.count == Int(length) + 7
+        guard isOldFormat || isNewFormat else { return nil }
 
         let btID = frame[3]
         let source = frame[4]

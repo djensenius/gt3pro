@@ -11,10 +11,11 @@ import XCTest
 final class NinebotFrameBuilderTests: XCTestCase {
     func testBuildReadFrame() {
         let frame = NinebotFrameBuilder.buildReadFrame(board: .vcu, register: 0x57, length: 2)
+        // GT3 Pro format: LEN = data.count only (1 data byte = the length byte)
         // [5A, A5, LEN, 3E, 02, 01, 57, 02]
         XCTAssertEqual(frame[0], 0x5A) // sync
         XCTAssertEqual(frame[1], 0xA5) // sync
-        XCTAssertEqual(frame[2], 5)    // length: 1(data) + 4 = 5
+        XCTAssertEqual(frame[2], 1)    // length: 1 data byte
         XCTAssertEqual(frame[3], 0x3E) // BT_ID
         XCTAssertEqual(frame[4], 0x02) // VCU board
         XCTAssertEqual(frame[5], 0x01) // read command
@@ -28,7 +29,7 @@ final class NinebotFrameBuilderTests: XCTestCase {
         let frame = NinebotFrameBuilder.buildWriteFrame(board: .bms1, register: 0x10, data: data)
         XCTAssertEqual(frame[0], 0x5A)
         XCTAssertEqual(frame[1], 0xA5)
-        XCTAssertEqual(frame[2], 6)    // 2(data) + 4 = 6
+        XCTAssertEqual(frame[2], 2)    // 2 data bytes
         XCTAssertEqual(frame[3], 0x3E)
         XCTAssertEqual(frame[4], 0x06) // BMS1
         XCTAssertEqual(frame[5], 0x03) // write command
