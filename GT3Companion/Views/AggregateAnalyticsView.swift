@@ -14,8 +14,10 @@ struct AggregateAnalyticsView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: Theme.Spacing.large) {
+            ZStack {
+                Theme.Colors.background.ignoresSafeArea()
+                ScrollView {
+                    VStack(spacing: Theme.Spacing.large) {
                     LazyVGrid(
                         columns: [GridItem(.flexible()), GridItem(.flexible())],
                         spacing: Theme.Spacing.medium
@@ -71,8 +73,8 @@ struct AggregateAnalyticsView: View {
                     }
                 }
                 .padding()
+                }
             }
-            .background(Theme.Colors.background.ignoresSafeArea())
             .navigationTitle("Analytics")
         }
     }

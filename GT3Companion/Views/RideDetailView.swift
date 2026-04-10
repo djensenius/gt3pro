@@ -36,61 +36,63 @@ struct RideDetailView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: Theme.Spacing.large) {
-                HStack(spacing: Theme.Spacing.medium) {
-                    StatCard(
-                        title: "Distance",
-                        value: String(format: "%.1f km", ride.totalDistance),
-                        icon: "point.topleft.down.to.point.bottomright.curvepath",
-                        color: Theme.Colors.accent
-                    )
-                    StatCard(
-                        title: "Duration",
-                        value: ride.formattedDuration,
-                        icon: "clock",
-                        color: Theme.Colors.secondary
-                    )
-                }
+        ZStack {
+            Theme.Colors.background.ignoresSafeArea()
+            ScrollView {
+                VStack(spacing: Theme.Spacing.large) {
+                    HStack(spacing: Theme.Spacing.medium) {
+                        StatCard(
+                            title: "Distance",
+                            value: String(format: "%.1f km", ride.totalDistance),
+                            icon: "point.topleft.down.to.point.bottomright.curvepath",
+                            color: Theme.Colors.accent
+                        )
+                        StatCard(
+                            title: "Duration",
+                            value: ride.formattedDuration,
+                            icon: "clock",
+                            color: Theme.Colors.secondary
+                        )
+                    }
 
-                HStack(spacing: Theme.Spacing.medium) {
-                    StatCard(
-                        title: "Max Speed",
-                        value: String(format: "%.0f km/h", ride.maxSpeed),
-                        icon: "gauge.open.with.lines.needle.84percent",
-                        color: Theme.Colors.error
-                    )
-                    StatCard(
-                        title: "Avg Speed",
-                        value: String(format: "%.0f km/h", ride.avgSpeed),
-                        icon: "gauge.open.with.lines.needle.33percent",
-                        color: Theme.Colors.info
-                    )
-                }
+                    HStack(spacing: Theme.Spacing.medium) {
+                        StatCard(
+                            title: "Max Speed",
+                            value: String(format: "%.0f km/h", ride.maxSpeed),
+                            icon: "gauge.open.with.lines.needle.84percent",
+                            color: Theme.Colors.error
+                        )
+                        StatCard(
+                            title: "Avg Speed",
+                            value: String(format: "%.0f km/h", ride.avgSpeed),
+                            icon: "gauge.open.with.lines.needle.33percent",
+                            color: Theme.Colors.info
+                        )
+                    }
 
-                HStack(spacing: Theme.Spacing.medium) {
-                    StatCard(
-                        title: "Start",
-                        value: "\(ride.startBattery)%",
-                        icon: "battery.100percent",
-                        color: Theme.Colors.success
-                    )
-                    StatCard(
-                        title: "End",
-                        value: "\(ride.endBattery ?? 0)%",
-                        icon: "battery.25percent",
-                        color: Theme.Colors.warning
-                    )
-                }
+                    HStack(spacing: Theme.Spacing.medium) {
+                        StatCard(
+                            title: "Start",
+                            value: "\(ride.startBattery)%",
+                            icon: "battery.100percent",
+                            color: Theme.Colors.success
+                        )
+                        StatCard(
+                            title: "End",
+                            value: "\(ride.endBattery ?? 0)%",
+                            icon: "battery.25percent",
+                            color: Theme.Colors.warning
+                        )
+                    }
 
-                routeSection
-                speedChartSection
-                batteryChartSection
-                tempChartSection
+                    routeSection
+                    speedChartSection
+                    batteryChartSection
+                    tempChartSection
+                }
+                .padding()
             }
-            .padding()
         }
-        .background(Theme.Colors.background.ignoresSafeArea())
         .navigationTitle(ride.startTime.formatted(date: .abbreviated, time: .omitted))
     }
 

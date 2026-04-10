@@ -61,5 +61,6 @@ struct RideRowView: View {
                 .foregroundStyle(Theme.Colors.textSecondary)
         }
         .padding(.vertical, 4)
+        .listRowBackground(Theme.Colors.elevatedBackground)
     }
 }

@@ -59,6 +59,7 @@ struct SettingsView: View {
                 Button("Sign Out") { showSignOutAlert = true }
                     .foregroundStyle(Theme.Colors.error)
             }
+            .listRowBackground(Theme.Colors.elevatedBackground)
         }
         .confirmationDialog("Sign Out", isPresented: $showSignOutAlert) {
             Button("Sign Out", role: .destructive) { AuthManager.shared.signOut() }
@@ -71,9 +72,11 @@ struct SettingsView: View {
     private var scooterSection: some View {
         Section("Scooter") {
             NavigationLink("Pair Scooter") { PairingView() }
+                .listRowBackground(Theme.Colors.elevatedBackground)
 
             if ScooterKeychain.hasPassword() && !scooterForgotten {
                 Button("Forget Scooter", role: .destructive) { showForgetScooterAlert = true }
+                    .listRowBackground(Theme.Colors.elevatedBackground)
             }
         }
         .confirmationDialog("Forget Scooter?", isPresented: $showForgetScooterAlert) {
@@ -95,16 +98,21 @@ struct SettingsView: View {
                 Text(String(format: "%.1f Hz", pollingFrequency))
                     .foregroundStyle(Theme.Colors.textSecondary)
             }
+            .listRowBackground(Theme.Colors.elevatedBackground)
             Slider(value: $pollingFrequency, in: 0.5...2.0, step: 0.5)
                 .tint(Theme.Colors.accent)
+                .listRowBackground(Theme.Colors.elevatedBackground)
             Toggle("GPS Recording", isOn: $gpsEnabled)
+                .listRowBackground(Theme.Colors.elevatedBackground)
             Toggle("Surface Roughness", isOn: $roughnessEnabled)
+                .listRowBackground(Theme.Colors.elevatedBackground)
         }
     }
 
     private var liveActivitySection: some View {
         Section("Live Activity") {
             Toggle("Show on Dynamic Island", isOn: $liveActivityEnabled)
+                .listRowBackground(Theme.Colors.elevatedBackground)
         }
     }
 
@@ -114,11 +122,14 @@ struct SettingsView: View {
                 ShareLink(item: exportCSV(), preview: SharePreview("Rides.csv")) {
                     Label("Export Rides (CSV)", systemImage: "tablecells")
                 }
+                .listRowBackground(Theme.Colors.elevatedBackground)
                 ShareLink(item: exportJSON(), preview: SharePreview("Rides.json")) {
                     Label("Export Rides (JSON)", systemImage: "curlybraces")
                 }
+                .listRowBackground(Theme.Colors.elevatedBackground)
             }
             Button("Clear Local Data", role: .destructive) { showClearDataAlert = true }
+                .listRowBackground(Theme.Colors.elevatedBackground)
         }
         .confirmationDialog("Clear Local Data?", isPresented: $showClearDataAlert) {
             Button("Clear", role: .destructive) { clearLocalData() }
@@ -131,22 +142,27 @@ struct SettingsView: View {
     private var debugSection: some View {
         Section {
             Toggle("Verbose Logging", isOn: $logStore.verboseLoggingEnabled)
+                .listRowBackground(Theme.Colors.elevatedBackground)
             if !logStore.entries.isEmpty {
                 NavigationLink("View Logs (\(logStore.entries.count))") {
                     DebugLogView()
                 }
+                .listRowBackground(Theme.Colors.elevatedBackground)
                 Button {
                     showLogFileExporter = true
                 } label: {
                     Label("Save to Files…", systemImage: "folder")
                 }
+                .listRowBackground(Theme.Colors.elevatedBackground)
                 ShareLink(
                     item: logStore.export(),
                     preview: SharePreview("gt3-debug.log")
                 ) {
                     Label("Share Logs", systemImage: "square.and.arrow.up")
                 }
+                .listRowBackground(Theme.Colors.elevatedBackground)
                 Button("Clear Logs", role: .destructive) { logStore.clear() }
+                    .listRowBackground(Theme.Colors.elevatedBackground)
             }
         } header: {
             Text("Diagnostics")
@@ -163,7 +179,9 @@ struct SettingsView: View {
                 value: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "–"
             )
             NavigationLink("Privacy Policy") { PrivacyPolicyView() }
+                .listRowBackground(Theme.Colors.elevatedBackground)
             NavigationLink("Licenses") { LicensesView() }
+                .listRowBackground(Theme.Colors.elevatedBackground)
         }
     }
 
@@ -235,7 +253,7 @@ You can delete all local data at any time from Settings → Data → Clear Local
             }
             .padding()
         }
-        .background(Theme.Colors.background)
+        .background(Theme.Colors.background.ignoresSafeArea())
         .navigationTitle("Privacy Policy")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -264,6 +282,7 @@ struct LicensesView: View {
                     .foregroundStyle(Theme.Colors.textSecondary)
             }
             .padding(.vertical, Theme.Spacing.small)
+            .listRowBackground(Theme.Colors.elevatedBackground)
         }
         .scrollContentBackground(.hidden)
         .background(Theme.Colors.background.ignoresSafeArea())
@@ -293,6 +312,7 @@ struct DebugLogView: View {
                     .foregroundStyle(Theme.Colors.textPrimary)
             }
             .padding(.vertical, 2)
+            .listRowBackground(Theme.Colors.elevatedBackground)
         }
         .scrollContentBackground(.hidden)
         .background(Theme.Colors.background.ignoresSafeArea())

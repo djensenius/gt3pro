@@ -102,6 +102,11 @@ public struct Theme {
             light: CatppuccinLatte.mantle,
             dark: CatppuccinMocha.mantle
         )
+        /// Elevated surfaces: list rows, cards. Uses surface0 which is lighter than base in dark mode.
+        public static let elevatedBackground = dynamicColor(
+            light: CatppuccinLatte.surface0,
+            dark: CatppuccinMocha.surface0
+        )
 
         public static let textPrimary = dynamicColor(light: CatppuccinLatte.text, dark: CatppuccinMocha.text)
         public static let textSecondary = dynamicColor(

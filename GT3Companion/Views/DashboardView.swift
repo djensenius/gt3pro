@@ -32,14 +32,16 @@ struct DashboardView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                if isConnected {
-                    connectedView
-                } else {
-                    disconnectedView
+            ZStack {
+                Theme.Colors.background.ignoresSafeArea()
+                ScrollView {
+                    if isConnected {
+                        connectedView
+                    } else {
+                        disconnectedView
+                    }
                 }
             }
-            .background(Theme.Colors.background.ignoresSafeArea())
             .navigationTitle("GT3 Companion")
         }
     }
@@ -59,6 +61,7 @@ struct DashboardView: View {
                 .multilineTextAlignment(.center)
             Spacer()
         }
+        .frame(maxWidth: .infinity)
         .padding()
     }
 
