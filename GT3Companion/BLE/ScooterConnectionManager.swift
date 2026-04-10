@@ -172,13 +172,16 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     }
 
     /// Try to begin auth if both characteristics are discovered.
+    // Set to true after CCCD ON is sent; beginAuthentication fires on the ACK
+    var pendingBeginAuthOnCCCDOn = false
+
     func checkReadyForAuth() {
         guard writeCharacteristic != nil, notifyCharacteristic != nil else { return }
         toggleNotifications()
     }
 
     /// CCCD toggle workaround for iOS stale notifications on reconnect.
-    /// All CB calls stay on bleQueue for proper serialization.
+    /// Sends OFF then ON; beginAuthentication fires when the ON is ACK'd by the scooter.
     private func toggleNotifications() {
         guard let peripheral = peripheral, let characteristic = notifyCharacteristic else { return }
 
@@ -187,17 +190,13 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
             self?.bleQueue.asyncAfter(
                 deadline: .now() + .milliseconds(Int(BLEConstants.cccdToggleOffDelayMs))
             ) { [weak self] in
+                self?.pendingBeginAuthOnCCCDOn = true
                 peripheral.setNotifyValue(true, for: characteristic)
-                self?.bleQueue.asyncAfter(
-                    deadline: .now() + .milliseconds(Int(BLEConstants.cccdDrainDelayMs))
-                ) { [weak self] in
-                    self?.beginAuthentication()
-                }
             }
         }
     }
 
-    private func beginAuthentication() {
+    func beginAuthentication() {
         guard let name = btName else {
             logger.error("No BT name available for auth")
             bleLog("Auth failed — no BT name available", level: .error)
@@ -481,6 +480,7 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
         // prematurely on the next connection's characteristic discovery.
         writeCharacteristic = nil
         notifyCharacteristic = nil
+        pendingBeginAuthOnCCCDOn = false
         auth = nil
         transport = nil
 

@@ -23,11 +23,16 @@ extension ScooterConnectionManager: CBPeripheralDelegate {
             bleLog("No services found on peripheral", level: .warning)
             return
         }
-        bleLog("Discovered \(services.count) service(s) — looking for Ninebot service")
-        for service in services where service.uuid == BLEConstants.serviceUUID {
-            bleLog("Found Ninebot service — discovering ALL characteristics…")
-            // Discover all characteristics to catch any notify channel (0003 or 0004)
-            peripheral.discoverCharacteristics(nil, for: service)
+        bleLog("Discovered \(services.count) service(s)")
+        for service in services {
+            print("[GT3] [BLE] Service: \(service.uuid)")
+            if service.uuid == BLEConstants.serviceUUID {
+                bleLog("Found Ninebot service — discovering ALL characteristics…")
+                peripheral.discoverCharacteristics(nil, for: service)
+            } else {
+                // Discover chars on other services too so we can log them
+                peripheral.discoverCharacteristics(nil, for: service)
+            }
         }
     }
 
@@ -37,7 +42,8 @@ extension ScooterConnectionManager: CBPeripheralDelegate {
         error: Error?
     ) {
         guard let characteristics = service.characteristics else { return }
-        bleLog("Discovered \(characteristics.count) characteristic(s):")
+        let isNinebot = service.uuid == BLEConstants.serviceUUID
+        print("[GT3] [BLE] Chars for service \(service.uuid) (\(isNinebot ? "NINEBOT" : "other")):")
         for characteristic in characteristics {
             let props = characteristic.properties
             var propStr: [String] = []
@@ -49,11 +55,11 @@ extension ScooterConnectionManager: CBPeripheralDelegate {
             print("[GT3] [BLE] Char \(characteristic.uuid) props=[\(propStr.joined(separator: ","))]")
 
             switch characteristic.uuid {
-            case BLEConstants.writeCharUUID:
+            case BLEConstants.writeCharUUID where isNinebot:
                 writeCharacteristic = characteristic
                 bleLog("Found write characteristic (0002)")
                 checkReadyForAuth()
-            case BLEConstants.notifyCharUUID:
+            case BLEConstants.notifyCharUUID where isNinebot:
                 notifyCharacteristic = characteristic
                 bleLog("Found notify characteristic (0004)")
                 checkReadyForAuth()
@@ -61,8 +67,7 @@ extension ScooterConnectionManager: CBPeripheralDelegate {
                 break
             }
 
-            // Subscribe to ANY characteristic that supports notify or indicate,
-            // except 0004 which is handled by toggleNotifications before auth.
+            // Subscribe to ANY notify/indicate char (except 0004, handled by toggleNotifications)
             if props.contains(.notify) || props.contains(.indicate),
                characteristic.uuid != BLEConstants.notifyCharUUID {
                 print("[GT3] [BLE] Subscribing to extra notify char \(characteristic.uuid)")
@@ -123,6 +128,15 @@ extension ScooterConnectionManager: CBPeripheralDelegate {
         let state = characteristic.isNotifying ? "ON" : "OFF"
         bleLog("CCCD \(state) for \(characteristic.uuid)")
         print("[GT3] [BLE] CCCD \(state) for \(characteristic.uuid)")
+
+        // Fire beginAuthentication as soon as CCCD ON is ACK'd (event-driven, not timer)
+        if characteristic.isNotifying,
+           characteristic.uuid == BLEConstants.notifyCharUUID,
+           pendingBeginAuthOnCCCDOn {
+            pendingBeginAuthOnCCCDOn = false
+            print("[GT3] [BLE] CCCD ON confirmed — starting auth now")
+            beginAuthentication()
+        }
     }
 
     func peripheral(
