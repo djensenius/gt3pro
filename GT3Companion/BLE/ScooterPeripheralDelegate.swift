@@ -65,6 +65,7 @@ extension ScooterConnectionManager: CBPeripheralDelegate {
 
         guard let transport = self.transport else { return }
 
+        print("[GT3] [BLE] didUpdateValueFor (notify): \(data.hexString)")
         Task {
             do {
                 if let parsed = try await transport.processInbound(chunk: data) {
@@ -83,6 +84,34 @@ extension ScooterConnectionManager: CBPeripheralDelegate {
             } catch {
                 bleLog("Frame processing error: \(error)", level: .error)
             }
+        }
+    }
+
+    func peripheral(
+        _ peripheral: CBPeripheral,
+        didUpdateNotificationStateFor characteristic: CBCharacteristic,
+        error: Error?
+    ) {
+        if let error {
+            bleLog("CCCD update failed for \(characteristic.uuid): \(error.localizedDescription)", level: .error)
+            print("[GT3] [BLE] CCCD ERROR: \(characteristic.uuid) — \(error.localizedDescription)")
+            return
+        }
+        let state = characteristic.isNotifying ? "ON" : "OFF"
+        bleLog("CCCD \(state) for \(characteristic.uuid)")
+        print("[GT3] [BLE] CCCD \(state) for \(characteristic.uuid)")
+    }
+
+    func peripheral(
+        _ peripheral: CBPeripheral,
+        didWriteValueFor characteristic: CBCharacteristic,
+        error: Error?
+    ) {
+        if let error {
+            bleLog("Write failed for \(characteristic.uuid): \(error.localizedDescription)", level: .error)
+            print("[GT3] [BLE] Write ERROR: \(characteristic.uuid) — \(error.localizedDescription)")
+        } else {
+            print("[GT3] [BLE] Write ACK: \(characteristic.uuid)")
         }
     }
 }
