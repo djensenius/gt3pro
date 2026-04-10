@@ -224,8 +224,8 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
 
         Task {
             let frame = await authActor.startAuth()
-            bleLog("Sending PRE_COMM (\(frame.count) bytes)")
-            sendFrame(frame)
+            bleLog("Sending PRE_COMM plain (\(frame.count) bytes)")
+            sendFramePlain(frame)
         }
     }
 
@@ -285,6 +285,32 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
                 }
             } catch {
                 logger.error("Failed to send frame: \(error)")
+            }
+        }
+    }
+
+    /// Send a plain (unencrypted) frame directly — used for PRE_COMM.
+    /// PRE_COMM carries no secrets; encryption begins with SET_PWD/AUTH.
+    private func sendFramePlain(_ frame: Data) {
+        guard let characteristic = writeCharacteristic, let peripheral = peripheral else {
+            logger.error("Cannot send plain frame: write characteristic not available")
+            return
+        }
+        print("[GT3] [TRANSPORT] sendFramePlain: \(frame.hexString)")
+        let chunkSize = max(1, mtu - 3)
+        var chunks: [Data] = []
+        var offset = 0
+        while offset < frame.count {
+            let end = min(offset + chunkSize, frame.count)
+            chunks.append(Data(frame[offset..<end]))
+            offset = end
+        }
+        bleQueue.async {
+            for (index, chunk) in chunks.enumerated() {
+                peripheral.writeValue(chunk, for: characteristic, type: .withResponse)
+                if index < chunks.count - 1 {
+                    Thread.sleep(forTimeInterval: Double(BLEConstants.fragmentDelayMs) / 1000.0)
+                }
             }
         }
     }
