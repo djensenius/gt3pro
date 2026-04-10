@@ -122,14 +122,14 @@ extension ScooterConnectionManager: CBPeripheralDelegate {
     ) {
         // Log raw bytes immediately, before ANY guard — catch silent drops
         if let data = characteristic.value {
-            print("[GT3] [BLE] <<< RAW notify on \(characteristic.uuid): \(data.hexString)")
+            print("[GT3] \(bleTS()) [BLE] <<< RAW notify on \(characteristic.uuid): \(data.hexString)")
         } else {
-            print("[GT3] [BLE] <<< RAW notify on \(characteristic.uuid): (no data)")
+            print("[GT3] \(bleTS()) [BLE] <<< RAW notify on \(characteristic.uuid): (no data)")
         }
 
         guard let data = characteristic.value else { return }
         guard let transport = self.transport else {
-            print("[GT3] [BLE] <<< transport=nil, dropping \(data.hexString)")
+            print("[GT3] \(bleTS()) [BLE] <<< transport=nil, dropping \(data.hexString)")
             return
         }
 
@@ -166,7 +166,7 @@ extension ScooterConnectionManager: CBPeripheralDelegate {
         }
         let state = characteristic.isNotifying ? "ON" : "OFF"
         bleLog("CCCD \(state) for \(characteristic.uuid)")
-        print("[GT3] [BLE] CCCD \(state) for \(characteristic.uuid)")
+        print("[GT3] \(bleTS()) [BLE] CCCD \(state) for \(characteristic.uuid)")
 
         // Fire beginAuthentication after CCCD ON is ACK'd + drain delay.
         // Accept confirmation from either: old-service notify (B5A3-0003) or new-service 0004.
@@ -175,7 +175,7 @@ extension ScooterConnectionManager: CBPeripheralDelegate {
         if characteristic.isNotifying, isAuthNotify, pendingBeginAuthOnCCCDOn {
             pendingBeginAuthOnCCCDOn = false
             let delayMs = Int(BLEConstants.cccdDrainDelayMs)
-            print("[GT3] [BLE] CCCD ON confirmed on \(characteristic.uuid) — auth in \(delayMs)ms")
+            print("[GT3] \(bleTS()) [BLE] CCCD ON confirmed on \(characteristic.uuid) — auth in \(delayMs)ms")
             bleQueue.asyncAfter(deadline: .now() + .milliseconds(delayMs)) { [weak self] in
                 self?.beginAuthentication()
             }
@@ -189,9 +189,9 @@ extension ScooterConnectionManager: CBPeripheralDelegate {
     ) {
         if let error {
             bleLog("Write failed for \(characteristic.uuid): \(error.localizedDescription)", level: .error)
-            print("[GT3] [BLE] Write ERROR: \(characteristic.uuid) — \(error.localizedDescription)")
+            print("[GT3] \(bleTS()) [BLE] Write ERROR: \(characteristic.uuid) — \(error.localizedDescription)")
         } else {
-            print("[GT3] [BLE] Write ACK: \(characteristic.uuid)")
+            print("[GT3] \(bleTS()) [BLE] Write ACK: \(characteristic.uuid)")
         }
     }
 }

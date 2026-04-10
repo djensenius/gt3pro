@@ -18,6 +18,17 @@ func bleLog(_ message: String, level: LogEntry.Level = .info) {
     }
 }
 
+/// Returns a compact timestamp string: HH:MM:SS.mmm
+func bleTS() -> String {
+    let now = Date()
+    let cal = Calendar.current
+    let hour = cal.component(.hour, from: now)
+    let min = cal.component(.minute, from: now)
+    let sec = cal.component(.second, from: now)
+    let msec = Int(now.timeIntervalSince1970 * 1000) % 1000
+    return String(format: "%02d:%02d:%02d.%03d", hour, min, sec, msec)
+}
+
 /// Connection states for the BLE lifecycle.
 enum ConnectionState: Sendable, Equatable, CaseIterable {
     case disconnected
@@ -254,7 +265,9 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
 
         Task {
             let frame = await authActor.startAuth()
+            let timestamp = bleTS()
             bleLog("Sending PRE_COMM plain (\(frame.count) bytes)")
+            print("[GT3] \(timestamp) [AUTH] Sending PRE_COMM plain")
             sendFramePlain(frame)
         }
     }
@@ -332,7 +345,7 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         outFrame.append(UInt8(chksum & 0xFF))
         outFrame.append(UInt8(chksum >> 8))
         let charDesc = char.uuid.uuidString.suffix(4)
-        print("[GT3] [TRANSPORT] sendFramePlain on \(charDesc): \(outFrame.hexString)")
+        print("[GT3] \(bleTS()) [TRANSPORT] sendFramePlain on \(charDesc): \(outFrame.hexString)")
         let chunkSize = max(1, mtu - 3)
         var chunks: [Data] = []
         var offset = 0
@@ -475,8 +488,10 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
         _ central: CBCentralManager,
         didConnect peripheral: CBPeripheral
     ) {
+        let timestamp = bleTS()
         logger.info("Connected to \(peripheral.name ?? "unknown")")
         bleLog("Connected to \(peripheral.name ?? "unknown") — discovering services…")
+        print("[GT3] \(timestamp) [BLE] Connected to \(peripheral.name ?? "unknown")")
         echoRetryCount = 0
 
         // Update btName from peripheral.name if we didn't have it from discovery
@@ -509,9 +524,11 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
         didDisconnectPeripheral peripheral: CBPeripheral,
         error: Error?
     ) {
+        let timestamp = bleTS()
         logger.info("Disconnected: \(error?.localizedDescription ?? "clean")")
         bleLog("Disconnected: \(error?.localizedDescription ?? "clean disconnect")",
                level: error != nil ? .warning : .info)
+        print("[GT3] \(timestamp) [BLE] Disconnected: \(error?.localizedDescription ?? "clean")")
 
         // Clear per-connection state so checkReadyForAuth() doesn't fire
         // prematurely on the next connection's characteristic discovery.
