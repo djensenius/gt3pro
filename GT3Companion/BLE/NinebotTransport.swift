@@ -39,12 +39,14 @@ actor NinebotTransport {
     /// Returns an array of Data chunks to write sequentially with inter-fragment delay.
     func prepareOutbound(plaintextFrame: Data) throws -> [Data] {
         guard plaintextFrame.count >= 3 else { return [] }
+        print("[GT3] [TRANSPORT] prepareOutbound: \(plaintextFrame.hexString)")
 
         // Extract payload (everything after 3-byte header [5A, A5, LEN])
         let payload = Data(plaintextFrame[3...])
 
         // Encrypt
         let encrypted = try crypto.encrypt(plaintext: payload)
+        print("[GT3] [TRANSPORT] encrypted payload: \(encrypted.hexString)")
 
         // Build encrypted frame with header
         var frame = Data()
@@ -126,10 +128,12 @@ actor NinebotTransport {
         _ frame: Data
     ) throws -> NinebotFrameBuilder.ParsedFrame? {
         let isEncrypted = frame[1] == BLEConstants.syncByte2Encrypted
+        print("[GT3] [TRANSPORT] decryptAndParse: \(frame.hexString) isEncrypted=\(isEncrypted)")
 
         if isEncrypted {
             let encryptedPayload = Data(frame[3...])
             let decrypted = try crypto.decrypt(encrypted: encryptedPayload)
+            print("[GT3] [TRANSPORT] decrypted: \(decrypted.hexString)")
 
             // Rebuild as plaintext frame for parsing
             var plainFrame = Data()

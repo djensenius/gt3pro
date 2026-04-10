@@ -16,6 +16,7 @@
 		12BC724CF4BE3DEDED407778 /* GPSTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C1ECE09CFA84C86FA1A4892 /* GPSTracker.swift */; };
 		14081CD2FA3DE9C3454C6EF0 /* RideSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5321F13F45361AC2D0345AF4 /* RideSyncService.swift */; };
 		18816EF42D84BEE79BAECC77 /* VisionContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DCD3F4E090513234E3E93D4 /* VisionContentView.swift */; };
+		1A073CC2F36A0042C580A3B0 /* DataExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B37C34C9C57F04F3812AA098 /* DataExtensions.swift */; };
 		1B3980D421AC54B23ADC469A /* NinebotCrypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1DF0B6837DF0A29239682E /* NinebotCrypto.swift */; };
 		1BA065423E7014CBEF7E5789 /* PreviewHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEC6013FFE64589ED662804D /* PreviewHelpers.swift */; };
 		1BCC17969E11E97F3D009E00 /* GT3CompanionWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 891BD92EAAEA3BFE7C483FEA /* GT3CompanionWatchApp.swift */; };
@@ -214,6 +215,7 @@
 		ACFF7915A5105F90F7895B3B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		ADC13C5A39D3483D8EEDD04B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		AEC6013FFE64589ED662804D /* PreviewHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewHelpers.swift; sourceTree = "<group>"; };
+		B37C34C9C57F04F3812AA098 /* DataExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataExtensions.swift; sourceTree = "<group>"; };
 		B7BEE3B916F38F756C2A05FA /* GT3Registers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3Registers.swift; sourceTree = "<group>"; };
 		BDE60F2A3E20E8CFCAE04D6A /* GT3CompanionWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = GT3CompanionWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		BEEE5678757A80552FB8CD6E /* JavaLCGTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JavaLCGTests.swift; sourceTree = "<group>"; };
@@ -442,6 +444,7 @@
 			isa = PBXGroup;
 			children = (
 				C578ACBA36D95C48E179455A /* AppCoordinator.swift */,
+				B37C34C9C57F04F3812AA098 /* DataExtensions.swift */,
 				117232BCF6C3AE194334376A /* DebugLogStore.swift */,
 				5CA73CFF555039D3094FDDBF /* GT3CompanionApp.swift */,
 				F2457DD0E36F44181C0211AD /* PermissionsManager.swift */,
@@ -768,6 +771,7 @@
 				DF6A88BD36CBAB7FA8DEC557 /* BLEConstants.swift in Sources */,
 				31572ECF63F373A2BCAC326E /* ContentView.swift in Sources */,
 				A8E0223E41ADE054D28A2EA4 /* DashboardView.swift in Sources */,
+				1A073CC2F36A0042C580A3B0 /* DataExtensions.swift in Sources */,
 				F15FD8003ED830192B77D39A /* DebugLogStore.swift in Sources */,
 				12BC724CF4BE3DEDED407778 /* GPSTracker.swift in Sources */,
 				DC91FD896EFB9747551A8451 /* GPXExporter.swift in Sources */,
