@@ -36,6 +36,10 @@ final class NinebotCrypto: @unchecked Sendable {
         }
     }
 
+    func setCounter(_ newCounter: UInt16) {
+        counter = newCounter
+    }
+
     func getCounter() -> UInt16 {
         counter
     }

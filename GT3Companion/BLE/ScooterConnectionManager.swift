@@ -198,11 +198,12 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         let authName = ScooterConnectionManager.sanitizeBLEName(name)
         logger.info("Raw BT name: \(name) → auth name: \(authName) (bytes: \(Data(authName.utf8).count))")
 
-        // Single shared crypto instance for both auth and transport
+        // Single shared crypto instance — auth and transport MUST share the same object
+        // so that key/counter updates during the handshake are visible to both sides.
         let key = KeyDerivation.deriveKey(key1: Data(authName.utf8), key2: nil)
         let crypto = NinebotCrypto(key: key, counter: 0)
 
-        let authActor = NinebotAuth(btName: authName, storedPassword: storedPassword)
+        let authActor = NinebotAuth(btName: authName, crypto: crypto, storedPassword: storedPassword)
         self.auth = authActor
         self.transport = NinebotTransport(crypto: crypto, mtu: mtu)
 

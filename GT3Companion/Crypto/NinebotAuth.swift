@@ -32,19 +32,25 @@ actor NinebotAuth {
     private var deviceHasStoredPassword = false
     private var setPwdRetryCount = 0
 
-    init(btName: String, storedPassword: Data? = nil) {
+    init(btName: String, crypto: NinebotCrypto, storedPassword: Data? = nil) {
         self.btName = btName
         self.storedPassword = storedPassword
-        let initialKey = KeyDerivation.deriveKey(key1: Data(btName.utf8), key2: nil)
-        self.crypto = NinebotCrypto(key: initialKey, counter: 0)
+        self.crypto = crypto
+    }
+
+    /// Convenience initializer for tests — creates a NinebotCrypto derived from btName.
+    /// Production code should inject a shared crypto instance via the primary initializer
+    /// so auth and transport stay in sync.
+    init(btName: String, storedPassword: Data? = nil) {
+        let key = KeyDerivation.deriveKey(key1: Data(btName.utf8), key2: nil)
+        self.btName = btName
+        self.storedPassword = storedPassword
+        self.crypto = NinebotCrypto(key: key, counter: 0)
     }
 
     /// Start the handshake by generating the PRE_COMM frame.
     func startAuth() -> Data {
         state = .preComm
-        let initialKey = KeyDerivation.deriveKey(key1: Data(btName.utf8), key2: nil)
-        crypto = NinebotCrypto(key: initialKey, counter: 0)
-
         let plainFrame = NinebotFrameBuilder.buildAuthFrame(cmd: .preComm, data: Data())
         return plainFrame
     }
@@ -92,7 +98,9 @@ actor NinebotAuth {
         if let stored = storedPassword, deviceHasStoredPassword {
             password = stored
             let authKey = KeyDerivation.deriveKey(key1: stored, key2: authParam!)
-            crypto = NinebotCrypto(key: authKey, authParam: authParam!, counter: 2)
+            crypto.updateKey(authKey)
+            crypto.updateAuthParam(authParam!)
+            crypto.setCounter(2)
             state = .auth
             return buildAuthFrame()
         }
