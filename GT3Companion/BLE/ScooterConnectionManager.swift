@@ -212,8 +212,10 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         let hasWrite = oldWriteCharacteristic != nil
             || authWriteCharacteristic != nil
             || writeCharacteristic != nil
-        // Must have 006E-0004 — it's the toggle target and auth trigger
-        guard hasWrite, notifyCharacteristic != nil else { return }
+        // Must have 006E-0004 (toggle target + auth trigger) AND B5A3-0003 (also toggled).
+        // Requiring both ensures toggleNotifications captures non-nil oldNotifyCharacteristic,
+        // because B5A3-0003 is discovered after 006E-0004 in most connection orderings.
+        guard hasWrite, notifyCharacteristic != nil, oldNotifyCharacteristic != nil else { return }
         // Only start the CCCD toggle if we haven't already for this connection
         guard !pendingBeginAuthOnCCCDOn else { return }
         toggleNotifications()
