@@ -168,14 +168,16 @@ extension ScooterConnectionManager: CBPeripheralDelegate {
         bleLog("CCCD \(state) for \(characteristic.uuid)")
         print("[GT3] \(bleTS()) [BLE] CCCD \(state) for \(characteristic.uuid)")
 
-        // Fire beginAuthentication after CCCD ON is ACK'd + drain delay.
-        // Accept confirmation from either: old-service notify (B5A3-0003) or new-service 0004.
-        let isAuthNotify = characteristic.uuid == BLEConstants.oldNotifyCharUUID
-            || characteristic.uuid == BLEConstants.notifyCharUUID
-        if characteristic.isNotifying, isAuthNotify, pendingBeginAuthOnCCCDOn {
+        // Fire beginAuthentication after the 006E-0004 CCCD toggle ON is ACK'd + drain delay.
+        // Only 006E-0004 is toggled — B5A3-0003 and 006E-0006 are passive subscriptions.
+        // If we accepted B5A3-0003 here, we'd trigger auth on its initial subscription
+        // before the 006E-0004 toggle starts, meaning 006E-0004 would still be unsubscribed
+        // when PRE_COMM is sent and we'd miss any challenge on that channel.
+        let isToggledNotify = characteristic.uuid == BLEConstants.notifyCharUUID
+        if characteristic.isNotifying, isToggledNotify, pendingBeginAuthOnCCCDOn {
             pendingBeginAuthOnCCCDOn = false
             let delayMs = Int(BLEConstants.cccdDrainDelayMs)
-            print("[GT3] \(bleTS()) [BLE] CCCD ON confirmed on \(characteristic.uuid) — auth in \(delayMs)ms")
+            print("[GT3] \(bleTS()) [BLE] CCCD ON confirmed (006E-0004 toggle) — auth in \(delayMs)ms")
             bleQueue.asyncAfter(deadline: .now() + .milliseconds(delayMs)) { [weak self] in
                 self?.beginAuthentication()
             }

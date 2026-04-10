@@ -197,30 +197,29 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     var pendingBeginAuthOnCCCDOn = false
 
     /// Try to begin auth when both a write and notify characteristic are discovered.
-    /// Priority order: old service (B5A3) > new service (006E).
-    /// Only fires once per connection — guard prevents multiple toggles.
+    /// Requires 006E-0004 specifically — that's the characteristic we toggle for the iOS
+    /// stale-notification workaround, and auth fires on its CCCD ON confirmation.
+    /// B5A3-0003 and 006E-0006 are subscribed passively and are never toggled.
     func checkReadyForAuth() {
         let hasWrite = oldWriteCharacteristic != nil
             || authWriteCharacteristic != nil
             || writeCharacteristic != nil
-        let hasNotify = oldNotifyCharacteristic != nil || notifyCharacteristic != nil
-        guard hasWrite, hasNotify else { return }
+        // Must have 006E-0004 — it's the toggle target and auth trigger
+        guard hasWrite, notifyCharacteristic != nil else { return }
         // Only start the CCCD toggle if we haven't already for this connection
         guard !pendingBeginAuthOnCCCDOn else { return }
         toggleNotifications()
     }
 
     /// CCCD toggle workaround for iOS stale notifications on reconnect.
-    /// Toggles the notify characteristic OFF then ON; beginAuthentication fires on the ON ACK.
-    /// When B5A3 service is present, use B5A3-0003; otherwise use 006E-0004.
+    /// ALWAYS toggles 006E-0004. Never touches B5A3-0003 or 006E-0006 (passive subs).
+    /// beginAuthentication fires on the 006E-0004 CCCD ON ACK + drain delay.
     private func toggleNotifications() {
-        // Prefer old-service notify for CCCD toggle (Segway app uses B5A3-0003)
-        let characteristic = oldNotifyCharacteristic ?? notifyCharacteristic
-        guard let characteristic, let peripheral = peripheral else { return }
+        // Always toggle 006E-0004 — the passive subs (B5A3-0003, 006E-0006) must
+        // stay continuously subscribed so we don't miss any incoming challenge frame.
+        guard let characteristic = notifyCharacteristic, let peripheral = peripheral else { return }
 
-        // Set the guard synchronously so a second call from a race-condition
-        // (e.g., B5A3 chars discovered before the 300ms closure fires) doesn't
-        // start a second parallel toggle.
+        // Set the guard synchronously before any async work.
         pendingBeginAuthOnCCCDOn = true
 
         bleQueue.async {
