@@ -18,7 +18,11 @@ struct GT3CompanionVisionApp: App {
             case .unknown:
                 ProgressView()
             case .signedOut:
-                LoginView()
+                if auth.isDemoMode {
+                    VisionContentView()
+                } else {
+                    LoginView()
+                }
             case .signedIn:
                 VisionContentView()
                     .onAppear {

@@ -10,24 +10,28 @@ import SwiftUI
 struct DashboardView: View {
     #if os(iOS)
     @EnvironmentObject private var coordinator: AppCoordinator
+    @ObservedObject private var auth = AuthManager.shared
 
-    private var isConnected: Bool { coordinator.connectionState == .connected }
-    private var speed: Double { coordinator.currentSpeed }
-    private var battery: Int { coordinator.currentBattery }
-    private var tripDistance: Double { coordinator.tripDistance }
-    private var estimatedRange: Double { coordinator.estimatedRange }
-    private var gearMode: Int { coordinator.gearMode }
-    private var bms1Temp: Double { coordinator.bms1Temp }
-    private var bms2Temp: Double { coordinator.bms2Temp }
+    private var isDemo: Bool { auth.isDemoMode }
+    private var isConnected: Bool { isDemo || coordinator.connectionState == .connected }
+    private var speed: Double { isDemo ? 32.5 : coordinator.currentSpeed }
+    private var battery: Int { isDemo ? 78 : coordinator.currentBattery }
+    private var tripDistance: Double { isDemo ? 12.4 : coordinator.tripDistance }
+    private var estimatedRange: Double { isDemo ? 45 : coordinator.estimatedRange }
+    private var gearMode: Int { isDemo ? 2 : coordinator.gearMode }
+    private var bms1Temp: Double { isDemo ? 28 : coordinator.bms1Temp }
+    private var bms2Temp: Double { isDemo ? 30 : coordinator.bms2Temp }
     #else
-    private let isConnected = false
-    private let speed: Double = 0
-    private let battery: Int = 0
-    private let tripDistance: Double = 0
-    private let estimatedRange: Double = 0
-    private let gearMode: Int = 0
-    private let bms1Temp: Double = 0
-    private let bms2Temp: Double = 0
+    @ObservedObject private var auth = AuthManager.shared
+    private var isDemo: Bool { auth.isDemoMode }
+    private var isConnected: Bool { isDemo }
+    private var speed: Double { isDemo ? 32.5 : 0 }
+    private var battery: Int { isDemo ? 78 : 0 }
+    private var tripDistance: Double { isDemo ? 12.4 : 0 }
+    private var estimatedRange: Double { isDemo ? 45 : 0 }
+    private var gearMode: Int { isDemo ? 2 : 0 }
+    private var bms1Temp: Double { isDemo ? 28 : 0 }
+    private var bms2Temp: Double { isDemo ? 30 : 0 }
     #endif
 
     var body: some View {
@@ -35,6 +39,9 @@ struct DashboardView: View {
             ZStack {
                 Theme.Colors.background.ignoresSafeArea()
                 ScrollView {
+                    if isDemo {
+                        demoBanner
+                    }
                     if isConnected {
                         connectedView
                     } else {
@@ -44,6 +51,17 @@ struct DashboardView: View {
             }
             .navigationTitle("GT3 Companion")
         }
+    }
+
+    private var demoBanner: some View {
+        Label("Demo Mode", systemImage: "play.circle")
+            .font(Theme.Fonts.bodySmall)
+            .foregroundStyle(Theme.Colors.accent)
+            .padding(.vertical, Theme.Spacing.small)
+            .padding(.horizontal, Theme.Spacing.medium)
+            .background(Theme.Colors.accent.opacity(0.15))
+            .clipShape(Capsule())
+            .padding(.top, Theme.Spacing.small)
     }
 
     private var disconnectedView: some View {

@@ -24,7 +24,12 @@ struct GT3CompanionApp: App {
             case .unknown:
                 ProgressView().tint(Theme.Colors.accent)
             case .signedOut:
-                LoginView()
+                if auth.isDemoMode {
+                    ContentView()
+                        .environmentObject(coordinator)
+                } else {
+                    LoginView()
+                }
             case .signedIn:
                 if onboardingComplete {
                     ContentView()
