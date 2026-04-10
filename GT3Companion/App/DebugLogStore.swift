@@ -21,7 +21,7 @@ final class DebugLogStore: ObservableObject {
     private static let maxEntries = 500
 
     @Published private(set) var entries: [LogEntry] = []
-    @AppStorage("verboseLoggingEnabled") var verboseLoggingEnabled = false
+    @AppStorage("verboseLoggingEnabled") var verboseLoggingEnabled = true
 
     private init() {}
 

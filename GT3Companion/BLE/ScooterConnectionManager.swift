@@ -9,8 +9,13 @@
 @preconcurrency import CoreBluetooth
 import Foundation
 import os
-
 private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", category: "BLE")
+
+func bleLog(_ message: String, level: LogEntry.Level = .info) {
+    Task { @MainActor in
+        DebugLogStore.shared.log(message, category: "BLE", level: level)
+    }
+}
 
 /// Connection states for the BLE lifecycle.
 enum ConnectionState: Sendable, Equatable, CaseIterable {
@@ -40,10 +45,10 @@ protocol ScooterConnectionDelegate: AnyObject {
 final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     private var centralManager: CBCentralManager?
     private var peripheral: CBPeripheral?
-    private var writeCharacteristic: CBCharacteristic?
-    private var notifyCharacteristic: CBCharacteristic?
+    var writeCharacteristic: CBCharacteristic?
+    var notifyCharacteristic: CBCharacteristic?
 
-    private var transport: NinebotTransport?
+    var transport: NinebotTransport?
     private var auth: NinebotAuth?
     private var mtu: Int = BLEConstants.defaultMTU
     private var intentionalDisconnect = false
@@ -86,6 +91,7 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     func scan() {
         guard let central = centralManager, central.state == .poweredOn else {
             logger.warning("Cannot scan: Bluetooth not ready (centralManager not started or not powered on)")
+            bleLog("Cannot scan — Bluetooth not ready", level: .warning)
             return
         }
 
@@ -96,6 +102,7 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
             if let existing = known.first, existing.state == .connected {
                 btName = existing.name
                 logger.info("Reconnecting to saved connected peripheral: \(self.btName ?? "unknown")")
+                bleLog("Reconnecting to saved peripheral: \(existing.name ?? savedUUID.uuidString)")
                 connectToPeripheral(existing)
                 return
             }
@@ -108,6 +115,7 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         if let existing = connected.first {
             btName = existing.name
             logger.info("Found bonded peripheral: \(self.btName ?? "unknown")")
+            bleLog("Found already-connected peripheral: \(existing.name ?? "(no name)")")
             connectToPeripheral(existing)
             return
         }
@@ -118,6 +126,7 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
             options: [CBCentralManagerScanOptionAllowDuplicatesKey: false]
         )
         logger.info("Scanning for GT3 Pro...")
+        bleLog("Scanning for GT3 Pro (service \(BLEConstants.serviceUUID.uuidString))…")
     }
 
     // MARK: - Peripheral UUID Persistence
@@ -160,7 +169,7 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     }
 
     /// Try to begin auth if both characteristics are discovered.
-    private func checkReadyForAuth() {
+    func checkReadyForAuth() {
         guard writeCharacteristic != nil, notifyCharacteristic != nil else { return }
         toggleNotifications()
     }
@@ -188,6 +197,7 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     private func beginAuthentication() {
         guard let name = btName else {
             logger.error("No BT name available for auth")
+            bleLog("Auth failed — no BT name available", level: .error)
             return
         }
 
@@ -197,6 +207,8 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         // but the scooter firmware uses the plain name for key derivation
         let authName = ScooterConnectionManager.sanitizeBLEName(name)
         logger.info("Raw BT name: \(name) → auth name: \(authName) (bytes: \(Data(authName.utf8).count))")
+        bleLog("Auth start — raw name: \"\(name)\" → sanitized: \"\(authName)\" (\(Data(authName.utf8).count) bytes)")
+        bleLog("Stored password in keychain: \(storedPassword != nil ? "YES (\(storedPassword!.count) bytes)" : "NO")")
 
         // Single shared crypto instance — auth and transport MUST share the same object
         // so that key/counter updates during the handshake are visible to both sides.
@@ -209,6 +221,7 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
 
         Task {
             let frame = await authActor.startAuth()
+            bleLog("Sending PRE_COMM (\(frame.count) bytes)")
             sendFrame(frame)
         }
     }
@@ -222,6 +235,17 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
             }
         })
         return stripped.isEmpty ? name : stripped
+    }
+
+    static func btStateDescription(_ state: CBManagerState) -> String {
+        switch state {
+        case .poweredOn:     return "powered on"
+        case .poweredOff:    return "powered off"
+        case .unauthorized:  return "unauthorized"
+        case .unsupported:   return "unsupported"
+        case .resetting:     return "resetting"
+        default:             return "unknown"
+        }
     }
 
     func sendFrame(_ frame: Data) {
@@ -249,7 +273,7 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         }
     }
 
-    private func handleAuthResponse(_ parsed: NinebotFrameBuilder.ParsedFrame) {
+    func handleAuthResponse(_ parsed: NinebotFrameBuilder.ParsedFrame) {
         guard let auth = self.auth else { return }
 
         Task {
@@ -260,6 +284,7 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
             case .authenticated:
                 let serial = await auth.getSerialNumber() ?? "unknown"
                 logger.info("Authenticated with GT3 Pro (SN: \(serial))")
+                bleLog("✅ Authenticated! Serial: \(serial)")
                 connectionState = .connected
                 // Persist peripheral UUID only after successful auth
                 if let peripheralID = self.peripheral?.identifier {
@@ -271,17 +296,27 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
 
             case .failed(let reason):
                 logger.error("Auth failed: \(reason)")
+                bleLog("🔴 Auth failed: \(reason)", level: .error)
                 connectionState = .disconnected
                 disconnect()
 
             default:
-                if let frame = nextFrame {
-                    if case .setPwd = state {
-                        try? await Task.sleep(for: .seconds(2))
-                    }
-                    sendFrame(frame)
-                }
+                await advanceAuthState(state: state, nextFrame: nextFrame)
             }
+        }
+    }
+
+    private func advanceAuthState(state: AuthState, nextFrame: Data?) async {
+        if case .setPwd = state {
+            bleLog("Auth state → SET_PWD (waiting for button press on dashboard)")
+        } else if case .auth = state {
+            bleLog("Auth state → AUTH (sending credentials)")
+        }
+        if let frame = nextFrame {
+            if case .setPwd = state {
+                try? await Task.sleep(for: .seconds(2))
+            }
+            sendFrame(frame)
         }
     }
 
@@ -299,6 +334,7 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
 extension ScooterConnectionManager: CBCentralManagerDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         logger.info("Central manager state: \(central.state.rawValue)")
+        bleLog("Bluetooth state: \(central.state.rawValue) (\(Self.btStateDescription(central.state)))")
         if central.state == .poweredOn {
             scan()
         }
@@ -330,9 +366,11 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
     ) {
         let name = peripheral.name ?? advertisementData[CBAdvertisementDataLocalNameKey] as? String
         logger.info("Discovered: \(name ?? "(no name)") RSSI: \(RSSI)")
+        bleLog("Discovered peripheral: \"\(name ?? "(no name)")\" RSSI: \(RSSI)")
 
         guard let name, !name.isEmpty else {
             logger.warning("Skipping device with no name — key derivation requires a valid BT name")
+            bleLog("Skipped device — no name (key derivation requires a name)", level: .warning)
             return
         }
 
@@ -348,6 +386,7 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
         didConnect peripheral: CBPeripheral
     ) {
         logger.info("Connected to \(peripheral.name ?? "unknown")")
+        bleLog("Connected to \(peripheral.name ?? "unknown") — discovering services…")
         echoRetryCount = 0
 
         // Update btName from peripheral.name if we didn't have it from discovery
@@ -359,6 +398,7 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
         if negotiatedMTU > BLEConstants.defaultMTU {
             mtu = negotiatedMTU
             logger.info("Negotiated MTU: \(self.mtu)")
+            bleLog("Negotiated MTU: \(self.mtu)")
         }
 
         discoverServices()
@@ -370,6 +410,7 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
         error: Error?
     ) {
         logger.error("Failed to connect: \(error?.localizedDescription ?? "unknown")")
+        bleLog("Failed to connect: \(error?.localizedDescription ?? "unknown error")", level: .error)
         connectionState = .disconnected
     }
 
@@ -379,6 +420,8 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
         error: Error?
     ) {
         logger.info("Disconnected: \(error?.localizedDescription ?? "clean")")
+        bleLog("Disconnected: \(error?.localizedDescription ?? "clean disconnect")",
+               level: error != nil ? .warning : .info)
         let err = error
         Task { @MainActor [weak self] in
             self?.delegate?.didDisconnect(error: err)
@@ -389,72 +432,6 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
             watchForReconnection()
         } else {
             connectionState = .disconnected
-        }
-    }
-}
-
-// MARK: - CBPeripheralDelegate
-
-extension ScooterConnectionManager: CBPeripheralDelegate {
-    func peripheral(
-        _ peripheral: CBPeripheral,
-        didDiscoverServices error: Error?
-    ) {
-        guard let services = peripheral.services else { return }
-        for service in services where service.uuid == BLEConstants.serviceUUID {
-            peripheral.discoverCharacteristics(
-                [BLEConstants.writeCharUUID, BLEConstants.notifyCharUUID],
-                for: service
-            )
-        }
-    }
-
-    func peripheral(
-        _ peripheral: CBPeripheral,
-        didDiscoverCharacteristicsFor service: CBService,
-        error: Error?
-    ) {
-        guard let characteristics = service.characteristics else { return }
-        for characteristic in characteristics {
-            switch characteristic.uuid {
-            case BLEConstants.writeCharUUID:
-                writeCharacteristic = characteristic
-                logger.info("Found write characteristic")
-                checkReadyForAuth()
-            case BLEConstants.notifyCharUUID:
-                notifyCharacteristic = characteristic
-                logger.info("Found notify characteristic (0004)")
-                checkReadyForAuth()
-            default:
-                break
-            }
-        }
-    }
-
-    func peripheral(
-        _ peripheral: CBPeripheral,
-        didUpdateValueFor characteristic: CBCharacteristic,
-        error: Error?
-    ) {
-        guard characteristic.uuid == BLEConstants.notifyCharUUID,
-              let data = characteristic.value else { return }
-
-        guard let transport = self.transport else { return }
-
-        Task {
-            do {
-                if let parsed = try await transport.processInbound(chunk: data) {
-                    if connectionState == .authenticating {
-                        handleAuthResponse(parsed)
-                    } else if connectionState == .connected {
-                        Task { @MainActor [weak self] in
-                            self?.delegate?.didReceiveTelemetry(parsed)
-                        }
-                    }
-                }
-            } catch {
-                logger.error("Frame processing error: \(error)")
-            }
         }
     }
 }
