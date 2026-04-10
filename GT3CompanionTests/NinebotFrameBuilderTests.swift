@@ -40,7 +40,7 @@ final class NinebotFrameBuilderTests: XCTestCase {
 
     func testBuildAuthFrame() {
         let frame = NinebotFrameBuilder.buildAuthFrame(cmd: .preComm, data: Data())
-        XCTAssertEqual(frame[4], 0x04) // BLE board
+        XCTAssertEqual(frame[4], 0x21) // BLE board (0x21 on GT3 Pro)
         XCTAssertEqual(frame[5], 0x5B) // PRE_COMM
         XCTAssertEqual(frame[6], 0x00) // index 0
     }

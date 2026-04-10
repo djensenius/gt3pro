@@ -92,7 +92,8 @@ final class NinebotTransportTests: XCTestCase {
         XCTAssertGreaterThan(chunks.count, 0)
 
         XCTAssertEqual(chunks[0][0], BLEConstants.syncByte1)
-        XCTAssertEqual(chunks[0][1], BLEConstants.syncByte2Encrypted)
+        // GT3 Pro uses 5AA5 for ALL frames (both plain and encrypted)
+        XCTAssertEqual(chunks[0][1], BLEConstants.syncByte2Plain)
     }
 
     func testMTUUpdate() async {

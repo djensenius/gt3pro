@@ -23,11 +23,11 @@ final class BLEConstantsTests: XCTestCase {
     }
 
     func testBoardIDs() {
-        XCTAssertEqual(BLEConstants.Board.ble.rawValue, 0x04)
+        XCTAssertEqual(BLEConstants.Board.ble.rawValue, 0x21)
         XCTAssertEqual(BLEConstants.Board.vcu.rawValue, 0x02)
         XCTAssertEqual(BLEConstants.Board.bms1.rawValue, 0x06)
         XCTAssertEqual(BLEConstants.Board.bms2.rawValue, 0x07)
-        XCTAssertEqual(BLEConstants.Board.mcu.rawValue, 0x05)
+        XCTAssertEqual(BLEConstants.Board.mcu.rawValue, 0x04)
         XCTAssertEqual(BLEConstants.Board.tft.rawValue, 0x09)
     }
 

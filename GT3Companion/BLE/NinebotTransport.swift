@@ -24,6 +24,8 @@ actor NinebotTransport {
     private var reassemblyBuffer = Data()
     private var expectedLength: Int = 0
     private var inboundIsEncrypted = false
+    /// When true, 5AA5-prefixed frames are treated as encrypted (GT3 Pro uses 5AA5 for everything).
+    private var encryptionActive = false
 
     init(crypto: NinebotCrypto, mtu: Int = BLEConstants.defaultMTU) {
         self.crypto = crypto
@@ -32,6 +34,13 @@ actor NinebotTransport {
 
     func updateMTU(_ newMTU: Int) {
         self.mtu = newMTU
+    }
+
+    /// Tell the transport that encryption is now active.
+    /// After this, incoming 5AA5 frames will be treated as encrypted (LEN + 3 total).
+    func setEncryptionActive() {
+        encryptionActive = true
+        print("[GT3] [TRANSPORT] Encryption active — 5AA5 frames will be decrypted")
     }
 
     // MARK: - Outbound (app → device)
@@ -49,10 +58,10 @@ actor NinebotTransport {
         let encrypted = try crypto.encrypt(plaintext: payload)
         print("[GT3] [TRANSPORT] encrypted payload: \(encrypted.hexString)")
 
-        // Build encrypted frame with header
+        // Build encrypted frame — packet capture shows ALL frames use 5AA5, never 5AB5
         var frame = Data()
         frame.append(BLEConstants.syncByte1)
-        frame.append(BLEConstants.syncByte2Encrypted)
+        frame.append(BLEConstants.syncByte2Plain)
         frame.append(UInt8(encrypted.count))
         frame.append(encrypted)
 
@@ -101,7 +110,9 @@ actor NinebotTransport {
 
         case .haveHead:
             if byte == BLEConstants.syncByte2Plain || byte == BLEConstants.syncByte2Encrypted {
-                inboundIsEncrypted = byte == BLEConstants.syncByte2Encrypted
+                // GT3 Pro uses 5AA5 for both plain AND encrypted frames.
+                // If encryption is active, 5AA5 = encrypted. 5AB5 always = encrypted.
+                inboundIsEncrypted = (byte == BLEConstants.syncByte2Encrypted) || encryptionActive
                 reassemblyBuffer.append(byte)
                 reassemblyState = .haveBegin
             } else {

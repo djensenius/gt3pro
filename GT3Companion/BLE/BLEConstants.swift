@@ -111,13 +111,9 @@ enum BLEConstants {
 
     /// Auth phase timeouts
     static let preCommTimeoutMs: UInt64 = 2000
-    /// How long to wait on one write channel before retrying on the next (within one connection).
-    /// 4 channels × 1500ms = 6000ms ≤ 8000ms Ninebot auth window.
-    static let preCommChannelRetryMs: UInt64 = 1500
     static let setPwdTimeoutMs: UInt64 = 2000
     static let authTimeoutMs: UInt64 = 2000
     static let setPwdMaxRetries = 30
-    static let preCommMaxRetries = 10
     static let authMaxRetries = 3
     static let authMaxRestarts = 5
 

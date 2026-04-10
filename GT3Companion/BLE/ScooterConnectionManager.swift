@@ -70,15 +70,7 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     /// Old Nordic UART service notify (B5A3-0003) — the Segway app listens here for auth response
     var oldNotifyCharacteristic: CBCharacteristic?
 
-    /// Cycles 0→3 across reconnects (never reset) to rotate write channel for diagnostics.
-    /// 0=006E-0005, 1=006E-0002, 2=006E-0003, 3=B5A3-0002
     var authAttemptCount = 0
-    /// The write characteristic chosen for this connection's auth attempt.
-    private var currentAuthWriteChar: CBCharacteristic?
-    /// Last PRE_COMM frame sent — reused by retry loop without re-running startAuth().
-    private var preCommFrame: Data?
-    /// Retries PRE_COMM on successive write channels if no scooter response arrives.
-    private var preCommRetryTask: Task<Void, Never>?
 
     var transport: NinebotTransport?
     private var auth: NinebotAuth?
@@ -226,9 +218,8 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     }
 
     /// CCCD toggle workaround for iOS stale notifications on reconnect.
-    /// Toggles 006E-0004 (auth trigger) AND B5A3-0003 (legacy — toggling this appeared
-    /// to trigger the scooter's auth mode in prior testing, giving an 8s auth timeout
-    /// instead of the 20-55s supervision timeout we get without it).
+    /// Only toggles 006E-0004 — the packet capture shows the official Segway app
+    /// never unsubscribes B5A3-0003 (it re-subscribes it AFTER PRE_COMM instead).
     /// beginAuthentication fires on the 006E-0004 CCCD ON ACK + drain delay.
     private func toggleNotifications() {
         guard let notifyChar = notifyCharacteristic, let peripheral = peripheral else { return }
@@ -236,20 +227,12 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         // Set the guard synchronously before any async work.
         pendingBeginAuthOnCCCDOn = true
 
-        let oldNotify = oldNotifyCharacteristic  // capture before async dispatch
-
         bleQueue.async {
             peripheral.setNotifyValue(false, for: notifyChar)
-            if let old = oldNotify {
-                peripheral.setNotifyValue(false, for: old)
-            }
             self.bleQueue.asyncAfter(
                 deadline: .now() + .milliseconds(Int(BLEConstants.cccdToggleOffDelayMs))
             ) {
                 peripheral.setNotifyValue(true, for: notifyChar)
-                if let old = oldNotify {
-                    peripheral.setNotifyValue(true, for: old)
-                }
             }
         }
     }
@@ -270,29 +253,13 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         bleLog("Auth start — raw name: \"\(name)\" → sanitized: \"\(authName)\" (\(Data(authName.utf8).count) bytes)")
         bleLog("Stored password in keychain: \(storedPassword != nil ? "YES (\(storedPassword!.count) bytes)" : "NO")")
 
-        // Rotate through all write characteristics on successive reconnects to discover
-        // which channel the scooter expects PRE_COMM on.
-        // Order: 006E-0005 → 006E-0002 → 006E-0003 → B5A3-0002 → repeat
-        let channelCandidates: [(CBCharacteristic?, String)] = [
-            (authWriteCharacteristic, "006E-0005"),
-            (writeCharacteristic, "006E-0002"),
-            (rctpWriteCharacteristic, "006E-0003"),
-            (oldWriteCharacteristic, "B5A3-0002")
-        ]
-        var selectedChannel: CBCharacteristic?
-        var selectedChannelName = "none"
-        for offset in 0..<channelCandidates.count {
-            let (char, chanName) = channelCandidates[(authAttemptCount + offset) % channelCandidates.count]
-            if let char {
-                selectedChannel = char
-                selectedChannelName = chanName
-                break
-            }
+        // Packet capture confirms: PRE_COMM always goes to 006E-0005 (auth-write).
+        guard let authChar = authWriteCharacteristic else {
+            bleLog("Auth failed — 006E-0005 not discovered", level: .error)
+            return
         }
-        currentAuthWriteChar = selectedChannel
         authAttemptCount += 1
-        bleLog("Auth attempt \(authAttemptCount) — write channel: \(selectedChannelName)")
-        print("[GT3] [AUTH] Attempt \(authAttemptCount): PRE_COMM → \(selectedChannelName)")
+        bleLog("Auth attempt \(authAttemptCount) — write channel: 006E-0005")
 
         // Single shared crypto instance — auth and transport MUST share the same object
         // so that key/counter updates during the handshake are visible to both sides.
@@ -308,47 +275,20 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
             let timestamp = bleTS()
             bleLog("Sending PRE_COMM plain (\(frame.count) bytes)")
             print("[GT3] \(timestamp) [AUTH] Sending PRE_COMM plain")
-            self.preCommFrame = frame
-            sendFramePlain(frame)
-            startPreCommRetryLoop()
-        }
-    }
+            sendFramePlain(frame, to: authChar)
 
-    /// Retries PRE_COMM on successive write channels every `preCommChannelRetryMs` until
-    /// a response is received (retry task is cancelled by handleAuthResponse) or disconnected.
-    private func startPreCommRetryLoop() {
-        preCommRetryTask?.cancel()
-        preCommRetryTask = Task { [weak self] in
-            for retryIdx in 1...BLEConstants.preCommMaxRetries {
-                let delayNs = BLEConstants.preCommChannelRetryMs * 1_000_000
-                try? await Task.sleep(nanoseconds: delayNs)
-                guard !Task.isCancelled, let self else { break }
-                guard self.connectionState == .authenticating else { break }
-                self.retryPreCommNextChannel(retryIndex: retryIdx)
+            // Packet capture step 5: re-subscribe B5A3-0003 immediately after PRE_COMM.
+            // The official Segway app sends a fresh CCCD 0100 to B5A3-0003 right after
+            // PRE_COMM. This appears to signal the scooter that B5A3-0003 is the response
+            // channel. Prior testing confirmed that a CCCD write to B5A3-0003 correlates
+            // with the 8-second auth timeout (scooter processing auth) vs 55s supervision.
+            if let oldNotify = self.oldNotifyCharacteristic, let periph = self.peripheral {
+                self.bleQueue.async {
+                    print("[GT3] \(bleTS()) [BLE] Re-subscribing B5A3-0003 after PRE_COMM")
+                    periph.setNotifyValue(true, for: oldNotify)
+                }
             }
         }
-    }
-
-    /// Advances `currentAuthWriteChar` to the next candidate and resends PRE_COMM.
-    private func retryPreCommNextChannel(retryIndex: Int) {
-        guard let frame = preCommFrame else { return }
-        let candidates: [(CBCharacteristic?, String)] = [
-            (authWriteCharacteristic, "006E-0005"),
-            (writeCharacteristic, "006E-0002"),
-            (rctpWriteCharacteristic, "006E-0003"),
-            (oldWriteCharacteristic, "B5A3-0002")
-        ]
-        // Rotate starting from the channel AFTER the one already tried this connection.
-        let base = (authAttemptCount + retryIndex) % candidates.count
-        for offset in 0..<candidates.count {
-            let (char, name) = candidates[(base + offset) % candidates.count]
-            if let char {
-                currentAuthWriteChar = char
-                print("[GT3] [AUTH] PRE_COMM retry \(retryIndex): → \(name)")
-                break
-            }
-        }
-        sendFramePlain(frame)
     }
 
     /// Strips leading emoji and whitespace from a BLE device name.
@@ -387,8 +327,8 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     }
 
     func sendFrame(_ frame: Data) {
-        // Prefer old Nordic UART service, then new auth char, then new primary
-        guard let characteristic = oldWriteCharacteristic ?? authWriteCharacteristic ?? writeCharacteristic,
+        // Packet capture: ALL encrypted data goes to B5A3-0002 (OLD write) using WRITE_CMD
+        guard let characteristic = oldWriteCharacteristic ?? writeCharacteristic,
               let peripheral = peripheral else {
             logger.error("Cannot send: write characteristic not available")
             return
@@ -401,7 +341,8 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
                 // Dispatch writes back to bleQueue for CB serialization
                 self.bleQueue.async {
                     for (index, chunk) in chunks.enumerated() {
-                        peripheral.writeValue(chunk, for: characteristic, type: .withResponse)
+                        // Capture shows WRITE_CMD (no response) for encrypted writes
+                        peripheral.writeValue(chunk, for: characteristic, type: .withoutResponse)
                         if index < chunks.count - 1 {
                             Thread.sleep(forTimeInterval: Double(BLEConstants.fragmentDelayMs) / 1000.0)
                         }
@@ -414,14 +355,9 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     }
 
     /// Send a plain (unencrypted) frame with trailing 2-byte checksum — used for PRE_COMM.
-    /// Uses currentAuthWriteChar (set per-attempt by beginAuthentication for channel rotation),
-    /// falling back to any available write char.
-    private func sendFramePlain(_ frame: Data) {
-        guard let char = currentAuthWriteChar
-                ?? authWriteCharacteristic
-                ?? oldWriteCharacteristic
-                ?? writeCharacteristic,
-              let periph = peripheral, frame.count > 3 else { return }
+    /// Writes to the explicitly provided characteristic using WRITE_REQ (.withResponse).
+    private func sendFramePlain(_ frame: Data, to char: CBCharacteristic) {
+        guard let periph = peripheral, frame.count > 3 else { return }
         let chksum = UInt16(truncatingIfNeeded: ~Data(frame[2...]).reduce(UInt32(0)) { $0 + UInt32($1) })
         var outFrame = frame
         outFrame.append(UInt8(chksum & 0xFF))
@@ -447,13 +383,18 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     }
 
     func handleAuthResponse(_ parsed: NinebotFrameBuilder.ParsedFrame) {
-        preCommRetryTask?.cancel()  // got a response — stop channel cycling
-        preCommRetryTask = nil
         guard let auth = self.auth else { return }
 
         Task {
             let nextFrame = await auth.processResponse(parsed)
             let state = await auth.state
+
+            // After PRE_COMM response, crypto is initialized — tell transport to decrypt 5AA5 frames
+            if case .setPwd = state {
+                await self.transport?.setEncryptionActive()
+            } else if case .auth = state {
+                await self.transport?.setEncryptionActive()
+            }
 
             switch state {
             case .authenticated:
@@ -623,10 +564,6 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
         authNotifyCharacteristic = nil
         oldWriteCharacteristic = nil
         oldNotifyCharacteristic = nil
-        currentAuthWriteChar = nil
-        preCommFrame = nil
-        preCommRetryTask?.cancel()
-        preCommRetryTask = nil
         pendingBeginAuthOnCCCDOn = false
         auth = nil
         transport = nil
