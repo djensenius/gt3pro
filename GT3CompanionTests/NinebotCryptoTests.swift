@@ -149,4 +149,25 @@ final class NinebotCryptoTests: XCTestCase {
 
         XCTAssertNotEqual(enc1, enc2)
     }
+
+    /// Verify the PRE_COMM checksum is computed over the full payload (not payload[3:]).
+    /// For payload 3E 04 5B 00: sum = 0x9D, checksum = ~0x9D & 0xFFFF = 0xFF62.
+    func testNonSNChecksumCoversFullPayload() throws {
+        let key = KeyDerivation.deriveKey(key1: Data("03GGG2539C0023".utf8), key2: nil)
+        let crypto = NinebotCrypto(key: key, counter: 0)
+
+        // PRE_COMM payload (after 3-byte frame header is stripped)
+        let payload = Data([0x3E, 0x04, 0x5B, 0x00])
+        let encrypted = try crypto.encrypt(plaintext: payload)
+
+        // Tail is the last 6 bytes: [0x00, 0x00, checksum_lo, checksum_hi, 0x00, 0x00]
+        // sum(3E 04 5B 00) = 0x9D → checksum = ~0x9D & 0xFFFF = 0xFF62
+        let tail = Data(encrypted[(encrypted.count - 6)...])
+        let checksumLo = tail[tail.startIndex + 2]
+        let checksumHi = tail[tail.startIndex + 3]
+        let checksum = UInt16(checksumHi) << 8 | UInt16(checksumLo)
+
+        XCTAssertEqual(checksum, 0xFF62,
+            "Checksum must cover full payload (sum=0x9D, ~sum=0xFF62), not just payload[3:]")
+    }
 }

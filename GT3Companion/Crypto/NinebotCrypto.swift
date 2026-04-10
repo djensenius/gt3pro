@@ -81,9 +81,8 @@ final class NinebotCrypto: @unchecked Sendable {
             }
         }
 
-        // Checksum: (~sum(plaintext[3...])) & 0xFFFF
-        let checksumData = plaintext.count > 3 ? plaintext[3...] : Data()
-        let sum = checksumData.reduce(UInt32(0)) { $0 + UInt32($1) }
+        // Checksum covers the full payload (the 3-byte frame header was already stripped by the transport).
+        let sum = plaintext.reduce(UInt32(0)) { $0 + UInt32($1) }
         let checksum = UInt16(truncatingIfNeeded: ~sum)
 
         encrypted.append(0x00)
@@ -120,8 +119,8 @@ final class NinebotCrypto: @unchecked Sendable {
         let checksumHi = tail[tail.startIndex + 3]
         let receivedChecksum = UInt16(checksumHi) << 8 | UInt16(checksumLo)
 
-        let checksumData = decrypted.count > 3 ? decrypted[3...] : Data()
-        let sum = checksumData.reduce(UInt32(0)) { $0 + UInt32($1) }
+        // Checksum covers the full decrypted payload (header was already stripped).
+        let sum = decrypted.reduce(UInt32(0)) { $0 + UInt32($1) }
         let expectedChecksum = UInt16(truncatingIfNeeded: ~sum)
 
         guard receivedChecksum == expectedChecksum else {

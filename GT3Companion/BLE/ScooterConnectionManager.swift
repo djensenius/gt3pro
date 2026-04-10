@@ -450,6 +450,14 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
         logger.info("Disconnected: \(error?.localizedDescription ?? "clean")")
         bleLog("Disconnected: \(error?.localizedDescription ?? "clean disconnect")",
                level: error != nil ? .warning : .info)
+
+        // Clear per-connection state so checkReadyForAuth() doesn't fire
+        // prematurely on the next connection's characteristic discovery.
+        writeCharacteristic = nil
+        notifyCharacteristic = nil
+        auth = nil
+        transport = nil
+
         let err = error
         Task { @MainActor [weak self] in
             self?.delegate?.didDisconnect(error: err)
