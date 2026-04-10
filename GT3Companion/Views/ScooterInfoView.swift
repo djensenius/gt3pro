@@ -59,8 +59,8 @@ struct ScooterInfoView: View {
                 }
             }
             .scrollContentBackground(.hidden)
+            .background(Theme.Colors.background.ignoresSafeArea())
             .navigationTitle("Scooter Info")
         }
-        .background(Theme.Colors.background.ignoresSafeArea())
     }
 }

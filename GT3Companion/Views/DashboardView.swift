@@ -39,9 +39,9 @@ struct DashboardView: View {
                     disconnectedView
                 }
             }
+            .background(Theme.Colors.background.ignoresSafeArea())
             .navigationTitle("GT3 Companion")
         }
-        .background(Theme.Colors.background.ignoresSafeArea())
     }
 
     private var disconnectedView: some View {

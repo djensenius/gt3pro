@@ -23,6 +23,7 @@ struct SettingsView: View {
     @State private var showClearDataAlert = false
     @State private var showSignOutAlert = false
     @State private var scooterForgotten = false
+    @State private var showLogFileExporter = false
 
     var body: some View {
         NavigationStack {
@@ -36,9 +37,15 @@ struct SettingsView: View {
                 aboutSection
             }
             .scrollContentBackground(.hidden)
+            .background(Theme.Colors.background.ignoresSafeArea())
             .navigationTitle("Settings")
         }
-        .background(Theme.Colors.background.ignoresSafeArea())
+        .fileExporter(
+            isPresented: $showLogFileExporter,
+            document: logStore.makeFileDocument(),
+            contentType: .plainText,
+            defaultFilename: logStore.exportFilename
+        ) { _ in }
     }
 
     // MARK: - Sections
@@ -128,18 +135,23 @@ struct SettingsView: View {
                 NavigationLink("View Logs (\(logStore.entries.count))") {
                     DebugLogView()
                 }
+                Button {
+                    showLogFileExporter = true
+                } label: {
+                    Label("Save to Files…", systemImage: "folder")
+                }
                 ShareLink(
                     item: logStore.export(),
                     preview: SharePreview("gt3-debug.log")
                 ) {
-                    Label("Export Logs", systemImage: "square.and.arrow.up")
+                    Label("Share Logs", systemImage: "square.and.arrow.up")
                 }
                 Button("Clear Logs", role: .destructive) { logStore.clear() }
             }
         } header: {
             Text("Diagnostics")
         } footer: {
-            Text("Verbose logging captures BLE, auth, and upload events to help diagnose connection issues.")
+            Text("Verbose logging captures BLE, auth, and upload events. Save to Files to sync via iCloud.")
                 .font(Theme.Fonts.caption)
         }
     }
@@ -261,6 +273,7 @@ struct LicensesView: View {
 
 struct DebugLogView: View {
     @StateObject private var logStore = DebugLogStore.shared
+    @State private var showFileExporter = false
 
     var body: some View {
         List(logStore.entries.reversed()) { entry in
@@ -286,15 +299,26 @@ struct DebugLogView: View {
         .navigationTitle("Debug Logs")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                Button {
+                    showFileExporter = true
+                } label: {
+                    Image(systemName: "folder")
+                }
                 ShareLink(
                     item: logStore.export(),
-                    preview: SharePreview("gt3-debug.log")
+                    preview: SharePreview(logStore.exportFilename)
                 ) {
                     Image(systemName: "square.and.arrow.up")
                 }
             }
         }
+        .fileExporter(
+            isPresented: $showFileExporter,
+            document: logStore.makeFileDocument(),
+            contentType: .plainText,
+            defaultFilename: logStore.exportFilename
+        ) { _ in }
         .overlay {
             if logStore.entries.isEmpty {
                 ContentUnavailableView(

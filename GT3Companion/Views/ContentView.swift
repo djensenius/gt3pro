@@ -34,6 +34,7 @@ struct ContentView: View {
                 }
         }
         .tint(Theme.Colors.accent)
+        .background(Theme.Colors.background.ignoresSafeArea())
     }
 }
 
