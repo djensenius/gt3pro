@@ -46,9 +46,9 @@
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>OIDCClientID</key>
-	<string>gt3companion</string>
+	<string>gcQHXtphJwbyF6az9rMLavWOqR1vrQqq12t6cjvH</string>
 	<key>OIDCIssuerBase</key>
-	<string>https://auth.fluxhaus.io/application/o/fluxhaus-server</string>
+	<string>https://auth.fluxhaus.io/application/o/gt3-companion</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>bluetooth-central</string>
