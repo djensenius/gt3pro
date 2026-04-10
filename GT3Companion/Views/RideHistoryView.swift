@@ -64,3 +64,16 @@ struct RideRowView: View {
         .listRowBackground(Theme.Colors.elevatedBackground)
     }
 }
+
+#if DEBUG
+#Preview {
+    RideHistoryView()
+        .modelContainer(PreviewData.container)
+}
+
+#Preview("Ride Row") {
+    List {
+        RideRowView(ride: PreviewData.sampleRide)
+    }
+}
+#endif

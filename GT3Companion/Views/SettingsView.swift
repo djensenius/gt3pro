@@ -370,3 +370,30 @@ struct DebugLogView: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("Settings") {
+    SettingsView()
+        .modelContainer(PreviewData.container)
+}
+
+#Preview("Privacy Policy") {
+    NavigationStack {
+        PrivacyPolicyView()
+    }
+}
+
+#Preview("Licenses") {
+    NavigationStack {
+        LicensesView()
+    }
+}
+
+#Preview("Debug Logs") {
+    NavigationStack {
+        DebugLogView()
+    }
+}
+#endif

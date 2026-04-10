@@ -110,6 +110,9 @@ struct VisionRideDetailView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     VisionContentView()
+        .modelContainer(PreviewData.container)
 }
+#endif

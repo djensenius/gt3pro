@@ -220,3 +220,11 @@ struct RideDetailView: View {
             .padding(.horizontal)
     }
 }
+
+#if DEBUG
+#Preview {
+    NavigationStack {
+        RideDetailView(ride: PreviewData.sampleRide)
+    }
+}
+#endif

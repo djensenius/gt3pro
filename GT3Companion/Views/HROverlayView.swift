@@ -43,4 +43,11 @@ struct HROverlayView: View {
         }
     }
 }
+
+#if DEBUG
+#Preview {
+    HROverlayView()
+        .padding()
+}
+#endif
 #endif

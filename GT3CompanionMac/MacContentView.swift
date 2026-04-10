@@ -130,6 +130,9 @@ struct MacRideDetailView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     MacContentView()
+        .modelContainer(PreviewData.container)
 }
+#endif

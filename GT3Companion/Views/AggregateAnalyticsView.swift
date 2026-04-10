@@ -139,3 +139,25 @@ struct SectionHeader: View {
         }
     }
 }
+
+#if DEBUG
+#Preview {
+    AggregateAnalyticsView()
+        .modelContainer(PreviewData.container)
+}
+
+#Preview("Lifetime Stat Card") {
+    LifetimeStatCard(
+        title: "Total Distance",
+        value: "432",
+        unit: "km",
+        icon: "point.topleft.down.to.point.bottomright.curvepath"
+    )
+    .frame(width: 180)
+}
+
+#Preview("Section Header") {
+    SectionHeader(title: "Distance per Ride")
+        .padding()
+}
+#endif

@@ -30,3 +30,18 @@ struct StatCard: View {
         .glassCard()
     }
 }
+
+#if DEBUG
+#Preview {
+    HStack {
+        StatCard(title: "Battery", value: "85%", icon: "battery.75percent", color: Theme.Colors.success)
+        StatCard(
+            title: "Speed",
+            value: "42 km/h",
+            icon: "gauge.open.with.lines.needle.33percent",
+            color: Theme.Colors.accent
+        )
+    }
+    .padding()
+}
+#endif
