@@ -41,7 +41,11 @@ private class AuthAnchorProvider: NSObject, ASWebAuthenticationPresentationConte
         if #unavailable(iOS 26, visionOS 26) {
             return ASPresentationAnchor(frame: .zero)
         }
-        fatalError("No window scene available for ASWebAuthenticationSession")
+        // Safe fallback: return a detached UIWindow rather than crashing.
+        // ASWebAuthenticationSession may still present on it; if not, the
+        // auth call will throw and AuthManager handles it gracefully.
+        logger.warning("No key window found for ASWebAuthenticationSession — using detached UIWindow")
+        return UIWindow()
         #else
         return ASPresentationAnchor(frame: .zero)
         #endif

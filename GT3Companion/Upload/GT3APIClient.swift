@@ -58,6 +58,7 @@ actor GT3APIClient {
         guard let url = URL(string: baseURL + path) else {
             throw APIError.invalidURL
         }
+        _ = await AuthManager.shared.ensureValidToken()
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -81,6 +82,7 @@ actor GT3APIClient {
         guard let url = URL(string: baseURL + path) else {
             throw APIError.invalidURL
         }
+        _ = await AuthManager.shared.ensureValidToken()
         var request = URLRequest(url: url)
         request.addValue("application/json", forHTTPHeaderField: "Accept")
         if let auth = AuthManager.shared.authorizationHeader() {

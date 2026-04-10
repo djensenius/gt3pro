@@ -72,7 +72,16 @@ final class RideSyncService {
         if let auth = AuthManager.shared.authorizationHeader() {
             request.setValue(auth, forHTTPHeaderField: "Authorization")
         }
-        let (data, _) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        if let http = response as? HTTPURLResponse {
+            if http.statusCode == 401 {
+                logger.warning("Rides sync received 401 — skipping, will retry after token refresh")
+                return []
+            }
+            guard (200...299).contains(http.statusCode) else {
+                throw URLError(.badServerResponse)
+            }
+        }
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         return try decoder.decode(ServerRidesResponse.self, from: data).rides

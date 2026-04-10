@@ -49,8 +49,8 @@ targets:
         CFBundleURLTypes:
           - CFBundleURLSchemes:
               - gt3companion
-        OIDCIssuerBase: https://auth.fluxhaus.io/application/o/fluxhaus-server
-        OIDCClientID: gt3companion
+        OIDCIssuerBase: https://auth.fluxhaus.io/application/o/gt3-companion
+        OIDCClientID: gcQHXtphJwbyF6az9rMLavWOqR1vrQqq12t6cjvH
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion

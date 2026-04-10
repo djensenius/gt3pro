@@ -54,18 +54,37 @@ final class PermissionsManager: NSObject, ObservableObject {
 
     private func requestBluetooth() async {
         // Initialising CBCentralManager triggers the system Bluetooth permission dialog.
+        // Poll the authorization status (updated synchronously after the dialog is dismissed).
         centralManager = CBCentralManager(delegate: nil, queue: .main)
-        try? await Task.sleep(for: .milliseconds(500))
+        for _ in 0..<20 {
+            let status = CBCentralManager.authorization
+            if status != .notDetermined {
+                return
+            }
+            try? await Task.sleep(for: .milliseconds(250))
+        }
     }
 
     private func requestLocationWhenInUse() async {
         locationManager.requestWhenInUseAuthorization()
-        try? await Task.sleep(for: .milliseconds(500))
+        for _ in 0..<20 {
+            let status = locationManager.authorizationStatus
+            if status != .notDetermined {
+                return
+            }
+            try? await Task.sleep(for: .milliseconds(250))
+        }
     }
 
     private func requestLocationAlways() async {
         locationManager.requestAlwaysAuthorization()
-        try? await Task.sleep(for: .milliseconds(500))
+        for _ in 0..<20 {
+            let status = locationManager.authorizationStatus
+            if status != .notDetermined && status != .authorizedWhenInUse {
+                return
+            }
+            try? await Task.sleep(for: .milliseconds(250))
+        }
     }
 
     private func requestHealth() async {
@@ -87,7 +106,7 @@ final class PermissionsManager: NSObject, ObservableObject {
         guard CMMotionActivityManager.isActivityAvailable() else { return }
         let queue = OperationQueue()
         motionActivityManager.startActivityUpdates(to: queue) { _ in }
-        try? await Task.sleep(for: .milliseconds(500))
+        try? await Task.sleep(for: .milliseconds(800))
         motionActivityManager.stopActivityUpdates()
     }
 

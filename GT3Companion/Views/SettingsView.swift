@@ -13,7 +13,6 @@ struct SettingsView: View {
     @AppStorage("liveActivityEnabled") private var liveActivityEnabled = true
     @AppStorage("gpsEnabled") private var gpsEnabled = true
     @AppStorage("roughnessEnabled") private var roughnessEnabled = true
-    @AppStorage("onboardingComplete") private var onboardingComplete = true
 
     @Environment(\.modelContext) private var modelContext
     @Query private var rides: [PersistedRide]
