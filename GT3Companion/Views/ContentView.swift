@@ -27,6 +27,7 @@ struct ContentView: View {
             ScooterInfoView()
                 .tabItem {
                     Label("Scooter", systemImage: "scooter")
+                        .environment(\.layoutDirection, .rightToLeft)
                 }
             SettingsView()
                 .tabItem {

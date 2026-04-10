@@ -24,7 +24,7 @@ final class BLEConstantsTests: XCTestCase {
 
     func testBoardIDs() {
         XCTAssertEqual(BLEConstants.Board.ble.rawValue, 0x21)
-        XCTAssertEqual(BLEConstants.Board.vcu.rawValue, 0x02)
+        XCTAssertEqual(BLEConstants.Board.vcu.rawValue, 0x16)
         XCTAssertEqual(BLEConstants.Board.bms1.rawValue, 0x06)
         XCTAssertEqual(BLEConstants.Board.bms2.rawValue, 0x07)
         XCTAssertEqual(BLEConstants.Board.mcu.rawValue, 0x04)
@@ -45,6 +45,7 @@ final class BLEConstantsTests: XCTestCase {
         XCTAssertEqual(BLEConstants.Command.preComm.rawValue, 0x5B)
         XCTAssertEqual(BLEConstants.Command.setPwd.rawValue, 0x5C)
         XCTAssertEqual(BLEConstants.Command.auth.rawValue, 0x5D)
+        XCTAssertEqual(BLEConstants.Command.powerOn.rawValue, 0x79)
     }
 
     func testDefaultMTU() {

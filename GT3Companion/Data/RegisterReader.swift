@@ -84,13 +84,13 @@ actor RegisterReader {
         guard parsed.cmd == BLEConstants.Command.readAck.rawValue else { return nil }
 
         let matchingRegister = GT3Registers.all.first { register in
-            register.board.rawValue == parsed.source
+            register.board.rawValue == parsed.btID
             && register.index == parsed.index
             && register.size == UInt8(parsed.payload.count)
         }
 
         guard let register = matchingRegister else {
-            let boardHex = String(parsed.source, radix: 16)
+            let boardHex = String(parsed.btID, radix: 16)
             let indexHex = String(parsed.index, radix: 16)
             logger.debug("Unknown register response: board=0x\(boardHex) index=0x\(indexHex)")
             return nil

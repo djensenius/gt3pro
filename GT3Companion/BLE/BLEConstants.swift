@@ -62,11 +62,13 @@ enum BLEConstants {
 
     // MARK: - Board Target IDs
 
+    /// x3 series (GT3 Pro) board addresses — verified from packet capture.
+    /// VCU is 0x16 (NOT 0x02 which is MCU on the x3 series).
     enum Board: UInt8 {
         /// BLE module (Ninebot standard address for BLE chip = 0x21)
         case ble = 0x21
-        case vcu = 0x02  // ESC / Vehicle Control Unit
-        case mcu = 0x04  // Master Control Unit
+        case vcu = 0x16  // Vehicle Control Unit (x3 series)
+        case mcu = 0x04  // BLE auth target / Motor Control Unit
         case bms1 = 0x06
         case bms2 = 0x07
         case tft = 0x09
@@ -101,6 +103,7 @@ enum BLEConstants {
         case preComm = 0x5B
         case setPwd = 0x5C
         case auth = 0x5D
+        case powerOn = 0x79
     }
 
     // MARK: - Timing

@@ -55,6 +55,17 @@ enum NinebotFrameBuilder {
         )
     }
 
+    /// Build a power-on command frame for the VCU.
+    /// Verified from packet capture: CMD=0x79, TARGET=VCU(0x16), DATA=[0x01, 0x00].
+    static func buildPowerOnFrame() -> Data {
+        return buildFrame(
+            target: BLEConstants.Board.vcu.rawValue,
+            cmd: BLEConstants.Command.powerOn.rawValue,
+            index: 0x00,
+            data: Data([0x01, 0x00])
+        )
+    }
+
     /// Build a raw Ninebot frame.
     /// Layout: [0x5A, 0xA5, LEN, BT_ID, TARGET, CMD, INDEX, DATA...]
     /// LEN = data.count (GT3 Pro "x3 series" protocol: LEN counts data bytes only)

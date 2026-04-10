@@ -45,6 +45,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     private var storedPassword: Data?
     private var hasStarted = false
     private var pendingEndTask: Task<Void, Never>?
+    private var powerOnTask: Task<Void, Never>?
 
     private init() {
         connectionManager.delegate = self
@@ -106,6 +107,9 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         await registerReader.startPolling()
         await liveActivityManager.startRideActivity()
 
+        sendPowerOn()
+        startPowerOnPolling()
+
         logger.info("Fully connected — polling, GPS, roughness, Live Activity active")
     }
 
@@ -113,6 +117,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         await registerReader.stopPolling()
         gpsTracker.stopTracking()
         roughnessTracker.stopTracking()
+        stopPowerOnPolling()
 
         let lastBattery = currentBattery
         await rideTracker.forceEndRide(endBattery: lastBattery)
@@ -124,6 +129,35 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         }
 
         logger.info("Disconnected — trackers stopped, ride finalized")
+    }
+
+    // MARK: - Power On
+
+    /// Send the power-on command to the VCU.
+    func sendPowerOn() {
+        let frame = NinebotFrameBuilder.buildPowerOnFrame()
+        connectionManager.sendFrame(frame)
+        logger.info("Sent power-on command to VCU")
+    }
+
+    private func startPowerOnPolling() {
+        powerOnTask?.cancel()
+        powerOnTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(5))
+                guard !Task.isCancelled, let self else { break }
+                if self.currentBattery == 0 {
+                    self.sendPowerOn()
+                } else {
+                    break
+                }
+            }
+        }
+    }
+
+    private func stopPowerOnPolling() {
+        powerOnTask?.cancel()
+        powerOnTask = nil
     }
 
     // MARK: - Telemetry Processing
@@ -138,7 +172,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     private func updatePublishedValue(for result: RegisterReadResult) {
         switch result.name {
         case "rSpeed":            currentSpeed = result.doubleValue ?? 0
-        case "rBattery":          currentBattery = result.intValue ?? 0
+        case "rBattery":          handleBatteryUpdate(result.intValue ?? 0)
         case "rSingleMileage":    tripDistance = result.doubleValue ?? 0
         case "rLeftMileage":      estimatedRange = result.doubleValue ?? 0
         case "rGearMode":         gearMode = result.intValue ?? 0
@@ -148,6 +182,11 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         case "rTotalRideTime":    totalRideTime = result.intValue ?? 0
         default:                  break
         }
+    }
+
+    private func handleBatteryUpdate(_ value: Int) {
+        currentBattery = value
+        if value > 0 { stopPowerOnPolling() }
     }
 
     private func emitSample() async {

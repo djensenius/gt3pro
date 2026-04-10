@@ -19,6 +19,7 @@ struct LoginView: View {
             Image(systemName: "scooter")
                 .font(.system(size: 72))
                 .foregroundStyle(Theme.Colors.accent)
+                .environment(\.layoutDirection, .rightToLeft)
 
             Text("GT3 Companion")
                 .font(Theme.Fonts.headerXL())

@@ -70,6 +70,7 @@ struct DashboardView: View {
             Image(systemName: "scooter")
                 .font(.system(size: 80))
                 .foregroundStyle(Theme.Colors.textSecondary)
+                .environment(\.layoutDirection, .rightToLeft)
             Text("Waiting for GT3 Pro")
                 .font(Theme.Fonts.headerLarge())
                 .foregroundStyle(Theme.Colors.textPrimary)
@@ -77,6 +78,18 @@ struct DashboardView: View {
                 .font(Theme.Fonts.bodyMedium)
                 .foregroundStyle(Theme.Colors.textSecondary)
                 .multilineTextAlignment(.center)
+            #if os(iOS)
+            if coordinator.connectionState == .connected {
+                Button {
+                    coordinator.sendPowerOn()
+                } label: {
+                    Label("Power On Scooter", systemImage: "power")
+                        .font(Theme.Fonts.bodyMedium)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(Theme.Colors.accent)
+            }
+            #endif
             Spacer()
         }
         .frame(maxWidth: .infinity)
@@ -93,7 +106,19 @@ struct DashboardView: View {
                     .font(Theme.Fonts.bodyMedium)
                     .foregroundStyle(Theme.Colors.textSecondary)
             }
-            .glassCard()
+
+            #if os(iOS)
+            if battery == 0 {
+                Button {
+                    coordinator.sendPowerOn()
+                } label: {
+                    Label("Power On Scooter", systemImage: "power")
+                        .font(Theme.Fonts.bodyMedium)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(Theme.Colors.accent)
+            }
+            #endif
 
             HStack(spacing: Theme.Spacing.medium) {
                 StatCard(
