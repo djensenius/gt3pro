@@ -30,6 +30,16 @@ enum BLEConstants {
         string: "6E400004-0000-0000-006E-696E65626F74"
     )
 
+    /// Secondary write characteristic (app → device). May be the auth channel.
+    nonisolated(unsafe) static let authWriteCharUUID = CBUUID(
+        string: "6E400005-0000-0000-006E-696E65626F74"
+    )
+
+    /// Secondary notify characteristic (device → app). May be the auth response channel.
+    nonisolated(unsafe) static let authNotifyCharUUID = CBUUID(
+        string: "6E400006-0000-0000-006E-696E65626F74"
+    )
+
     // MARK: - Board Target IDs
 
     enum Board: UInt8 {

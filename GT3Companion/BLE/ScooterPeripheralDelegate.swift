@@ -63,6 +63,14 @@ extension ScooterConnectionManager: CBPeripheralDelegate {
                 notifyCharacteristic = characteristic
                 bleLog("Found notify characteristic (0004)")
                 checkReadyForAuth()
+            case BLEConstants.authWriteCharUUID where isNinebot:
+                authWriteCharacteristic = characteristic
+                bleLog("Found auth-write characteristic (0005)")
+                checkReadyForAuth()
+            case BLEConstants.authNotifyCharUUID where isNinebot:
+                authNotifyCharacteristic = characteristic
+                bleLog("Found auth-notify characteristic (0006)")
+                checkReadyForAuth()
             default:
                 break
             }

@@ -47,6 +47,10 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     private var peripheral: CBPeripheral?
     var writeCharacteristic: CBCharacteristic?
     var notifyCharacteristic: CBCharacteristic?
+    /// Secondary write channel — tested as auth write (0005)
+    var authWriteCharacteristic: CBCharacteristic?
+    /// Secondary notify channel — tested as auth response (0006)
+    var authNotifyCharacteristic: CBCharacteristic?
 
     var transport: NinebotTransport?
     private var auth: NinebotAuth?
@@ -171,12 +175,14 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         peripheral?.discoverServices([BLEConstants.serviceUUID])
     }
 
-    /// Try to begin auth if both characteristics are discovered.
     // Set to true after CCCD ON is sent; beginAuthentication fires on the ACK
     var pendingBeginAuthOnCCCDOn = false
 
+    /// Try to begin auth if write + notify characteristics are discovered.
+    /// Prefers authWriteCharacteristic (0005) over writeCharacteristic (0002).
     func checkReadyForAuth() {
-        guard writeCharacteristic != nil, notifyCharacteristic != nil else { return }
+        let hasWrite = authWriteCharacteristic != nil || writeCharacteristic != nil
+        guard hasWrite, notifyCharacteristic != nil else { return }
         toggleNotifications()
     }
 
@@ -211,6 +217,8 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         logger.info("Raw BT name: \(name) → auth name: \(authName) (bytes: \(Data(authName.utf8).count))")
         bleLog("Auth start — raw name: \"\(name)\" → sanitized: \"\(authName)\" (\(Data(authName.utf8).count) bytes)")
         bleLog("Stored password in keychain: \(storedPassword != nil ? "YES (\(storedPassword!.count) bytes)" : "NO")")
+        let writeDesc = authWriteCharacteristic != nil ? "0005 (auth channel)" : "0002 (telemetry fallback)"
+        bleLog("Auth write channel: \(writeDesc)")
 
         // Single shared crypto instance — auth and transport MUST share the same object
         // so that key/counter updates during the handshake are visible to both sides.
@@ -264,7 +272,9 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     }
 
     func sendFrame(_ frame: Data) {
-        guard let characteristic = writeCharacteristic, let peripheral = peripheral else {
+        // Prefer 0005 (auth channel); fall back to 0002
+        guard let characteristic = authWriteCharacteristic ?? writeCharacteristic,
+              let peripheral = peripheral else {
             logger.error("Cannot send: write characteristic not available")
             return
         }
@@ -289,13 +299,17 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     }
 
     /// Send a plain (unencrypted) frame with trailing 2-byte checksum — used for PRE_COMM.
+    /// Uses authWriteCharacteristic (0005) if available, falls back to writeCharacteristic (0002).
     private func sendFramePlain(_ frame: Data) {
-        guard let char = writeCharacteristic, let periph = peripheral, frame.count > 3 else { return }
+        // Prefer 0005 (secondary auth channel); fall back to 0002
+        guard let char = authWriteCharacteristic ?? writeCharacteristic,
+              let periph = peripheral, frame.count > 3 else { return }
         let chksum = UInt16(truncatingIfNeeded: ~Data(frame[2...]).reduce(UInt32(0)) { $0 + UInt32($1) })
         var outFrame = frame
         outFrame.append(UInt8(chksum & 0xFF))
         outFrame.append(UInt8(chksum >> 8))
-        print("[GT3] [TRANSPORT] sendFramePlain: \(outFrame.hexString)")
+        let charDesc = char.uuid.uuidString.suffix(4)
+        print("[GT3] [TRANSPORT] sendFramePlain on \(charDesc): \(outFrame.hexString)")
         let chunkSize = max(1, mtu - 3)
         var chunks: [Data] = []
         var offset = 0
@@ -480,6 +494,8 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
         // prematurely on the next connection's characteristic discovery.
         writeCharacteristic = nil
         notifyCharacteristic = nil
+        authWriteCharacteristic = nil
+        authNotifyCharacteristic = nil
         pendingBeginAuthOnCCCDOn = false
         auth = nil
         transport = nil
