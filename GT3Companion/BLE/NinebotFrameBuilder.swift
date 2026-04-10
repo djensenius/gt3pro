@@ -34,12 +34,24 @@ enum NinebotFrameBuilder {
     }
 
     /// Build an auth command frame (PRE_COMM, SET_PWD, AUTH).
+    /// Uses MCU target (0x04) for the GT3 Pro encrypted auth channel.
     static func buildAuthFrame(cmd: BLEConstants.Command, data: Data) -> Data {
         return buildFrame(
-            target: BLEConstants.Board.ble.rawValue,
+            target: BLEConstants.Board.mcu.rawValue,
             cmd: cmd.rawValue,
             index: 0x00,
             data: data
+        )
+    }
+
+    /// Build a plain PRE_COMM probe frame with the legacy BLE target (0x21).
+    /// Sent unencrypted to 006E-0005 as a legacy wakeup signal.
+    static func buildPlainPreComm() -> Data {
+        return buildFrame(
+            target: BLEConstants.Board.ble.rawValue,
+            cmd: BLEConstants.Command.preComm.rawValue,
+            index: 0x00,
+            data: Data()
         )
     }
 

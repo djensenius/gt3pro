@@ -263,7 +263,7 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
 
         // Single shared crypto instance — auth and transport MUST share the same object
         // so that key/counter updates during the handshake are visible to both sides.
-        let key = KeyDerivation.deriveKey(key1: Data(authName.utf8), key2: nil)
+        let key = KeyDerivation.deriveKey(key1: Data(authName.utf8), key2: BLEConstants.dataBasic)
         let crypto = NinebotCrypto(key: key, counter: 0)
 
         let authActor = NinebotAuth(btName: authName, crypto: crypto, storedPassword: storedPassword)
@@ -271,23 +271,23 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         self.transport = NinebotTransport(crypto: crypto, mtu: mtu)
 
         Task {
-            let frame = await authActor.startAuth()
+            // Step 1: Send plain PRE_COMM probe to 006E-0005 (legacy wakeup, target=0x21)
+            let plainFrame = NinebotFrameBuilder.buildPlainPreComm()
             let timestamp = bleTS()
-            bleLog("Sending PRE_COMM plain (\(frame.count) bytes)")
+            bleLog("Sending PRE_COMM plain (\(plainFrame.count) bytes)")
             print("[GT3] \(timestamp) [AUTH] Sending PRE_COMM plain")
-            sendFramePlain(frame, to: authChar)
+            sendFramePlain(plainFrame, to: authChar)
 
-            // Packet capture step 5: re-subscribe B5A3-0003 immediately after PRE_COMM.
-            // The official Segway app sends a fresh CCCD 0100 to B5A3-0003 right after
-            // PRE_COMM. This appears to signal the scooter that B5A3-0003 is the response
-            // channel. Prior testing confirmed that a CCCD write to B5A3-0003 correlates
-            // with the 8-second auth timeout (scooter processing auth) vs 55s supervision.
-            if let oldNotify = self.oldNotifyCharacteristic, let periph = self.peripheral {
-                self.bleQueue.async {
-                    print("[GT3] \(bleTS()) [BLE] Re-subscribing B5A3-0003 after PRE_COMM")
-                    periph.setNotifyValue(true, for: oldNotify)
-                }
-            }
+            // Step 2: Send encrypted PRE_COMM to B5A3-0002 (real auth, target=0x04)
+            // Packet capture shows the scooter responds to THIS one on B5A3-0003.
+            let encryptedAuthFrame = await authActor.startAuth()
+            bleLog("Sending PRE_COMM encrypted (\(encryptedAuthFrame.count) bytes)")
+            print("[GT3] \(bleTS()) [AUTH] Sending PRE_COMM encrypted")
+            sendFrame(encryptedAuthFrame)
+
+            // Mark encryption active immediately — the PRE_COMM *response* is encrypted
+            // (non-SN mode). Must be set before the first notification arrives.
+            await self.transport?.setEncryptionActive()
         }
     }
 
@@ -389,12 +389,8 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
             let nextFrame = await auth.processResponse(parsed)
             let state = await auth.state
 
-            // After PRE_COMM response, crypto is initialized — tell transport to decrypt 5AA5 frames
-            if case .setPwd = state {
-                await self.transport?.setEncryptionActive()
-            } else if case .auth = state {
-                await self.transport?.setEncryptionActive()
-            }
+            // Encryption is already active (set after sending encrypted PRE_COMM).
+            // Just advance the state machine.
 
             switch state {
             case .authenticated:

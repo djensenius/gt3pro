@@ -42,7 +42,7 @@ actor NinebotAuth {
     /// Production code should inject a shared crypto instance via the primary initializer
     /// so auth and transport stay in sync.
     init(btName: String, storedPassword: Data? = nil) {
-        let key = KeyDerivation.deriveKey(key1: Data(btName.utf8), key2: nil)
+        let key = KeyDerivation.deriveKey(key1: Data(btName.utf8), key2: BLEConstants.dataBasic)
         self.btName = btName
         self.storedPassword = storedPassword
         self.crypto = NinebotCrypto(key: key, counter: 0)

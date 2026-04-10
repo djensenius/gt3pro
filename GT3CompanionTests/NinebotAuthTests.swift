@@ -30,7 +30,7 @@ final class NinebotAuthTests: XCTestCase {
         let parsed = NinebotFrameBuilder.parseFrame(frame)
         XCTAssertNotNil(parsed)
         XCTAssertEqual(parsed?.cmd, BLEConstants.Command.preComm.rawValue)
-        XCTAssertEqual(parsed?.source, BLEConstants.Board.ble.rawValue)
+        XCTAssertEqual(parsed?.source, BLEConstants.Board.mcu.rawValue) // MCU target for encrypted auth
         XCTAssertEqual(parsed?.index, 0x00)
     }
 

@@ -72,6 +72,15 @@ enum BLEConstants {
         case tft = 0x09
     }
 
+    // MARK: - Protocol Constants
+
+    /// Fixed 16-byte IV for initial key derivation and non-SN mode keystream.
+    /// From the NinebotCrypto reference implementation (scooterhacking/NinebotCrypto).
+    static let dataBasic = Data([
+        0x97, 0xCF, 0xB8, 0x02, 0x84, 0x41, 0x43, 0xDE,
+        0x56, 0x00, 0x2B, 0x3B, 0x34, 0x78, 0x0A, 0x5D
+    ])
+
     // MARK: - Frame Constants
 
     /// Bluetooth frame ID (always 0x3E in outbound frames)

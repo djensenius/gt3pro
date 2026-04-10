@@ -58,11 +58,11 @@ actor NinebotTransport {
         let encrypted = try crypto.encrypt(plaintext: payload)
         print("[GT3] [TRANSPORT] encrypted payload: \(encrypted.hexString)")
 
-        // Build encrypted frame — packet capture shows ALL frames use 5AA5, never 5AB5
+        // Build encrypted frame — preserve original LEN byte from plaintext frame
         var frame = Data()
         frame.append(BLEConstants.syncByte1)
         frame.append(BLEConstants.syncByte2Plain)
-        frame.append(UInt8(encrypted.count))
+        frame.append(plaintextFrame[2])
         frame.append(encrypted)
 
         // Fragment
@@ -126,10 +126,11 @@ actor NinebotTransport {
             // Third byte after sync is the length.
             // GT3 Pro plain frames: LEN = data bytes only, total frame = LEN + 9
             // (5A + A5 + LEN + SRC + DEST + CMD + INDEX + DATA(LEN) + CHK_LO + CHK_HI)
-            // Encrypted frames: LEN = encrypted payload bytes, total frame = LEN + 3
+            // Encrypted frames: total = LEN + 13
+            // (5A + A5 + LEN + encrypted_payload(LEN+4) + tail(6))
             if reassemblyBuffer.count == 3 {
                 if inboundIsEncrypted {
-                    expectedLength = Int(byte) + 3
+                    expectedLength = Int(byte) + 13
                 } else {
                     expectedLength = Int(byte) + 9
                 }
@@ -147,7 +148,9 @@ actor NinebotTransport {
     private func decryptAndParse(
         _ frame: Data
     ) throws -> NinebotFrameBuilder.ParsedFrame? {
-        let isEncrypted = frame[1] == BLEConstants.syncByte2Encrypted
+        // GT3 Pro uses 5AA5 for ALL frames. Use the encryptionActive flag set after
+        // PRE_COMM response, or check for 5AB5 (other Ninebot scooters).
+        let isEncrypted = encryptionActive || frame[1] == BLEConstants.syncByte2Encrypted
         print("[GT3] [TRANSPORT] decryptAndParse: \(frame.hexString) isEncrypted=\(isEncrypted)")
 
         if isEncrypted {
@@ -155,11 +158,13 @@ actor NinebotTransport {
             let decrypted = try crypto.decrypt(encrypted: encryptedPayload)
             print("[GT3] [TRANSPORT] decrypted: \(decrypted.hexString)")
 
-            // Rebuild as plaintext frame for parsing
+            // Rebuild as plaintext frame for parsing.
+            // LEN = data bytes count (GT3 Pro format: payload = BT_ID+TARGET+CMD+INDEX+DATA).
+            let dataLen = max(0, decrypted.count - 4)
             var plainFrame = Data()
             plainFrame.append(BLEConstants.syncByte1)
             plainFrame.append(BLEConstants.syncByte2Plain)
-            plainFrame.append(UInt8(decrypted.count))
+            plainFrame.append(UInt8(dataLen))
             plainFrame.append(decrypted)
 
             return NinebotFrameBuilder.parseFrame(plainFrame)

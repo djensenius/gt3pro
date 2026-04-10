@@ -70,7 +70,7 @@ final class NinebotCrypto: @unchecked Sendable {
     // MARK: - Non-SN Mode (PRE_COMM)
 
     private func encryptNonSN(plaintext: Data) throws -> Data {
-        let keystream = try AESHelper.encryptBlock(key: aesKey, plaintext: Data(count: 16))
+        let keystream = try AESHelper.encryptBlock(key: aesKey, plaintext: BLEConstants.dataBasic)
 
         var encrypted = Data()
         for offset in stride(from: 0, to: plaintext.count, by: 16) {
@@ -81,7 +81,6 @@ final class NinebotCrypto: @unchecked Sendable {
             }
         }
 
-        // Checksum covers the full payload (the 3-byte frame header was already stripped by the transport).
         let sum = plaintext.reduce(UInt32(0)) { $0 + UInt32($1) }
         let checksum = UInt16(truncatingIfNeeded: ~sum)
 
@@ -103,7 +102,7 @@ final class NinebotCrypto: @unchecked Sendable {
         let payloadEnd = encrypted.count - 6
         let payload = encrypted[0..<payloadEnd]
         let tail = encrypted[payloadEnd...]
-        let keystream = try AESHelper.encryptBlock(key: aesKey, plaintext: Data(count: 16))
+        let keystream = try AESHelper.encryptBlock(key: aesKey, plaintext: BLEConstants.dataBasic)
 
         var decrypted = Data()
         for offset in stride(from: 0, to: payload.count, by: 16) {
@@ -227,7 +226,7 @@ final class NinebotCrypto: @unchecked Sendable {
     /// Compute 4-byte CBC-MAC tag.
     /// B_0 = [0x59] + nonce(13B) + [0x00, payload_length]
     /// X = AES(key, B_0)
-    /// AAD = plaintext[0..<3] padded to 16 bytes
+    /// AAD = frame header [5A, A5, LEN] padded to 16 bytes
     /// X = AES(key, X XOR AAD)
     /// For each 16-byte payload block: X = AES(key, X XOR block)
     /// Return X[0..<4]
@@ -240,25 +239,22 @@ final class NinebotCrypto: @unchecked Sendable {
 
         var macState = try AESHelper.encryptBlock(key: aesKey, plaintext: macBlock)
 
-        // Associated data: first 3 bytes of plaintext, zero-padded to 16
+        // AAD = frame header [5A, A5, LEN], zero-padded to 16
+        // LEN = plaintext.count - 4 (GT3 Pro format: LEN counts DATA bytes only)
         var aad = Data(count: 16)
-        let aadLen = min(3, plaintext.count)
-        for idx in 0..<aadLen {
-            aad[idx] = plaintext[plaintext.startIndex + idx]
-        }
+        aad[0] = 0x5A
+        aad[1] = 0xA5
+        aad[2] = UInt8(max(0, plaintext.count - 4) & 0xFF)
         macState = try AESHelper.encryptBlock(key: aesKey, plaintext: xor(macState, aad))
 
-        // Process payload blocks (from byte 3 onward)
-        if plaintext.count > 3 {
-            let payloadData = Data(plaintext[3...])
-            for offset in stride(from: 0, to: payloadData.count, by: 16) {
-                var block = Data(count: 16)
-                let end = min(offset + 16, payloadData.count)
-                for idx in 0..<(end - offset) {
-                    block[idx] = payloadData[payloadData.startIndex + offset + idx]
-                }
-                macState = try AESHelper.encryptBlock(key: aesKey, plaintext: xor(macState, block))
+        // Process ALL payload blocks (the full plaintext, not from byte 3)
+        for offset in stride(from: 0, to: plaintext.count, by: 16) {
+            var block = Data(count: 16)
+            let end = min(offset + 16, plaintext.count)
+            for idx in 0..<(end - offset) {
+                block[idx] = plaintext[plaintext.startIndex + offset + idx]
             }
+            macState = try AESHelper.encryptBlock(key: aesKey, plaintext: xor(macState, block))
         }
 
         return macState.prefix(4)

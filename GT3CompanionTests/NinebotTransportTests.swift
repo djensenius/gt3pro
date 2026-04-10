@@ -78,7 +78,7 @@ final class NinebotTransportTests: XCTestCase {
     }
 
     func testPrepareOutboundProducesFragments() async throws {
-        let key = KeyDerivation.deriveKey(key1: Data("test".utf8), key2: nil)
+        let key = KeyDerivation.deriveKey(key1: Data("test".utf8), key2: BLEConstants.dataBasic)
         let crypto = NinebotCrypto(key: key, counter: 0)
         let transport = NinebotTransport(crypto: crypto, mtu: 23)
 
