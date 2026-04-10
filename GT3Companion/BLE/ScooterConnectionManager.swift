@@ -212,18 +212,22 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
 
     /// CCCD toggle workaround for iOS stale notifications on reconnect.
     /// Toggles the notify characteristic OFF then ON; beginAuthentication fires on the ON ACK.
-    /// Prefers old service (B5A3-0003); falls back to new service (006E-0004).
+    /// When B5A3 service is present, use B5A3-0003; otherwise use 006E-0004.
     private func toggleNotifications() {
         // Prefer old-service notify for CCCD toggle (Segway app uses B5A3-0003)
         let characteristic = oldNotifyCharacteristic ?? notifyCharacteristic
         guard let characteristic, let peripheral = peripheral else { return }
 
-        bleQueue.async { [weak self] in
+        // Set the guard synchronously so a second call from a race-condition
+        // (e.g., B5A3 chars discovered before the 300ms closure fires) doesn't
+        // start a second parallel toggle.
+        pendingBeginAuthOnCCCDOn = true
+
+        bleQueue.async {
             peripheral.setNotifyValue(false, for: characteristic)
-            self?.bleQueue.asyncAfter(
+            self.bleQueue.asyncAfter(
                 deadline: .now() + .milliseconds(Int(BLEConstants.cccdToggleOffDelayMs))
-            ) { [weak self] in
-                self?.pendingBeginAuthOnCCCDOn = true
+            ) {
                 peripheral.setNotifyValue(true, for: characteristic)
             }
         }
@@ -245,10 +249,10 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         bleLog("Auth start — raw name: \"\(name)\" → sanitized: \"\(authName)\" (\(Data(authName.utf8).count) bytes)")
         bleLog("Stored password in keychain: \(storedPassword != nil ? "YES (\(storedPassword!.count) bytes)" : "NO")")
         let writeDesc: String
-        if oldWriteCharacteristic != nil {
+        if authWriteCharacteristic != nil {
+            writeDesc = "006E-0005 (new dedicated auth channel)"
+        } else if oldWriteCharacteristic != nil {
             writeDesc = "B5A3-0002 (old Nordic UART — Segway app channel)"
-        } else if authWriteCharacteristic != nil {
-            writeDesc = "006E-0005 (new secondary channel)"
         } else {
             writeDesc = "006E-0002 (new primary channel)"
         }
@@ -335,10 +339,10 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     }
 
     /// Send a plain (unencrypted) frame with trailing 2-byte checksum — used for PRE_COMM.
-    /// Priority: old service B5A3-0002 > new 006E-0005 > new 006E-0002.
+    /// Priority: new auth-write 006E-0005 > old service B5A3-0002 > new primary 006E-0002.
+    /// 006E-0005 is the dedicated auth channel added in the GT3 Pro Ninebot service.
     private func sendFramePlain(_ frame: Data) {
-        // Prefer old Nordic UART service (Segway app channel), then new auth, then new primary
-        guard let char = oldWriteCharacteristic ?? authWriteCharacteristic ?? writeCharacteristic,
+        guard let char = authWriteCharacteristic ?? oldWriteCharacteristic ?? writeCharacteristic,
               let periph = peripheral, frame.count > 3 else { return }
         let chksum = UInt16(truncatingIfNeeded: ~Data(frame[2...]).reduce(UInt32(0)) { $0 + UInt32($1) })
         var outFrame = frame
