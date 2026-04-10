@@ -1,6 +1,7 @@
-# Xcode
-build/
-DerivedData/
+# Xcode personal/generated data
+xcuserdata/
+GT3Companion.xcodeproj/xcshareddata/
+GT3Companion.xcodeproj/project.xcworkspace/xcuserdata/
 *.pbxuser
 !default.pbxuser
 *.mode1v3
@@ -9,9 +10,12 @@ DerivedData/
 !default.mode2v3
 *.perspectivev3
 !default.perspectivev3
-xcuserdata/
 *.xccheckout
 *.moved-aside
+
+# Build artifacts
+build/
+DerivedData/
 *.hmap
 *.ipa
 *.dSYM.zip
@@ -24,9 +28,6 @@ Package.pins
 Package.resolved
 *.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
 
-# CocoaPods (not used but just in case)
-Pods/
-
 # OS files
 .DS_Store
 .DS_Store?
@@ -36,7 +37,7 @@ Pods/
 ehthumbs.db
 Thumbs.db
 
-# Environment
+# Environment / secrets
 .env
 .env.local
 scooter-credentials.md
