@@ -13,6 +13,9 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5"
+    DEVELOPMENT_TEAM: 9JALHNGRBQ
+    MARKETING_VERSION: "0.9"
+    CURRENT_PROJECT_VERSION: "1"
 
 targets:
   GT3Companion:
@@ -56,7 +59,10 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion
         TARGETED_DEVICE_FAMILY: "1,2"
         CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "iPhone Developer"
         GENERATE_INFOPLIST_FILE: false
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.lifestyle
     entitlements:
       path: GT3Companion/GT3Companion.entitlements
       properties:
@@ -112,6 +118,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.watch
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        TARGETED_DEVICE_FAMILY: "4"
     entitlements:
       path: GT3CompanionWatch/GT3CompanionWatch.entitlements
       properties:
@@ -166,6 +174,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.mac
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.lifestyle
 
   GT3CompanionVision:
     type: application
@@ -187,6 +197,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.vision
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        TARGETED_DEVICE_FAMILY: "7"
 
 schemes:
   GT3Companion:
@@ -200,6 +212,7 @@ schemes:
       config: Debug
       targets:
         - GT3CompanionTests
+        - GT3CompanionUITests
     profile:
       config: Release
     analyze:
