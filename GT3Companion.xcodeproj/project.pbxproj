@@ -39,6 +39,7 @@
 		3DF0D808D46289DC26A9D8EB /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00985FF0F4FBE77CCCE61CE6 /* PersistenceController.swift */; };
 		3F9E66D56F8851A8BF3A7C56 /* RegisterReaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FC63A3A2D8799086BC58523 /* RegisterReaderTests.swift */; };
 		4015788E36F5E39F65B91E0A /* RideWorkoutManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8D580E2A873BE70E1F49EE /* RideWorkoutManager.swift */; };
+		4036BCAB72CD7AF9EB6167A2 /* SnapshotHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88A4DC3FAB6BB8E8E7A8AA9E /* SnapshotHelper.swift */; };
 		442A1FD606975DF3B90BB12E /* GT3CompanionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CA73CFF555039D3094FDDBF /* GT3CompanionApp.swift */; };
 		4753C941A6D3702FDEFB76A8 /* ScooterPeripheralDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFD55D92AFA58C5FCCB083F7 /* ScooterPeripheralDelegate.swift */; };
 		475496F3CAA9923B88C471B7 /* ServerRide.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B7F41D6D8220A7D36237600 /* ServerRide.swift */; };
@@ -206,7 +207,7 @@
 		2D0BC7212A2BD252D996C21B /* GT3RideAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3RideAttributes.swift; sourceTree = "<group>"; };
 		2E6E068D2FFD52B5C440C611 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2F60D7016AF895D2E94ABCA0 /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
-		331C823A352F2D7F81A411AB /* GT3CompanionUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GT3CompanionUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		331C823A352F2D7F81A411AB /* GT3CompanionUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GT3CompanionUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		35AB36E7D729C0D68B6B3A03 /* GT3LiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3LiveActivity.swift; sourceTree = "<group>"; };
 		374129A26773B2CE08A45568 /* ScooterKeychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScooterKeychain.swift; sourceTree = "<group>"; };
 		3ABE49BC4B627FB608831639 /* GT3RegistersTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3RegistersTests.swift; sourceTree = "<group>"; };
@@ -236,7 +237,8 @@
 		83460368F60A53C5A30952A7 /* NinebotTransportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NinebotTransportTests.swift; sourceTree = "<group>"; };
 		863AE1336A31A4B389EB86D6 /* WatchConnectivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityManager.swift; sourceTree = "<group>"; };
 		867A0316339825606B7EBFEA /* GT3APIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3APIClientTests.swift; sourceTree = "<group>"; };
-		86B8226EFDA7D34866B48B2E /* GT3CompanionVision.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GT3CompanionVision.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		86B8226EFDA7D34866B48B2E /* GT3CompanionVision.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GT3CompanionVision.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		88A4DC3FAB6BB8E8E7A8AA9E /* SnapshotHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotHelper.swift; sourceTree = "<group>"; };
 		891BD92EAAEA3BFE7C483FEA /* GT3CompanionWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3CompanionWatchApp.swift; sourceTree = "<group>"; };
 		8934033CB09959903D59EF5C /* KeyDerivation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyDerivation.swift; sourceTree = "<group>"; };
 		8FC8DF5E472D510C6DDEDF69 /* GT3Companion.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GT3Companion.entitlements; sourceTree = "<group>"; };
@@ -251,19 +253,19 @@
 		AEC6013FFE64589ED662804D /* PreviewHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewHelpers.swift; sourceTree = "<group>"; };
 		B37C34C9C57F04F3812AA098 /* DataExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataExtensions.swift; sourceTree = "<group>"; };
 		B7BEE3B916F38F756C2A05FA /* GT3Registers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3Registers.swift; sourceTree = "<group>"; };
-		BDE60F2A3E20E8CFCAE04D6A /* GT3CompanionWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = GT3CompanionWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		BDE60F2A3E20E8CFCAE04D6A /* GT3CompanionWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GT3CompanionWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		BEEE5678757A80552FB8CD6E /* JavaLCGTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JavaLCGTests.swift; sourceTree = "<group>"; };
 		BFD55D92AFA58C5FCCB083F7 /* ScooterPeripheralDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScooterPeripheralDelegate.swift; sourceTree = "<group>"; };
 		C52F4AD50049BAA6D58C7B83 /* GT3CompanionMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GT3CompanionMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C578ACBA36D95C48E179455A /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
 		C76AE1C74BD9FB056599493D /* SurfaceRoughnessTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurfaceRoughnessTracker.swift; sourceTree = "<group>"; };
-		C822EB76A11042B82719F773 /* GT3Companion.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GT3Companion.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C822EB76A11042B82719F773 /* GT3Companion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GT3Companion.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C894222A35BFDE918279DBCA /* GT3APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3APIClient.swift; sourceTree = "<group>"; };
 		C96A0466670E6039D58C90A6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		CA0670D4CC9E61B989E835AC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		CB87773429ACD607F25A8BF3 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		CE53582C2CC4F2EFA20AD815 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
-		D79298EC0DD3C0258F248BCC /* GT3CompanionTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GT3CompanionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D79298EC0DD3C0258F248BCC /* GT3CompanionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GT3CompanionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D8D8302BED52B6CDA212C08A /* AESHelperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AESHelperTests.swift; sourceTree = "<group>"; };
 		DEE7C3B06D5FF3708534DD86 /* JavaLCG.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JavaLCG.swift; sourceTree = "<group>"; };
 		DFA059564462F3ED6EFEE13A /* StatCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatCard.swift; sourceTree = "<group>"; };
@@ -503,6 +505,7 @@
 			isa = PBXGroup;
 			children = (
 				21D1E227816962A170A4BB65 /* GT3CompanionUITests.swift */,
+				88A4DC3FAB6BB8E8E7A8AA9E /* SnapshotHelper.swift */,
 			);
 			path = GT3CompanionUITests;
 			sourceTree = "<group>";
@@ -676,7 +679,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1630;
+				LastUpgradeCheck = 2640;
 				TargetAttributes = {
 					1F8F4FC8E50B9764CB67E92E = {
 						DevelopmentTeam = 9JALHNGRBQ;
@@ -924,6 +927,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				197556F75B3820A1000D15DA /* GT3CompanionUITests.swift in Sources */,
+				4036BCAB72CD7AF9EB6167A2 /* SnapshotHelper.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1011,6 +1015,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GT3CompanionMac/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
@@ -1027,6 +1032,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1110,11 +1116,13 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 202604102305;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 9JALHNGRBQ;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -1129,6 +1137,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5;
@@ -1141,6 +1150,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1159,6 +1169,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GT3CompanionMac/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
@@ -1205,11 +1216,13 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 202604102305;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 9JALHNGRBQ;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -1231,6 +1244,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5;
@@ -1243,6 +1257,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1291,6 +1306,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

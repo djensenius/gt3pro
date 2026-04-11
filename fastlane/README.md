@@ -23,6 +23,22 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 Build and upload to TestFlight
 
+### ios screenshots
+
+```sh
+[bundle exec] fastlane ios screenshots
+```
+
+Capture App Store screenshots
+
+### ios upload_screenshots
+
+```sh
+[bundle exec] fastlane ios upload_screenshots
+```
+
+Upload screenshots to App Store Connect
+
 ### ios metadata
 
 ```sh
@@ -38,6 +54,27 @@ Upload metadata to App Store Connect
 ```
 
 Build and submit to App Store
+
+----
+
+
+## Mac
+
+### mac beta
+
+```sh
+[bundle exec] fastlane mac beta
+```
+
+Build and upload Mac app to TestFlight
+
+### mac release
+
+```sh
+[bundle exec] fastlane mac release
+```
+
+Build and submit Mac app to App Store
 
 ----
 

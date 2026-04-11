@@ -7,6 +7,17 @@
 
 import SwiftUI
 
+/// Forces tab-bar-only style in screenshot mode so iPad uses the same tab bar as iPhone.
+private struct ScreenshotTabBarModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        if ProcessInfo.processInfo.arguments.contains("--screenshot-mode") {
+            content.tabViewStyle(.tabBarOnly)
+        } else {
+            content.tabViewStyle(.sidebarAdaptable)
+        }
+    }
+}
+
 struct ContentView: View {
     #if os(iOS)
     /// SF Symbol "scooter" faces left by default; mirror it so it faces right.
@@ -53,6 +64,7 @@ struct ContentView: View {
                     Label("Settings", systemImage: "gear")
                 }
         }
+        .modifier(ScreenshotTabBarModifier())
         .tint(Theme.Colors.accent)
         .background(Theme.Colors.background.ignoresSafeArea())
     }

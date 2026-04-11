@@ -41,3 +41,5 @@ Thumbs.db
 .env
 .env.local
 scooter-credentials.md
+fastlane/report.xml
+fastlane/screenshots/screenshots.html

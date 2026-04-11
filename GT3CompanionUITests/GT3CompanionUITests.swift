@@ -7,6 +7,7 @@
 
 import XCTest
 
+@MainActor
 final class ScreenshotTests: XCTestCase {
     let app = XCUIApplication()
 
@@ -14,7 +15,36 @@ final class ScreenshotTests: XCTestCase {
         continueAfterFailure = false
         app.launchArguments = ["--screenshot-mode"]
         setupSnapshot(app)
+
+        addUIInterruptionMonitor(withDescription: "System Alert") { alert in
+            let allow = alert.buttons["Allow While Using App"]
+            if allow.exists {
+                allow.tap()
+                return true
+            }
+            let allowOnce = alert.buttons["Allow Once"]
+            if allowOnce.exists {
+                allowOnce.tap()
+                return true
+            }
+            let okButton = alert.buttons["OK"]
+            if okButton.exists {
+                okButton.tap()
+                return true
+            }
+            return false
+        }
+
         app.launch()
+        // Trigger the interruption monitor by interacting with the app
+        app.swipeUp()
+    }
+
+    private func navigateToTab(_ name: String) {
+        let tabButton = app.tabBars.buttons[name]
+        if tabButton.waitForExistence(timeout: 3) {
+            tabButton.tap()
+        }
     }
 
     func testDashboardScreenshot() {
@@ -22,13 +52,12 @@ final class ScreenshotTests: XCTestCase {
     }
 
     func testRidesScreenshot() {
-        app.tabBars.buttons["Rides"].tap()
+        navigateToTab("Rides")
         snapshot("02_RideHistory")
     }
 
     func testRideDetailScreenshot() {
-        app.tabBars.buttons["Rides"].tap()
-        // Tap the first ride in the list
+        navigateToTab("Rides")
         let firstRide = app.cells.firstMatch
         if firstRide.waitForExistence(timeout: 3) {
             firstRide.tap()
@@ -37,7 +66,7 @@ final class ScreenshotTests: XCTestCase {
     }
 
     func testScooterInfoScreenshot() {
-        app.tabBars.buttons["Scooter"].tap()
+        navigateToTab("Scooter")
         snapshot("04_ScooterInfo")
     }
 }

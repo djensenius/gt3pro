@@ -1,7 +1,9 @@
 devices([
-  "iPhone 16 Pro Max",
-  "iPhone 16 Pro",
-  "iPhone SE (3rd generation)"
+  "iPhone 17 Pro Max",
+  "iPhone 17 Pro",
+  "iPhone 16e",
+  "iPad Pro 13-inch (M5)",
+  "iPad Pro 11-inch (M5)"
 ])
 
 languages(["en-CA"])
@@ -12,3 +14,4 @@ clear_previous_screenshots(true)
 override_status_bar(true)
 
 launch_arguments(["--screenshot-mode"])
+xcargs("CODE_SIGNING_ALLOWED='YES' -allowProvisioningUpdates")

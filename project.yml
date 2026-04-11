@@ -139,6 +139,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.tests
+        GENERATE_INFOPLIST_FILE: true
     dependencies:
       - target: GT3Companion
         embed: false
@@ -153,6 +154,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.uitests
+        GENERATE_INFOPLIST_FILE: true
     dependencies:
       - target: GT3Companion
         embed: false

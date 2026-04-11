@@ -27,7 +27,9 @@ struct GT3CompanionApp: App {
                     .onAppear {
                         coordinator.start()
                     }
+                    #if DEBUG
                     .task { await populateScreenshotRides() }
+                    #endif
             } else {
             switch auth.authState {
             case .unknown:
@@ -86,6 +88,7 @@ struct GT3CompanionApp: App {
     }
 
     /// Populate sample rides for screenshot mode.
+    #if DEBUG
     @MainActor private func populateScreenshotRides() async {
         let context = PersistenceController.shared.container.mainContext
         // Only populate if empty
@@ -96,4 +99,5 @@ struct GT3CompanionApp: App {
         }
         try? context.save()
     }
+    #endif
 }
