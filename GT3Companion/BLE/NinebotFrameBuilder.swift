@@ -67,14 +67,14 @@ enum NinebotFrameBuilder {
     }
 
     /// Build a power-off (closeAcc) command frame for the VCU.
-    /// CMD=0x79, INDEX=0x00, DATA=[0x01, 0x00] (2 bytes per Codeberg GT3 docs).
-    /// The 2-byte payload distinguishes closeAcc from openAcc (1 byte).
+    /// CMD=0x79, INDEX=0x00, DATA=[0x02, 0x00].
+    /// Verified from pklg capture: Segway app sends 0x02 for closeAcc, 0x01 for openAcc.
     static func buildPowerOffFrame() -> Data {
         return buildFrame(
             target: BLEConstants.Board.vcu.rawValue,
             cmd: BLEConstants.Command.powerOn.rawValue,
             index: 0x00,
-            data: Data([0x01, 0x00])
+            data: Data([0x02, 0x00])
         )
     }
 

@@ -192,21 +192,11 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     }
 
     /// Send the power-off command to the scooter.
-    /// Tries two approaches: CMD=0x79 to VCU (inverse of power-on),
-    /// and a write to MCU register 0x51 (from segMod reverse engineering).
+    /// Verified from pklg: Segway app sends ACC_CMD (0x79) with data [0x02, 0x00].
     func sendPowerOff() {
-        let frame1 = NinebotFrameBuilder.buildPowerOffFrame()
-        connectionManager.sendFrame(frame1)
-        logger.info("Sent power-off CMD 0x79 to VCU")
-
-        // Also try writing 0x0100 to MCU register 0x51 (segMod approach — locks the scooter)
-        let frame2 = NinebotFrameBuilder.buildWriteFrame(
-            board: .mcu,
-            register: 0x51,
-            data: Data([0x01, 0x00])
-        )
-        connectionManager.sendFrame(frame2)
-        logger.info("Sent power-off write MCU:0x51=0x0100")
+        let frame = NinebotFrameBuilder.buildPowerOffFrame()
+        connectionManager.sendFrame(frame)
+        logger.info("Sent power-off CMD 0x79 data=[0x02,0x00] to VCU")
     }
 
     private func startPowerOnPolling() {
@@ -215,7 +205,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(5))
                 guard !Task.isCancelled, let self else { break }
-                if self.currentBattery == 0 {
+                if !self.isScooterAwake {
                     self.sendPowerOn()
                 } else {
                     break
@@ -265,30 +255,46 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     private func handleTelemetryFrame(_ frame: NinebotFrameBuilder.ParsedFrame) async {
         guard let result = await registerReader.processResponse(frame) else { return }
         lastTelemetryTime = Date()
-        if let batteryValue = updatePublishedValue(for: result) {
+
+        if result.name == "rBool", let rawValue = result.intValue {
+            handleRBoolUpdate(rawValue)
+        } else if let batteryValue = updatePublishedValue(for: result) {
             handleBatteryUpdate(batteryValue)
         }
+
         guard result.name == "rSpeed" else { return }
         await emitSample()
     }
 
-    private func handleBatteryUpdate(_ value: Int) {
-        let wasAwake = isScooterAwake
-        let previousBattery = currentBattery
-        currentBattery = value
+    /// Detect power state from VCU register 0x1C (rBool).
+    /// Bit 5 (0x20) = standby (BLE alive, motor off).
+    /// Bit 0 (0x01) = powered on (motor active).
+    /// Verified from pklg capture: 2098 (0x832) = standby, 2065 (0x811) = powered.
+    private func handleRBoolUpdate(_ rawValue: Int) {
+        let isStandby = (rawValue & 0x20) != 0
+        let isPowered = (rawValue & 0x01) != 0
 
-        if value > 0 {
+        if isPowered && !isStandby && !isScooterAwake {
+            logger.info("rBool=0x\(String(rawValue, radix: 16)): scooter powered ON")
             isScooterAwake = true
             stopPowerOnPolling()
+            gpsTracker.startTracking()
+            roughnessTracker.startTracking()
+            startTelemetryWatchdog()
+        } else if isStandby && !isPowered && isScooterAwake {
+            logger.info("rBool=0x\(String(rawValue, radix: 16)): scooter entered STANDBY")
+            let lastBattery = currentBattery
+            Task { await handleScooterSleep(lastBattery: lastBattery) }
+        }
+    }
 
-            if !wasAwake {
-                logger.info("Scooter woke up — battery \(value)%")
-                gpsTracker.startTracking()
-                roughnessTracker.startTracking()
-                startTelemetryWatchdog()
-            }
-        } else if wasAwake {
-            Task { await handleScooterSleep(lastBattery: previousBattery) }
+    private func handleBatteryUpdate(_ value: Int) {
+        currentBattery = value
+
+        // Battery > 0 confirms the VCU is alive. Use this as a secondary
+        // wake indicator for the initial connect before rBool is polled.
+        if value > 0 && !isScooterAwake {
+            logger.info("Battery \(value)% detected — scooter may be waking (rBool will confirm)")
         }
     }
 
