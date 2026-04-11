@@ -13,14 +13,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
-      - name: Install watchOS simulator
+      - name: Install simulator runtimes
         run: |
-          if ! xcrun simctl list runtimes | grep -q "watchOS.*Available"; then
-            echo "Installing watchOS simulator runtime..."
-            xcodebuild -downloadPlatform watchOS
-          else
-            echo "watchOS simulator runtime already available"
-          fi
+          xcodebuild -downloadPlatform watchOS
+          xcodebuild -downloadPlatform iOS
       - name: Run Tests
         run: |
           DEST=$(xcrun simctl list devices available -j | python3 -c "
