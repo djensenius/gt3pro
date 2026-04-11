@@ -29,20 +29,6 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "A83A7797F28590F653E2440A"
-               BuildableName = "GT3CompanionWatch.app"
-               BlueprintName = "GT3CompanionWatch"
-               ReferencedContainer = "container:GT3Companion.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
                BlueprintIdentifier = "D7725A84B2A0C61CCFC07BC5"
                BuildableName = "GT3CompanionWidgets.appex"
                BlueprintName = "GT3CompanionWidgets"
@@ -75,17 +61,6 @@
                BlueprintIdentifier = "3150836385EF705E4F18E305"
                BuildableName = "GT3CompanionTests.xctest"
                BlueprintName = "GT3CompanionTests"
-               ReferencedContainer = "container:GT3Companion.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "6C19F0F71ED7949B2A8A4C21"
-               BuildableName = "GT3CompanionUITests.xctest"
-               BlueprintName = "GT3CompanionUITests"
                ReferencedContainer = "container:GT3Companion.xcodeproj">
             </BuildableReference>
          </TestableReference>

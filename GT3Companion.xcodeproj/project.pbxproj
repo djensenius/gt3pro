@@ -74,7 +74,6 @@
 		8129DDC3E23E43B303E71586 /* KeyDerivationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF41BC7A131F7835D3D5FC88 /* KeyDerivationTests.swift */; };
 		8193ABBD8A123282200926E7 /* GT3RideAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0BC7212A2BD252D996C21B /* GT3RideAttributes.swift */; };
 		81D7BA3C931E113898DD539C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2E6E068D2FFD52B5C440C611 /* Assets.xcassets */; };
-		821C642FE5F08EFF57E68DD1 /* GT3CompanionWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 60A31234CEAAD986C4952B40 /* GT3CompanionWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		8A23628C545F836287E58ECC /* KeyDerivation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8934033CB09959903D59EF5C /* KeyDerivation.swift */; };
 		8C8633C36AE3426F055EE202 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E9E161CA55B49466B7C67D5 /* LoginView.swift */; };
 		8F085638E5D961EC00DE31CE /* RegisterReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 424F02984953C13821C555EE /* RegisterReader.swift */; };
@@ -130,6 +129,7 @@
 		F8CCDB6EEDE70D23A759D87E /* PairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11C5682B34F0870664C57915 /* PairingView.swift */; };
 		FA13A2007A1B2131ED1C0C01 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F60D7016AF895D2E94ABCA0 /* AuthManager.swift */; };
 		FC2180F4FEED50A0B0C5F60F /* GT3RideAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0BC7212A2BD252D996C21B /* GT3RideAttributes.swift */; };
+		FCFE42FB92CC3817499DC885 /* PowerSlideButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B34E5080C0FEEDFDC393EE9C /* PowerSlideButton.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -139,13 +139,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 8DAAB8E08DF7CB2411D8C05B;
 			remoteInfo = GT3Companion;
-		};
-		3AEAC9533885EBC232B5C97B /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = F9DD18F549BB83F9A6477CFC /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = A83A7797F28590F653E2440A;
-			remoteInfo = GT3CompanionWatch;
 		};
 		5CBF446ED955FC40900242EB /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -164,17 +157,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		17F6C6759BD7D4B82B31457A /* Embed Watch Content */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
-			dstSubfolderSpec = 16;
-			files = (
-				821C642FE5F08EFF57E68DD1 /* GT3CompanionWatch.app in Embed Watch Content */,
-			);
-			name = "Embed Watch Content";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		1D0A8F457FE77AD5C45A3969 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -257,6 +239,7 @@
 		ACFF7915A5105F90F7895B3B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		ADC13C5A39D3483D8EEDD04B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		AEC6013FFE64589ED662804D /* PreviewHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewHelpers.swift; sourceTree = "<group>"; };
+		B34E5080C0FEEDFDC393EE9C /* PowerSlideButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerSlideButton.swift; sourceTree = "<group>"; };
 		B37C34C9C57F04F3812AA098 /* DataExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataExtensions.swift; sourceTree = "<group>"; };
 		B7BEE3B916F38F756C2A05FA /* GT3Registers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3Registers.swift; sourceTree = "<group>"; };
 		BDE60F2A3E20E8CFCAE04D6A /* GT3CompanionWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = GT3CompanionWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -378,6 +361,7 @@
 				EBEE3BF0C58F8ABAFF006549 /* MapRouteView.swift */,
 				0B3AAFD381FF70FD11643480 /* OnboardingView.swift */,
 				11C5682B34F0870664C57915 /* PairingView.swift */,
+				B34E5080C0FEEDFDC393EE9C /* PowerSlideButton.swift */,
 				55FE211690F8E6728DBC3A59 /* RideDetailView.swift */,
 				05FA94F2A81DC172E483E5B4 /* RideHistoryView.swift */,
 				71C4965BA8E974E0A6B214CF /* RouteNavigationView.swift */,
@@ -628,13 +612,12 @@
 				C17BE4C51F76B1E68B910D09 /* Sources */,
 				935C4F7B3C77F195DED9A15F /* Resources */,
 				1D0A8F457FE77AD5C45A3969 /* Embed Foundation Extensions */,
-				17F6C6759BD7D4B82B31457A /* Embed Watch Content */,
+				DE2DEA6FB3ABCE9AFB2D18E3 /* Embed Watch App */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				B64D10485DF18BA7004FB6F5 /* PBXTargetDependency */,
-				A624852DCD1B821CCAD9218B /* PBXTargetDependency */,
 			);
 			name = GT3Companion;
 			packageProductDependencies = (
@@ -776,6 +759,28 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		DE2DEA6FB3ABCE9AFB2D18E3 /* Embed Watch App */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Embed Watch App";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "WATCH_APP=\"${BUILT_PRODUCTS_DIR}/GT3CompanionWatch.app\"\nDEST=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Watch\"\nif [ -d \"$WATCH_APP\" ]; then\n  mkdir -p \"$DEST\"\n  ditto \"$WATCH_APP\" \"$DEST/GT3CompanionWatch.app\"\n  echo \"Embedded Watch app from $WATCH_APP\"\nelse\n  echo \"Watch app not found at $WATCH_APP — skipping embed\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		2288948FAE9B5D75953D00B5 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -900,6 +905,7 @@
 				C5F7EF20D2B4BF78C81B9E13 /* PermissionsManager.swift in Sources */,
 				B65484A304ECCDC5B631F91C /* PersistenceController.swift in Sources */,
 				2267FF4882DF7605904F8B50 /* PhoneWatchSessionManager.swift in Sources */,
+				FCFE42FB92CC3817499DC885 /* PowerSlideButton.swift in Sources */,
 				1BA065423E7014CBEF7E5789 /* PreviewHelpers.swift in Sources */,
 				8F085638E5D961EC00DE31CE /* RegisterReader.swift in Sources */,
 				E98E90FD43E65AD77479B30B /* RideDetailView.swift in Sources */,
@@ -950,11 +956,6 @@
 			isa = PBXTargetDependency;
 			target = 8DAAB8E08DF7CB2411D8C05B /* GT3Companion */;
 			targetProxy = 26458BC8DDA19F2A43CCBB8F /* PBXContainerItemProxy */;
-		};
-		A624852DCD1B821CCAD9218B /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = A83A7797F28590F653E2440A /* GT3CompanionWatch */;
-			targetProxy = 3AEAC9533885EBC232B5C97B /* PBXContainerItemProxy */;
 		};
 		B64D10485DF18BA7004FB6F5 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -1127,7 +1128,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 202604111126;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 9JALHNGRBQ;
@@ -1226,7 +1227,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 202604111126;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 9JALHNGRBQ;

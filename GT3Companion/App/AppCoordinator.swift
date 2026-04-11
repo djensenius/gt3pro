@@ -285,11 +285,70 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     }
 
     private func handleBatteryUpdate(_ value: Int) {
+        let wasAwake = isScooterAwake
+        let previousBattery = currentBattery
         currentBattery = value
+
         if value > 0 {
             isScooterAwake = true
             stopPowerOnPolling()
+
+            if !wasAwake {
+                logger.info("Scooter woke up — battery \(value)%")
+                gpsTracker.startTracking()
+                roughnessTracker.startTracking()
+            }
+        } else if wasAwake {
+            Task { await handleScooterSleep(lastBattery: previousBattery) }
         }
+    }
+
+    /// Handle the scooter powering off while still BLE-connected.
+    private func handleScooterSleep(lastBattery: Int) async {
+        logger.info("Scooter entered standby — cleaning up ride state")
+        isScooterAwake = false
+
+        // End any active ride with the last valid battery reading
+        await rideTracker.forceEndRide(endBattery: lastBattery)
+        isRiding = false
+
+        // Stop location/motion tracking while asleep
+        gpsTracker.stopTracking()
+        roughnessTracker.stopTracking()
+
+        // Immediately push standby state to Live Activity
+        await liveActivityManager.updateActivity(state: .init(
+            speed: 0,
+            battery: 0,
+            tripDistance: 0,
+            estimatedRange: 0,
+            gearMode: 0,
+            bmsTemp: 0,
+            isCharging: false,
+            isAwake: false
+        ))
+
+        // Tell the Watch we're in standby
+        watchSession.sendTelemetry(speed: 0, battery: 0, tripDistance: 0, range: 0, mode: 0)
+
+        // Resume power-on polling so we detect wake-up
+        startPowerOnPolling()
+
+        sendScooterSleepNotification()
+    }
+
+    private func sendScooterSleepNotification() {
+        let content = UNMutableNotificationContent()
+        content.title = "Scooter Standby 💤"
+        content.body = "GT3 Pro powered off. Still connected via Bluetooth."
+        content.sound = .default
+
+        let request = UNNotificationRequest(
+            identifier: "scooter-sleep-\(UUID().uuidString)",
+            content: content,
+            trigger: nil
+        )
+        UNUserNotificationCenter.current().add(request)
     }
 
     private func emitSample() async {

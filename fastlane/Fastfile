@@ -171,4 +171,21 @@ platform :visionos do
       run_precheck_before_submit: false
     )
   end
+
+  desc "Build and upload Vision Pro app to TestFlight"
+  lane :beta do
+    increment_build_number(
+      build_number: Time.now.strftime("%Y%m%d%H%M")
+    )
+    build_app(
+      project: "GT3Companion.xcodeproj",
+      scheme: "GT3CompanionVision",
+      export_method: "app-store",
+      xcargs: "-allowProvisioningUpdates"
+    )
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      app_identifier: "org.davidjensenius.GT3Companion.vision"
+    )
+  end
 end

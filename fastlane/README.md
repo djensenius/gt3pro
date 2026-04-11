@@ -97,6 +97,14 @@ Build and submit Mac app to App Store
 
 Upload Vision Pro screenshots to App Store Connect
 
+### visionos beta
+
+```sh
+[bundle exec] fastlane visionos beta
+```
+
+Build and upload Vision Pro app to TestFlight
+
 ----
 
 This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.
