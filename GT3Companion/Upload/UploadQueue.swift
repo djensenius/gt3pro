@@ -1,11 +1,12 @@
 #if os(iOS)
 import Foundation
 import os
+import SwiftData
 
 private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", category: "UploadQueue")
 
 /// Upload queue. Batches telemetry and flushes to server.
-/// Note: SwiftData persistence for true offline support will be wired in a future PR.
+/// Failed batches are persisted to SwiftData for retry on next launch/connect.
 actor UploadQueue {
     private let apiClient = GT3APIClient()
     private var pendingSamples: [TelemetrySample] = []
@@ -24,17 +25,29 @@ actor UploadQueue {
     func flushSamples() async {
         guard !isFlushing, !pendingSamples.isEmpty else { return }
         isFlushing = true
-        let batch = Array(pendingSamples.prefix(batchSize))
-        pendingSamples.removeFirst(min(batch.count, pendingSamples.count))
 
-        do {
-            try await apiClient.uploadTelemetry(batch)
-            logger.info("Flushed \(batch.count) samples")
-        } catch {
-            pendingSamples.insert(contentsOf: batch, at: 0)
-            logger.error("Flush failed, re-queued \(batch.count) samples: \(error)")
+        while !pendingSamples.isEmpty {
+            let batch = Array(pendingSamples.prefix(batchSize))
+            pendingSamples.removeFirst(min(batch.count, pendingSamples.count))
+            do {
+                try await apiClient.uploadTelemetry(batch)
+                logger.info("Flushed \(batch.count) samples")
+            } catch {
+                persistFailedBatch(batch)
+                logger.error("Flush failed, persisted \(batch.count) samples for retry")
+                break
+            }
         }
         isFlushing = false
+    }
+
+    /// Persist any remaining in-memory samples to SwiftData (e.g. on ride end).
+    func persistRemainingsamples() {
+        guard !pendingSamples.isEmpty else { return }
+        let count = pendingSamples.count
+        persistFailedBatch(pendingSamples)
+        logger.info("Persisted \(count) remaining samples")
+        pendingSamples.removeAll()
     }
 
     /// Upload a completed ride. Returns the server-assigned ride ID if successful.
@@ -57,10 +70,21 @@ actor UploadQueue {
     }
 
     /// Retry a previously failed upload from persisted payload.
-    func retryUpload(payload: Data) async throws -> Data {
-        try await apiClient.retryPost(path: "/gt3/ride", body: payload)
+    func retryUpload(payload: Data, endpoint: String) async throws -> Data {
+        try await apiClient.retryPost(path: endpoint, body: payload)
     }
 
     func getPendingCount() -> Int { pendingSamples.count }
+
+    private func persistFailedBatch(_ samples: [TelemetrySample]) {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        guard let payload = try? encoder.encode(["samples": samples]) else { return }
+        Task { @MainActor in
+            let item = UploadQueueItem(payload: payload, endpoint: "/gt3/telemetry")
+            PersistenceController.shared.context.insert(item)
+            try? PersistenceController.shared.context.save()
+        }
+    }
 }
 #endif

@@ -152,18 +152,16 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     private func onDisconnected() async {
         await registerReader.stopPolling()
         stopTelemetryWatchdog()
-
         let lastBattery = currentBattery
         resetDashboardValues()
         isScooterAwake = false
-
         gpsTracker.stopTracking()
         roughnessTracker.stopTracking()
         watchSession.updateContext(battery: 0, isConnected: false)
-
         await rideTracker.forceEndRide(endBattery: lastBattery)
+        await uploadQueue.flushSamples()
+        await uploadQueue.persistRemainingsamples()
         await liveActivityManager.endRideActivity()
-
         logger.info("Disconnected — trackers stopped, ride finalized")
     }
 
@@ -276,12 +274,10 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         stopTelemetryWatchdog()
         resetDashboardValues()
         await registerReader.clearTelemetry()
-
-        // End any active ride with the last valid battery reading
         await rideTracker.forceEndRide(endBattery: lastBattery)
+        await uploadQueue.flushSamples()
+        await uploadQueue.persistRemainingsamples()
         isRiding = false
-
-        // Stop location/motion tracking while asleep
         gpsTracker.stopTracking()
         roughnessTracker.stopTracking()
 
@@ -459,7 +455,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         }
     }
 
-    /// Retry uploading any rides that failed previously.
+    /// Retry uploading any rides/telemetry that failed previously.
     private func retryPendingUploads() async {
         let context = PersistenceController.shared.context
         guard let items = try? context.fetch(FetchDescriptor<UploadQueueItem>()),
@@ -469,24 +465,28 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         decoder.dateDecodingStrategy = .iso8601
         for item in items {
             do {
-                let data = try await uploadQueue.retryUpload(payload: item.payload)
-                if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                let data = try await uploadQueue.retryUpload(
+                    payload: item.payload, endpoint: item.endpoint
+                )
+                // For ride uploads, mark the PersistedRide as uploaded
+                if item.endpoint == "/gt3/ride",
+                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                    let serverId = json["id"] as? String,
                    let ride = try? decoder.decode(RideLog.self, from: item.payload) {
                     let pred = #Predicate<PersistedRide> { $0.rideId == ride.rideId }
-                    if let persisted = try? context.fetch(FetchDescriptor(predicate: pred)).first {
-                        persisted.rideId = serverId
-                        persisted.uploaded = true
+                    if let match = try? context.fetch(FetchDescriptor(predicate: pred)).first {
+                        match.rideId = serverId
+                        match.uploaded = true
                     }
                 }
                 context.delete(item)
                 try? context.save()
-                logger.info("Retry succeeded for queued upload")
+                logger.info("Retry succeeded: \(item.endpoint)")
             } catch {
                 item.retryCount += 1
                 item.lastAttempt = Date()
                 try? context.save()
-                logger.warning("Retry failed (attempt \(item.retryCount)): \(error)")
+                logger.warning("Retry \(item.endpoint) failed (#\(item.retryCount)): \(error)")
             }
         }
     }
