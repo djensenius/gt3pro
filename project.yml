@@ -14,7 +14,7 @@ settings:
   base:
     SWIFT_VERSION: "5"
     DEVELOPMENT_TEAM: 9JALHNGRBQ
-    MARKETING_VERSION: "0.9"
+    MARKETING_VERSION: "1.0.1"
     CURRENT_PROJECT_VERSION: "202604111126"
     DEAD_CODE_STRIPPING: YES
     ENABLE_USER_SCRIPT_SANDBOXING: YES
@@ -57,6 +57,7 @@ targets:
           - CFBundleURLSchemes:
               - gt3companion
         ITSAppUsesNonExemptEncryption: false
+        LSApplicationCategoryType: public.app-category.lifestyle
         OIDCIssuerBase: https://auth.fluxhaus.io/application/o/gt3-companion
         OIDCClientID: gcQHXtphJwbyF6az9rMLavWOqR1vrQqq12t6cjvH
     settings:
@@ -67,7 +68,6 @@ targets:
         CODE_SIGN_IDENTITY: "iPhone Developer"
         GENERATE_INFOPLIST_FILE: false
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.lifestyle
     entitlements:
       path: GT3Companion/GT3Companion.entitlements
       properties:
@@ -188,7 +188,7 @@ targets:
           - "**/.DS_Store"
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.mac.tests
+        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.tests.mac
         GENERATE_INFOPLIST_FILE: true
     dependencies:
       - target: GT3CompanionMac
@@ -203,7 +203,7 @@ targets:
           - "**/.DS_Store"
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.vision.tests
+        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.tests.vision
         GENERATE_INFOPLIST_FILE: true
     dependencies:
       - target: GT3CompanionVision
@@ -243,13 +243,13 @@ targets:
         CFBundleDisplayName: GT3 Companion
         CFBundleName: GT3CompanionMac
         ITSAppUsesNonExemptEncryption: false
+        LSApplicationCategoryType: public.app-category.lifestyle
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.mac
+        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.lifestyle
 
   GT3CompanionVision:
     type: application
@@ -272,7 +272,7 @@ targets:
         ITSAppUsesNonExemptEncryption: false
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.vision
+        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon

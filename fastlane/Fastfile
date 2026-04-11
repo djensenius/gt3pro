@@ -124,7 +124,7 @@ platform :mac do
     )
     upload_to_testflight(
       skip_waiting_for_build_processing: true,
-      app_identifier: "org.davidjensenius.GT3Companion.mac"
+      app_identifier: "org.davidjensenius.GT3Companion"
     )
   end
 
@@ -144,7 +144,7 @@ platform :mac do
       force: true,
       submit_for_review: false,
       automatic_release: false,
-      app_identifier: "org.davidjensenius.GT3Companion.mac"
+      app_identifier: "org.davidjensenius.GT3Companion"
     )
   end
 end
@@ -185,7 +185,7 @@ platform :visionos do
     )
     upload_to_testflight(
       skip_waiting_for_build_processing: true,
-      app_identifier: "org.davidjensenius.GT3Companion.vision"
+      app_identifier: "org.davidjensenius.GT3Companion"
     )
   end
 end
