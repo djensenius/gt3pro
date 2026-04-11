@@ -205,16 +205,24 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
 
     private func updateInfoValues(for result: RegisterReadResult) {
         switch result.name {
-        case "rMileage":          odometer = result.doubleValue ?? 0
+        case "rPreciseMileage":    odometer = result.doubleValue ?? 0
+        case "rMileage":
+            if odometer == 0 { odometer = result.doubleValue ?? 0 }
         case "rRideTime":         totalRideTime = result.intValue ?? 0
-        case "rCtrlV":            controllerFirmware = result.stringValue ?? "—"
-        case "rMCUV":             mcuFirmware = result.stringValue ?? "—"
-        case "rBmsV":             bms1Firmware = result.stringValue ?? "—"
-        case "rBms2V":            bms2Firmware = result.stringValue ?? "—"
-        case "rBleV":             bleFirmware = result.stringValue ?? "—"
         case "rChargeStatus":     chargeStatus = result.intValue ?? 0
         case "rTimeFull":         timeToFull = result.intValue ?? 0
-        default:                  break
+        default:                  updateFirmwareValues(for: result)
+        }
+    }
+
+    private func updateFirmwareValues(for result: RegisterReadResult) {
+        switch result.name {
+        case "rCtrlV":  controllerFirmware = result.stringValue ?? "—"
+        case "rMCUV":   mcuFirmware = result.stringValue ?? "—"
+        case "rBmsV":   bms1Firmware = result.stringValue ?? "—"
+        case "rBms2V":  bms2Firmware = result.stringValue ?? "—"
+        case "rBleV":   bleFirmware = result.stringValue ?? "—"
+        default:        break
         }
     }
 

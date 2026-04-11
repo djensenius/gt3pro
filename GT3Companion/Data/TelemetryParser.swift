@@ -56,6 +56,17 @@ enum TelemetryParser {
         Double(parseInt16(data)) / 10.0
     }
 
+    /// BMS temperature: 4 bytes = 2 sensors (Int16 each, raw °C, no scaling)
+    /// Returns average of two sensor readings
+    static func parseBmsTemperature(_ data: Data) -> Double {
+        let sensor1 = Double(parseInt16(data))
+        if data.count >= 4 {
+            let sensor2 = Double(parseInt16(Data(data.suffix(from: data.startIndex + 2))))
+            return (sensor1 + sensor2) / 2.0
+        }
+        return sensor1
+    }
+
     /// Distance: raw ÷ 100 → km
     static func parseDistance(_ data: Data) -> Double {
         Double(parseUInt16(data)) / 100.0
@@ -132,7 +143,7 @@ enum TelemetryParser {
         case "rBMSVolt", "rBMSVolt2": return parseVoltage(data)
         case "rBMSCur", "rBMSCur2": return parseCurrent(data)
         case "rBmsSOC", "rBmsSOC2": return parsePercent(data)
-        case "rBmsTmp", "rBmsTmp2": return parseTemperature(data)
+        case "rBmsTmp", "rBmsTmp2": return parseBmsTemperature(data)
         case "rMileage": return parseOdometer(data)
         case "rRuntime", "rRideTime",
              "rBmsExtremeUseTimeLT", "rBmsExtremeChargeTimeLT": return parseSecondsLong(data)
