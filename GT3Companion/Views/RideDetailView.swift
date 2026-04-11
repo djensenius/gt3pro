@@ -23,8 +23,7 @@ struct RideDetailView: View {
 
     private struct TempSample {
         let timestamp: Date
-        let bms1: Double
-        let bms2: Double
+        let bms: Double
     }
 
     private var batterySamples: [(Date, Int)] {
@@ -32,7 +31,7 @@ struct RideDetailView: View {
     }
 
     private var tempSamples: [TempSample] {
-        (ride.samples ?? []).map { TempSample(timestamp: $0.timestamp, bms1: $0.bms1Temp, bms2: $0.bms2Temp) }
+        (ride.samples ?? []).map { TempSample(timestamp: $0.timestamp, bms: $0.bmsTemp) }
     }
 
     var body: some View {
@@ -180,7 +179,7 @@ struct RideDetailView: View {
                 .foregroundStyle(Theme.Colors.textPrimary)
                 .padding(.horizontal)
 
-            let hasTempData = tempSamples.contains { $0.bms1 > 0 || $0.bms2 > 0 }
+            let hasTempData = tempSamples.contains { $0.bms > 0 }
             if !hasTempData {
                 noDataPlaceholder(label: "No temperature data")
             } else {
@@ -188,18 +187,10 @@ struct RideDetailView: View {
                     ForEach(tempSamples, id: \.timestamp) { sample in
                         LineMark(
                             x: .value("Time", sample.timestamp),
-                            y: .value("BMS 1", sample.bms1),
-                            series: .value("Series", "BMS 1")
+                            y: .value("BMS", sample.bms),
+                            series: .value("Series", "BMS")
                         )
                         .foregroundStyle(Theme.Colors.warning)
-                        .interpolationMethod(.catmullRom)
-
-                        LineMark(
-                            x: .value("Time", sample.timestamp),
-                            y: .value("BMS 2", sample.bms2),
-                            series: .value("Series", "BMS 2")
-                        )
-                        .foregroundStyle(Theme.Colors.error)
                         .interpolationMethod(.catmullRom)
                     }
                 }

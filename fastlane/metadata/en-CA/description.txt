@@ -1,0 +1,38 @@
+GT3 Companion — your Segway GT3 Pro ride tracker.
+
+Connect to your GT3 Pro over Bluetooth, see live speed, battery, and range on your lock screen, and automatically log every ride with GPS routes, heart rate, and detailed telemetry.
+
+LIVE DASHBOARD
+• Real-time speed, battery, range, and gear mode
+• Live Activity on your lock screen and Dynamic Island
+• Standby mode shows when your scooter is connected but powered off
+
+AUTOMATIC RIDE LOGGING
+• Rides start and stop automatically based on speed
+• GPS route recording with map visualization
+• Surface roughness tracking via motion sensors
+• Heart rate recording via Apple Watch companion
+
+APPLE WATCH
+• See speed, battery, and distance on your wrist
+• HealthKit workout tracking with heart rate
+• Auto-starts when you start riding
+
+DETAILED TELEMETRY
+• Battery voltage, current, temperature, and state of charge
+• Body temperature monitoring
+• Gear mode tracking (Walk, Eco, Sport, Race)
+• Trip distance and time
+• Estimated range
+
+RIDE HISTORY
+• Browse past rides with distance, speed, and battery stats
+• Cloud sync with your personal FluxHaus server
+• Grafana dashboard integration for deep analytics
+
+SCOOTER INFO
+• Odometer, firmware versions, serial number
+• Battery health diagnostics
+• Real-time error and warning codes
+
+Requires a Segway SuperScooter GT3 Pro and a FluxHaus server account for cloud sync. Built with privacy in mind — all data stays on your device unless you choose to sync.

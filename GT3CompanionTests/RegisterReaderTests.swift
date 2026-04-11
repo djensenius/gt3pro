@@ -20,10 +20,11 @@ final class RegisterReaderTests: XCTestCase {
     func testProcessResponseWithReadAck() async {
         let reader = RegisterReader()
         // Simulate a speed register response: 723 raw = 72.3 km/h
+        // In responses: btID = responding board, source = 0x3E (app)
         let parsed = NinebotFrameBuilder.ParsedFrame(
             length: 6,
-            btID: 0x3E,
-            source: BLEConstants.Board.vcu.rawValue,
+            btID: BLEConstants.Board.vcu.rawValue,
+            source: 0x3E,
             cmd: BLEConstants.Command.readAck.rawValue,
             index: 0x57,
             payload: Data([0xD3, 0x02])
@@ -38,8 +39,8 @@ final class RegisterReaderTests: XCTestCase {
         let reader = RegisterReader()
         let parsed = NinebotFrameBuilder.ParsedFrame(
             length: 6,
-            btID: 0x3E,
-            source: BLEConstants.Board.vcu.rawValue,
+            btID: BLEConstants.Board.vcu.rawValue,
+            source: 0x3E,
             cmd: BLEConstants.Command.readAck.rawValue,
             index: 0x57,
             payload: Data([0xD3, 0x02])
@@ -53,8 +54,8 @@ final class RegisterReaderTests: XCTestCase {
         let reader = RegisterReader()
         let parsed = NinebotFrameBuilder.ParsedFrame(
             length: 6,
-            btID: 0x3E,
-            source: BLEConstants.Board.vcu.rawValue,
+            btID: BLEConstants.Board.vcu.rawValue,
+            source: 0x3E,
             cmd: BLEConstants.Command.write.rawValue,
             index: 0x57,
             payload: Data([0xD3, 0x02])
@@ -73,8 +74,8 @@ final class RegisterReaderTests: XCTestCase {
         ])
         let parsed = NinebotFrameBuilder.ParsedFrame(
             length: 8,
-            btID: 0x3E,
-            source: BLEConstants.Board.vcu.rawValue,
+            btID: BLEConstants.Board.vcu.rawValue,
+            source: 0x3E,
             cmd: BLEConstants.Command.readAck.rawValue,
             index: 0x62,
             payload: payload
@@ -82,7 +83,8 @@ final class RegisterReaderTests: XCTestCase {
         let result = await reader.processResponse(parsed)
         XCTAssertNotNil(result)
         XCTAssertEqual(result?.name, "rMileage")
-        let odometer = await reader.getSnapshotDouble("rMileage")
+        // Odometer is in liveTelemetry, so stored in telemetry values
+        let odometer = await reader.getTelemetryDouble("rMileage")
         XCTAssertEqual(odometer ?? 0, 1234.50, accuracy: 0.01)
     }
 
@@ -90,8 +92,8 @@ final class RegisterReaderTests: XCTestCase {
         let reader = RegisterReader()
         let parsed = NinebotFrameBuilder.ParsedFrame(
             length: 6,
-            btID: 0x3E,
-            source: BLEConstants.Board.vcu.rawValue,
+            btID: BLEConstants.Board.vcu.rawValue,
+            source: 0x3E,
             cmd: BLEConstants.Command.readAck.rawValue,
             index: 0x57,
             payload: Data([0xD3, 0x02])

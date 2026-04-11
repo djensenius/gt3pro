@@ -2,6 +2,7 @@ excluded:
   - Packages
   - GT3CompanionWatch
   - build
+  - GT3CompanionUITests/SnapshotHelper.swift
 type_body_length: 400
 file_length: 500
 function_body_length: 100

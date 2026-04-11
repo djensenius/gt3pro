@@ -16,14 +16,10 @@ struct TelemetrySample: Codable, Sendable {
     let timestamp: Date
     let speed: Double
     let battery: Int
-    let bms1Voltage: Double
-    let bms1Current: Double
-    let bms1SOC: Int
-    let bms1Temp: Double
-    let bms2Voltage: Double
-    let bms2Current: Double
-    let bms2SOC: Int
-    let bms2Temp: Double
+    let bmsVoltage: Double
+    let bmsCurrent: Double
+    let bmsSOC: Int
+    let bmsTemp: Double
     let tripDistance: Double
     let tripTime: Int
     let bodyTemp: Double
@@ -59,6 +55,8 @@ struct RideLog: Codable, Sendable {
     let batteryUsed: Int
     let startBattery: Int
     let endBattery: Int
+    /// Most-used gear mode during the ride (1=Walk, 2=Eco, 3=Sport, 4=Race).
+    let primaryGearMode: Int
 }
 
 /// Tracks ride lifecycle: start detection, sample collection, stop detection.
@@ -78,6 +76,7 @@ actor RideTracker {
     private var speedSum: Double = 0
     private var speedCount: Int = 0
     private var stoppedSince: Date?
+    private var gearModeHistogram: [Int: Int] = [:]
     // 5 minutes of no movement → end ride
     private let stopTimeout: TimeInterval = 300
 
@@ -128,6 +127,7 @@ actor RideTracker {
         maxSpeed = 0
         speedSum = 0
         speedCount = 0
+        gearModeHistogram = [:]
         samples = [firstSample]
         state = .riding
         updateStats(firstSample)
@@ -138,11 +138,15 @@ actor RideTracker {
         if sample.speed > maxSpeed { maxSpeed = sample.speed }
         speedSum += sample.speed
         speedCount += 1
+        if sample.gearMode > 0 {
+            gearModeHistogram[sample.gearMode, default: 0] += 1
+        }
     }
 
     private func endRide(endBattery: Int) {
         guard let rideId = currentRideId, let startTime = rideStartTime else { return }
 
+        let primaryMode = gearModeHistogram.max(by: { $0.value < $1.value })?.key ?? 0
         let rideLog = RideLog(
             rideId: rideId,
             startTime: startTime,
@@ -153,10 +157,11 @@ actor RideTracker {
             avgSpeed: speedCount > 0 ? speedSum / Double(speedCount) : 0,
             batteryUsed: max(0, startBattery - endBattery),
             startBattery: startBattery,
-            endBattery: endBattery
+            endBattery: endBattery,
+            primaryGearMode: primaryMode
         )
 
-        logger.info("Ride ended: \(rideId) distance=\(rideLog.totalDistance)km")
+        logger.info("Ride ended: \(rideId) distance=\(rideLog.totalDistance)km mode=\(primaryMode)")
         onRideComplete?(rideLog)
 
         state = .idle
@@ -164,6 +169,7 @@ actor RideTracker {
         rideStartTime = nil
         samples.removeAll()
         stoppedSince = nil
+        gearModeHistogram = [:]
     }
 
     func getCurrentRideId() -> String? { currentRideId }

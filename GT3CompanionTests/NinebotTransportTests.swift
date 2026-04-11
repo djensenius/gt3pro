@@ -41,7 +41,10 @@ final class NinebotTransportTests: XCTestCase {
         let crypto = NinebotCrypto(key: key, counter: 0)
         let transport = NinebotTransport(crypto: crypto)
 
-        let frame = Data([0x5A, 0xA5, 0x05, 0x3E, 0x02, 0x04, 0x57, 0x23])
+        // New GT3 Pro plain frame format: LEN=data count only.
+        // Frame: 5A A5 01 3E 02 04 57 23 CHK_LO CHK_HI (10 bytes, LEN=1 for 1 data byte)
+        // Checksum covers frame[2..]: 01+3E+02+04+57+23 = 0xBF → ~0xBF = 0xFF40 → [40, FF]
+        let frame = Data([0x5A, 0xA5, 0x01, 0x3E, 0x02, 0x04, 0x57, 0x23, 0x40, 0xFF])
         let parsed = try await transport.processInbound(chunk: frame)
         XCTAssertNotNil(parsed)
         XCTAssertEqual(parsed?.cmd, 0x04)
@@ -53,7 +56,8 @@ final class NinebotTransportTests: XCTestCase {
         let crypto = NinebotCrypto(key: key, counter: 0)
         let transport = NinebotTransport(crypto: crypto)
 
-        let frame = Data([0x5A, 0xA5, 0x05, 0x3E, 0x02, 0x04, 0x57, 0x23])
+        // New GT3 Pro plain frame (10 bytes, LEN=1)
+        let frame = Data([0x5A, 0xA5, 0x01, 0x3E, 0x02, 0x04, 0x57, 0x23, 0x40, 0xFF])
 
         let partial = try await transport.processInbound(chunk: Data(frame[0..<4]))
         XCTAssertNil(partial)
@@ -74,7 +78,7 @@ final class NinebotTransportTests: XCTestCase {
     }
 
     func testPrepareOutboundProducesFragments() async throws {
-        let key = KeyDerivation.deriveKey(key1: Data("test".utf8), key2: nil)
+        let key = KeyDerivation.deriveKey(key1: Data("test".utf8), key2: BLEConstants.dataBasic)
         let crypto = NinebotCrypto(key: key, counter: 0)
         let transport = NinebotTransport(crypto: crypto, mtu: 23)
 
@@ -88,7 +92,8 @@ final class NinebotTransportTests: XCTestCase {
         XCTAssertGreaterThan(chunks.count, 0)
 
         XCTAssertEqual(chunks[0][0], BLEConstants.syncByte1)
-        XCTAssertEqual(chunks[0][1], BLEConstants.syncByte2Encrypted)
+        // GT3 Pro uses 5AA5 for ALL frames (both plain and encrypted)
+        XCTAssertEqual(chunks[0][1], BLEConstants.syncByte2Plain)
     }
 
     func testMTUUpdate() async {

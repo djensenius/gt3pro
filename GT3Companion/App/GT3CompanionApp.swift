@@ -11,6 +11,7 @@ import SwiftUI
 @main
 struct GT3CompanionApp: App {
     #if os(iOS)
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var coordinator = AppCoordinator.shared
     @AppStorage("onboardingComplete") private var onboardingComplete = false
     #endif
@@ -20,6 +21,16 @@ struct GT3CompanionApp: App {
     var body: some Scene {
         WindowGroup {
             #if os(iOS)
+            if ProcessInfo.processInfo.arguments.contains("--screenshot-mode") {
+                ContentView()
+                    .environmentObject(coordinator)
+                    .onAppear {
+                        coordinator.start()
+                    }
+                    #if DEBUG
+                    .task { await populateScreenshotRides() }
+                    #endif
+            } else {
             switch auth.authState {
             case .unknown:
                 ProgressView().tint(Theme.Colors.accent)
@@ -42,6 +53,7 @@ struct GT3CompanionApp: App {
                 } else {
                     OnboardingView(isComplete: $onboardingComplete)
                 }
+            }
             }
             #else
             ContentView()
@@ -74,4 +86,18 @@ struct GT3CompanionApp: App {
             level: .warning
         )
     }
+
+    /// Populate sample rides for screenshot mode.
+    #if DEBUG
+    @MainActor private func populateScreenshotRides() async {
+        let context = PersistenceController.shared.container.mainContext
+        // Only populate if empty
+        let existing = (try? context.fetchCount(FetchDescriptor<PersistedRide>())) ?? 0
+        guard existing == 0 else { return }
+        for ride in PreviewData.sampleRides {
+            context.insert(ride)
+        }
+        try? context.save()
+    }
+    #endif
 }

@@ -4,13 +4,30 @@
 //
 //  Created by David Jensenius.
 //
+// swiftlint:disable file_length
 
 #if os(iOS)
 @preconcurrency import CoreBluetooth
 import Foundation
 import os
-
 private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", category: "BLE")
+
+func bleLog(_ message: String, level: LogEntry.Level = .info) {
+    Task { @MainActor in
+        DebugLogStore.shared.log(message, category: "BLE", level: level)
+    }
+}
+
+/// Returns a compact timestamp string: HH:MM:SS.mmm
+func bleTS() -> String {
+    let now = Date()
+    let cal = Calendar.current
+    let hour = cal.component(.hour, from: now)
+    let min = cal.component(.minute, from: now)
+    let sec = cal.component(.second, from: now)
+    let msec = Int(now.timeIntervalSince1970 * 1000) % 1000
+    return String(format: "%02d:%02d:%02d.%03d", hour, min, sec, msec)
+}
 
 /// Connection states for the BLE lifecycle.
 enum ConnectionState: Sendable, Equatable, CaseIterable {
@@ -40,10 +57,22 @@ protocol ScooterConnectionDelegate: AnyObject {
 final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     private var centralManager: CBCentralManager?
     private var peripheral: CBPeripheral?
-    private var writeCharacteristic: CBCharacteristic?
-    private var notifyCharacteristic: CBCharacteristic?
+    var writeCharacteristic: CBCharacteristic?
+    var notifyCharacteristic: CBCharacteristic?
+    /// 006E-0003: second write in Ninebot service (purpose unknown — tested as auth channel)
+    var rctpWriteCharacteristic: CBCharacteristic?
+    /// Secondary write channel — tested as auth write (0005)
+    var authWriteCharacteristic: CBCharacteristic?
+    /// Secondary notify channel — tested as auth response (0006)
+    var authNotifyCharacteristic: CBCharacteristic?
+    /// Old Nordic UART service write (B5A3-0002) — the Segway app uses this for auth
+    var oldWriteCharacteristic: CBCharacteristic?
+    /// Old Nordic UART service notify (B5A3-0003) — the Segway app listens here for auth response
+    var oldNotifyCharacteristic: CBCharacteristic?
 
-    private var transport: NinebotTransport?
+    var authAttemptCount = 0
+
+    var transport: NinebotTransport?
     private var auth: NinebotAuth?
     private var mtu: Int = BLEConstants.defaultMTU
     private var intentionalDisconnect = false
@@ -64,7 +93,7 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     private var rawBtName: String?
     private var storedPassword: Data?
     private var echoRetryCount = 0
-    private let bleQueue = DispatchQueue(label: "org.davidjensenius.GT3Companion.ble", qos: .userInitiated)
+    let bleQueue = DispatchQueue(label: "org.davidjensenius.GT3Companion.ble", qos: .userInitiated)
 
     override init() {
         super.init()
@@ -86,6 +115,7 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     func scan() {
         guard let central = centralManager, central.state == .poweredOn else {
             logger.warning("Cannot scan: Bluetooth not ready (centralManager not started or not powered on)")
+            bleLog("Cannot scan — Bluetooth not ready", level: .warning)
             return
         }
 
@@ -93,11 +123,23 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         // short-circuit when CoreBluetooth already reports it as connected.
         if let savedUUID = ScooterConnectionManager.loadPeripheralUUID() {
             let known = central.retrievePeripherals(withIdentifiers: [savedUUID])
-            if let existing = known.first, existing.state == .connected {
+            if let existing = known.first {
+                if existing.state == .connected {
+                    btName = existing.name
+                    logger.info("Reconnecting to saved connected peripheral: \(self.btName ?? "unknown")")
+                    bleLog("Reconnecting to saved peripheral: \(existing.name ?? savedUUID.uuidString)")
+                    connectToPeripheral(existing)
+                    return
+                }
+                // Peripheral is known but not connected — issue a persistent connect
+                // request so CoreBluetooth auto-connects when the scooter turns on.
+                self.peripheral = existing
+                existing.delegate = self
+                central.connect(existing, options: nil)
                 btName = existing.name
-                logger.info("Reconnecting to saved connected peripheral: \(self.btName ?? "unknown")")
-                connectToPeripheral(existing)
-                return
+                connectionState = .reconnecting
+                logger.info("Queued reconnect for saved peripheral: \(self.btName ?? savedUUID.uuidString)")
+                bleLog("Waiting for saved peripheral: \(existing.name ?? savedUUID.uuidString)")
             }
         }
 
@@ -108,16 +150,24 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         if let existing = connected.first {
             btName = existing.name
             logger.info("Found bonded peripheral: \(self.btName ?? "unknown")")
+            bleLog("Found already-connected peripheral: \(existing.name ?? "(no name)")")
             connectToPeripheral(existing)
             return
         }
 
-        connectionState = .scanning
+        // Also scan for new peripherals in case this is the first connection.
+        if connectionState != .reconnecting {
+            connectionState = .scanning
+        }
+        // Scan without service filter — the GT3 Pro does not include the Ninebot service UUID
+        // in its advertisement packet (it only exposes it post-connection). Filter by name instead.
         central.scanForPeripherals(
-            withServices: [BLEConstants.serviceUUID],
+            withServices: nil,
             options: [CBCentralManagerScanOptionAllowDuplicatesKey: false]
         )
-        logger.info("Scanning for GT3 Pro...")
+        let prefixes = BLEConstants.advertisingNamePrefixes.joined(separator: ", ")
+        logger.info("Scanning for GT3 Pro (name prefixes: \(prefixes))...")
+        bleLog("Scanning for GT3 Pro (name prefixes: \(prefixes))…")
     }
 
     // MARK: - Peripheral UUID Persistence
@@ -156,38 +206,55 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
 
     private func discoverServices() {
         connectionState = .discovering
-        peripheral?.discoverServices([BLEConstants.serviceUUID])
+        // Discover both the new Ninebot service and the old Nordic UART service (B5A3).
+        // The old service is present only on first connect; asking for both is harmless.
+        peripheral?.discoverServices([BLEConstants.serviceUUID, BLEConstants.oldServiceUUID])
     }
 
-    /// Try to begin auth if both characteristics are discovered.
-    private func checkReadyForAuth() {
-        guard writeCharacteristic != nil, notifyCharacteristic != nil else { return }
+    // Set to true after CCCD ON is sent; beginAuthentication fires on the ACK
+    var pendingBeginAuthOnCCCDOn = false
+
+    /// Try to begin auth when both a write and notify characteristic are discovered.
+    /// Requires 006E-0004 specifically — that's the characteristic we toggle for the iOS
+    /// stale-notification workaround, and auth fires on its CCCD ON confirmation.
+    /// B5A3-0003 and 006E-0006 are subscribed passively and are never toggled.
+    func checkReadyForAuth() {
+        let hasWrite = oldWriteCharacteristic != nil
+            || authWriteCharacteristic != nil
+            || writeCharacteristic != nil
+        // Must have 006E-0004 (toggle target + auth trigger) AND B5A3-0003 (also toggled).
+        // Requiring both ensures toggleNotifications captures non-nil oldNotifyCharacteristic,
+        // because B5A3-0003 is discovered after 006E-0004 in most connection orderings.
+        guard hasWrite, notifyCharacteristic != nil, oldNotifyCharacteristic != nil else { return }
+        // Only start the CCCD toggle if we haven't already for this connection
+        guard !pendingBeginAuthOnCCCDOn else { return }
         toggleNotifications()
     }
 
     /// CCCD toggle workaround for iOS stale notifications on reconnect.
-    /// All CB calls stay on bleQueue for proper serialization.
+    /// Only toggles 006E-0004 — the packet capture shows the official Segway app
+    /// never unsubscribes B5A3-0003 (it re-subscribes it AFTER PRE_COMM instead).
+    /// beginAuthentication fires on the 006E-0004 CCCD ON ACK + drain delay.
     private func toggleNotifications() {
-        guard let peripheral = peripheral, let characteristic = notifyCharacteristic else { return }
+        guard let notifyChar = notifyCharacteristic, let peripheral = peripheral else { return }
 
-        bleQueue.async { [weak self] in
-            peripheral.setNotifyValue(false, for: characteristic)
-            self?.bleQueue.asyncAfter(
+        // Set the guard synchronously before any async work.
+        pendingBeginAuthOnCCCDOn = true
+
+        bleQueue.async {
+            peripheral.setNotifyValue(false, for: notifyChar)
+            self.bleQueue.asyncAfter(
                 deadline: .now() + .milliseconds(Int(BLEConstants.cccdToggleOffDelayMs))
-            ) { [weak self] in
-                peripheral.setNotifyValue(true, for: characteristic)
-                self?.bleQueue.asyncAfter(
-                    deadline: .now() + .milliseconds(Int(BLEConstants.cccdDrainDelayMs))
-                ) { [weak self] in
-                    self?.beginAuthentication()
-                }
+            ) {
+                peripheral.setNotifyValue(true, for: notifyChar)
             }
         }
     }
 
-    private func beginAuthentication() {
+    func beginAuthentication() {
         guard let name = btName else {
             logger.error("No BT name available for auth")
+            bleLog("Auth failed — no BT name available", level: .error)
             return
         }
 
@@ -197,18 +264,44 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         // but the scooter firmware uses the plain name for key derivation
         let authName = ScooterConnectionManager.sanitizeBLEName(name)
         logger.info("Raw BT name: \(name) → auth name: \(authName) (bytes: \(Data(authName.utf8).count))")
+        bleLog("Auth start — raw name: \"\(name)\" → sanitized: \"\(authName)\" (\(Data(authName.utf8).count) bytes)")
+        bleLog("Stored password in keychain: \(storedPassword != nil ? "YES (\(storedPassword!.count) bytes)" : "NO")")
 
-        // Single shared crypto instance for both auth and transport
-        let key = KeyDerivation.deriveKey(key1: Data(authName.utf8), key2: nil)
+        // Packet capture confirms: PRE_COMM always goes to 006E-0005 (auth-write).
+        guard let authChar = authWriteCharacteristic else {
+            bleLog("Auth failed — 006E-0005 not discovered", level: .error)
+            return
+        }
+        authAttemptCount += 1
+        bleLog("Auth attempt \(authAttemptCount) — write channel: 006E-0005")
+
+        // Single shared crypto instance — auth and transport MUST share the same object
+        // so that key/counter updates during the handshake are visible to both sides.
+        let key = KeyDerivation.deriveKey(key1: Data(authName.utf8), key2: BLEConstants.dataBasic)
         let crypto = NinebotCrypto(key: key, counter: 0)
 
-        let authActor = NinebotAuth(btName: authName, storedPassword: storedPassword)
+        let authActor = NinebotAuth(btName: authName, crypto: crypto, storedPassword: storedPassword)
         self.auth = authActor
         self.transport = NinebotTransport(crypto: crypto, mtu: mtu)
 
         Task {
-            let frame = await authActor.startAuth()
-            sendFrame(frame)
+            // Step 1: Send plain PRE_COMM probe to 006E-0005 (legacy wakeup, target=0x21)
+            let plainFrame = NinebotFrameBuilder.buildPlainPreComm()
+            let timestamp = bleTS()
+            bleLog("Sending PRE_COMM plain (\(plainFrame.count) bytes)")
+            print("[GT3] \(timestamp) [AUTH] Sending PRE_COMM plain")
+            sendFramePlain(plainFrame, to: authChar)
+
+            // Step 2: Send encrypted PRE_COMM to B5A3-0002 (real auth, target=0x04)
+            // Packet capture shows the scooter responds to THIS one on B5A3-0003.
+            let encryptedAuthFrame = await authActor.startAuth()
+            bleLog("Sending PRE_COMM encrypted (\(encryptedAuthFrame.count) bytes)")
+            print("[GT3] \(bleTS()) [AUTH] Sending PRE_COMM encrypted")
+            sendFrame(encryptedAuthFrame)
+
+            // Mark encryption active immediately — the PRE_COMM *response* is encrypted
+            // (non-SN mode). Must be set before the first notification arrives.
+            await self.transport?.setEncryptionActive()
         }
     }
 
@@ -223,8 +316,34 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         return stripped.isEmpty ? name : stripped
     }
 
+    /// Returns true if `name` looks like a raw Ninebot serial number advertised directly over BLE.
+    /// Ninebot serials are 12–16 uppercase alphanumeric characters, starting with a digit.
+    /// Example: "03GGG2539C0023"
+    static func looksLikeNinebotSerial(_ name: String) -> Bool {
+        let chars = name.unicodeScalars
+        guard (12...16).contains(chars.count) else { return false }
+        guard let first = chars.first, first.value >= 48 && first.value <= 57 else { return false } // starts with digit
+        return chars.allSatisfy { scalar in
+            (scalar.value >= 48 && scalar.value <= 57) ||   // 0-9
+            (scalar.value >= 65 && scalar.value <= 90)        // A-Z
+        }
+    }
+
+    static func btStateDescription(_ state: CBManagerState) -> String {
+        switch state {
+        case .poweredOn:     return "powered on"
+        case .poweredOff:    return "powered off"
+        case .unauthorized:  return "unauthorized"
+        case .unsupported:   return "unsupported"
+        case .resetting:     return "resetting"
+        default:             return "unknown"
+        }
+    }
+
     func sendFrame(_ frame: Data) {
-        guard let characteristic = writeCharacteristic, let peripheral = peripheral else {
+        // Packet capture: ALL encrypted data goes to B5A3-0002 (OLD write) using WRITE_CMD
+        guard let characteristic = oldWriteCharacteristic ?? writeCharacteristic,
+              let peripheral = peripheral else {
             logger.error("Cannot send: write characteristic not available")
             return
         }
@@ -236,7 +355,8 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
                 // Dispatch writes back to bleQueue for CB serialization
                 self.bleQueue.async {
                     for (index, chunk) in chunks.enumerated() {
-                        peripheral.writeValue(chunk, for: characteristic, type: .withResponse)
+                        // Capture shows WRITE_CMD (no response) for encrypted writes
+                        peripheral.writeValue(chunk, for: characteristic, type: .withoutResponse)
                         if index < chunks.count - 1 {
                             Thread.sleep(forTimeInterval: Double(BLEConstants.fragmentDelayMs) / 1000.0)
                         }
@@ -248,17 +368,49 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         }
     }
 
-    private func handleAuthResponse(_ parsed: NinebotFrameBuilder.ParsedFrame) {
+    /// Send a plain (unencrypted) frame with trailing 2-byte checksum — used for PRE_COMM.
+    /// Writes to the explicitly provided characteristic using WRITE_REQ (.withResponse).
+    private func sendFramePlain(_ frame: Data, to char: CBCharacteristic) {
+        guard let periph = peripheral, frame.count > 3 else { return }
+        let chksum = UInt16(truncatingIfNeeded: ~Data(frame[2...]).reduce(UInt32(0)) { $0 + UInt32($1) })
+        var outFrame = frame
+        outFrame.append(UInt8(chksum & 0xFF))
+        outFrame.append(UInt8(chksum >> 8))
+        let charDesc = char.uuid.uuidString.suffix(4)
+        print("[GT3] \(bleTS()) [TRANSPORT] sendFramePlain on \(charDesc): \(outFrame.hexString)")
+        let chunkSize = max(1, mtu - 3)
+        var chunks: [Data] = []
+        var offset = 0
+        while offset < outFrame.count {
+            let end = min(offset + chunkSize, outFrame.count)
+            chunks.append(Data(outFrame[offset..<end]))
+            offset = end
+        }
+        bleQueue.async {
+            for (idx, chunk) in chunks.enumerated() {
+                periph.writeValue(chunk, for: char, type: .withResponse)
+                if idx < chunks.count - 1 {
+                    Thread.sleep(forTimeInterval: Double(BLEConstants.fragmentDelayMs) / 1000.0)
+                }
+            }
+        }
+    }
+
+    func handleAuthResponse(_ parsed: NinebotFrameBuilder.ParsedFrame) {
         guard let auth = self.auth else { return }
 
         Task {
             let nextFrame = await auth.processResponse(parsed)
             let state = await auth.state
 
+            // Encryption is already active (set after sending encrypted PRE_COMM).
+            // Just advance the state machine.
+
             switch state {
             case .authenticated:
                 let serial = await auth.getSerialNumber() ?? "unknown"
                 logger.info("Authenticated with GT3 Pro (SN: \(serial))")
+                bleLog("✅ Authenticated! Serial: \(serial)")
                 connectionState = .connected
                 // Persist peripheral UUID only after successful auth
                 if let peripheralID = self.peripheral?.identifier {
@@ -270,17 +422,27 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
 
             case .failed(let reason):
                 logger.error("Auth failed: \(reason)")
+                bleLog("🔴 Auth failed: \(reason)", level: .error)
                 connectionState = .disconnected
                 disconnect()
 
             default:
-                if let frame = nextFrame {
-                    if case .setPwd = state {
-                        try? await Task.sleep(for: .seconds(2))
-                    }
-                    sendFrame(frame)
-                }
+                await advanceAuthState(state: state, nextFrame: nextFrame)
             }
+        }
+    }
+
+    private func advanceAuthState(state: AuthState, nextFrame: Data?) async {
+        if case .setPwd = state {
+            bleLog("Auth state → SET_PWD (waiting for button press on dashboard)")
+        } else if case .auth = state {
+            bleLog("Auth state → AUTH (sending credentials)")
+        }
+        if let frame = nextFrame {
+            if case .setPwd = state {
+                try? await Task.sleep(for: .seconds(2))
+            }
+            sendFrame(frame)
         }
     }
 
@@ -298,6 +460,7 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
 extension ScooterConnectionManager: CBCentralManagerDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         logger.info("Central manager state: \(central.state.rawValue)")
+        bleLog("Bluetooth state: \(central.state.rawValue) (\(Self.btStateDescription(central.state)))")
         if central.state == .poweredOn {
             scan()
         }
@@ -329,14 +492,28 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
     ) {
         let name = peripheral.name ?? advertisementData[CBAdvertisementDataLocalNameKey] as? String
         logger.info("Discovered: \(name ?? "(no name)") RSSI: \(RSSI)")
+        bleLog("Discovered peripheral: \"\(name ?? "(no name)")\" RSSI: \(RSSI)")
 
         guard let name, !name.isEmpty else {
-            logger.warning("Skipping device with no name — key derivation requires a valid BT name")
+            bleLog("Skipped device — no name (key derivation requires a name)", level: .warning)
             return
         }
 
-        // Service UUID filter in scanForPeripherals is sufficient —
-        // device names vary by firmware ("NB-...", "Segway Scooter...", may include emoji)
+        // Check if the advertisement includes the Ninebot service UUID (some firmware versions)
+        let advertisedServices = advertisementData[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID] ?? []
+        let hasNinebotService = advertisedServices.contains(BLEConstants.serviceUUID)
+
+        // Filter: accept if Ninebot service UUID is advertised, name matches known prefixes,
+        // or name looks like a raw Ninebot serial (all-caps alphanumeric, 12–16 chars, starts with digit)
+        let sanitized = ScooterConnectionManager.sanitizeBLEName(name)
+        let hasKnownPrefix = BLEConstants.advertisingNamePrefixes.contains(where: { sanitized.hasPrefix($0) })
+        let looksLikeSerial = ScooterConnectionManager.looksLikeNinebotSerial(sanitized)
+        guard hasNinebotService || hasKnownPrefix || looksLikeSerial else {
+            bleLog("Skipped \"\(name)\" — not a GT3 Pro", level: .debug)
+            return
+        }
+        bleLog("Matched GT3 Pro: \"\(name)\"" +
+               " (service=\(hasNinebotService) prefix=\(hasKnownPrefix) serial=\(looksLikeSerial))")
         rawBtName = name
         btName = name
         connectToPeripheral(peripheral)
@@ -346,7 +523,10 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
         _ central: CBCentralManager,
         didConnect peripheral: CBPeripheral
     ) {
+        let timestamp = bleTS()
         logger.info("Connected to \(peripheral.name ?? "unknown")")
+        bleLog("Connected to \(peripheral.name ?? "unknown") — discovering services…")
+        print("[GT3] \(timestamp) [BLE] Connected to \(peripheral.name ?? "unknown")")
         echoRetryCount = 0
 
         // Update btName from peripheral.name if we didn't have it from discovery
@@ -358,6 +538,7 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
         if negotiatedMTU > BLEConstants.defaultMTU {
             mtu = negotiatedMTU
             logger.info("Negotiated MTU: \(self.mtu)")
+            bleLog("Negotiated MTU: \(self.mtu)")
         }
 
         discoverServices()
@@ -369,6 +550,7 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
         error: Error?
     ) {
         logger.error("Failed to connect: \(error?.localizedDescription ?? "unknown")")
+        bleLog("Failed to connect: \(error?.localizedDescription ?? "unknown error")", level: .error)
         connectionState = .disconnected
     }
 
@@ -377,7 +559,25 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
         didDisconnectPeripheral peripheral: CBPeripheral,
         error: Error?
     ) {
+        let timestamp = bleTS()
         logger.info("Disconnected: \(error?.localizedDescription ?? "clean")")
+        bleLog("Disconnected: \(error?.localizedDescription ?? "clean disconnect")",
+               level: error != nil ? .warning : .info)
+        print("[GT3] \(timestamp) [BLE] Disconnected: \(error?.localizedDescription ?? "clean")")
+
+        // Clear per-connection state so checkReadyForAuth() doesn't fire
+        // prematurely on the next connection's characteristic discovery.
+        writeCharacteristic = nil
+        notifyCharacteristic = nil
+        rctpWriteCharacteristic = nil
+        authWriteCharacteristic = nil
+        authNotifyCharacteristic = nil
+        oldWriteCharacteristic = nil
+        oldNotifyCharacteristic = nil
+        pendingBeginAuthOnCCCDOn = false
+        auth = nil
+        transport = nil
+
         let err = error
         Task { @MainActor [weak self] in
             self?.delegate?.didDisconnect(error: err)
@@ -388,72 +588,6 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
             watchForReconnection()
         } else {
             connectionState = .disconnected
-        }
-    }
-}
-
-// MARK: - CBPeripheralDelegate
-
-extension ScooterConnectionManager: CBPeripheralDelegate {
-    func peripheral(
-        _ peripheral: CBPeripheral,
-        didDiscoverServices error: Error?
-    ) {
-        guard let services = peripheral.services else { return }
-        for service in services where service.uuid == BLEConstants.serviceUUID {
-            peripheral.discoverCharacteristics(
-                [BLEConstants.writeCharUUID, BLEConstants.notifyCharUUID],
-                for: service
-            )
-        }
-    }
-
-    func peripheral(
-        _ peripheral: CBPeripheral,
-        didDiscoverCharacteristicsFor service: CBService,
-        error: Error?
-    ) {
-        guard let characteristics = service.characteristics else { return }
-        for characteristic in characteristics {
-            switch characteristic.uuid {
-            case BLEConstants.writeCharUUID:
-                writeCharacteristic = characteristic
-                logger.info("Found write characteristic")
-                checkReadyForAuth()
-            case BLEConstants.notifyCharUUID:
-                notifyCharacteristic = characteristic
-                logger.info("Found notify characteristic (0004)")
-                checkReadyForAuth()
-            default:
-                break
-            }
-        }
-    }
-
-    func peripheral(
-        _ peripheral: CBPeripheral,
-        didUpdateValueFor characteristic: CBCharacteristic,
-        error: Error?
-    ) {
-        guard characteristic.uuid == BLEConstants.notifyCharUUID,
-              let data = characteristic.value else { return }
-
-        guard let transport = self.transport else { return }
-
-        Task {
-            do {
-                if let parsed = try await transport.processInbound(chunk: data) {
-                    if connectionState == .authenticating {
-                        handleAuthResponse(parsed)
-                    } else if connectionState == .connected {
-                        Task { @MainActor [weak self] in
-                            self?.delegate?.didReceiveTelemetry(parsed)
-                        }
-                    }
-                }
-            } catch {
-                logger.error("Frame processing error: \(error)")
-            }
         }
     }
 }

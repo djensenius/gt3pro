@@ -13,14 +13,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
-      - name: Install iOS simulator if needed
+      - name: Install simulator runtimes
         run: |
-          if ! xcrun simctl list runtimes | grep -q "iOS.*Available"; then
-            echo "Installing iOS simulator runtime..."
-            xcodebuild -downloadPlatform iOS
-          else
-            echo "iOS simulator runtime already available"
-          fi
+          xcodebuild -downloadPlatform watchOS
+          xcodebuild -downloadPlatform iOS
       - name: Run Tests
         run: |
           DEST=$(xcrun simctl list devices available -j | python3 -c "
@@ -40,4 +36,6 @@ jobs:
             -scheme "GT3Companion" \
             -destination "$DEST" \
             -configuration Debug \
-            CODE_SIGNING_ALLOWED=NO
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO \
+            EXCLUDED_ARCHS=x86_64

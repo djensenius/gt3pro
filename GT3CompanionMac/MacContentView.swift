@@ -11,47 +11,93 @@ import SwiftUI
 struct MacContentView: View {
     @Query(sort: \PersistedRide.startTime, order: .reverse) private var rides: [PersistedRide]
 
+    private enum SidebarItem: String, Hashable {
+        case rides, analytics, scooter
+    }
+
+    @State private var selectedItem: SidebarItem?
+    @State private var selectedRide: PersistedRide?
+
+    private var screenshotTab: String? {
+        guard let idx = ProcessInfo.processInfo.arguments.firstIndex(of: "--screenshot-tab"),
+              idx + 1 < ProcessInfo.processInfo.arguments.count else { return nil }
+        return ProcessInfo.processInfo.arguments[idx + 1]
+    }
+
     var body: some View {
         NavigationSplitView {
-            List {
-                NavigationLink(destination: MacRideHistoryView(rides: rides)) {
+            List(selection: $selectedItem) {
+                NavigationLink(value: SidebarItem.rides) {
                     Label("Rides", systemImage: "point.topleft.down.to.point.bottomright.curvepath")
                 }
-                NavigationLink(destination: AggregateAnalyticsView()) {
+                NavigationLink(value: SidebarItem.analytics) {
                     Label("Analytics", systemImage: "chart.xyaxis.line")
                 }
-                NavigationLink(destination: ScooterInfoView()) {
-                    Label("Scooter", systemImage: "scooter")
+                NavigationLink(value: SidebarItem.scooter) {
+                    Label {
+                        Text("Scooter")
+                    } icon: {
+                        Image(systemName: "scooter")
+                            .environment(\.layoutDirection, .rightToLeft)
+                    }
                 }
             }
             .navigationTitle("GT3 Companion")
         } detail: {
-            VStack(spacing: Theme.Spacing.large) {
-                Image(systemName: "scooter")
-                    .font(.system(size: 48))
-                    .foregroundStyle(Theme.Colors.accent)
+            switch selectedItem {
+            case .rides:
+                if let ride = selectedRide {
+                    MacRideDetailView(ride: ride)
+                } else {
+                    MacRideListView(rides: rides, selectedRide: $selectedRide)
+                }
+            case .analytics:
+                AggregateAnalyticsView()
+            case .scooter:
+                ScooterInfoView()
+            case nil:
+                VStack(spacing: Theme.Spacing.large) {
+                    Image(systemName: "scooter")
+                        .font(.system(size: 48))
+                        .foregroundStyle(Theme.Colors.accent)
+                        .environment(\.layoutDirection, .rightToLeft)
 
-                Text("GT3 Companion")
-                    .font(Theme.Fonts.headerXL())
-                    .foregroundStyle(Theme.Colors.textPrimary)
+                    Text("GT3 Companion")
+                        .font(Theme.Fonts.headerXL())
+                        .foregroundStyle(Theme.Colors.textPrimary)
 
-                Text("Select a section to explore your ride data")
-                    .font(Theme.Fonts.bodyMedium)
-                    .foregroundStyle(Theme.Colors.textSecondary)
+                    Text("Select a section to explore your ride data")
+                        .font(Theme.Fonts.bodyMedium)
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .task {
+            if let tab = screenshotTab {
+                switch tab {
+                case "rides": selectedItem = .rides
+                case "analytics": selectedItem = .analytics
+                case "scooter": selectedItem = .scooter
+                case "ride-detail":
+                    selectedItem = .rides
+                    try? await Task.sleep(for: .milliseconds(500))
+                    selectedRide = rides.first
+                default: break
+                }
+            }
         }
     }
 }
 
-struct MacRideHistoryView: View {
+struct MacRideListView: View {
     let rides: [PersistedRide]
+    @Binding var selectedRide: PersistedRide?
 
     var body: some View {
-        List(rides) { ride in
-            NavigationLink(destination: MacRideDetailView(ride: ride)) {
-                MacRideRowView(ride: ride)
-            }
+        List(rides, selection: $selectedRide) { ride in
+            MacRideRowView(ride: ride)
+                .tag(ride)
         }
         .navigationTitle("Ride History")
         .overlay {

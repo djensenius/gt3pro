@@ -13,6 +13,12 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5"
+    DEVELOPMENT_TEAM: 9JALHNGRBQ
+    MARKETING_VERSION: "0.9"
+    CURRENT_PROJECT_VERSION: "1"
+    DEAD_CODE_STRIPPING: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    SWIFT_EMIT_LOC_STRINGS: YES
 
 targets:
   GT3Companion:
@@ -33,6 +39,7 @@ targets:
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
         UIBackgroundModes:
@@ -49,6 +56,7 @@ targets:
         CFBundleURLTypes:
           - CFBundleURLSchemes:
               - gt3companion
+        ITSAppUsesNonExemptEncryption: false
         OIDCIssuerBase: https://auth.fluxhaus.io/application/o/gt3-companion
         OIDCClientID: gcQHXtphJwbyF6az9rMLavWOqR1vrQqq12t6cjvH
     settings:
@@ -56,7 +64,10 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion
         TARGETED_DEVICE_FAMILY: "1,2"
         CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "iPhone Developer"
         GENERATE_INFOPLIST_FILE: false
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.lifestyle
     entitlements:
       path: GT3Companion/GT3Companion.entitlements
       properties:
@@ -64,6 +75,8 @@ targets:
         com.apple.developer.healthkit.access: []
     dependencies:
       - target: GT3CompanionWidgets
+        embed: true
+      - target: GT3CompanionWatch
         embed: true
 
   GT3CompanionWidgets:
@@ -102,11 +115,22 @@ targets:
         CFBundleDisplayName: GT3 Companion
         CFBundleName: GT3CompanionWatch
         WKApplication: true
+        WKCompanionAppBundleIdentifier: org.davidjensenius.GT3Companion
+        NSHealthShareUsageDescription: GT3 Companion reads your heart rate during scooter rides.
+        NSHealthUpdateUsageDescription: GT3 Companion saves scooter ride workouts to Apple Health.
+        ITSAppUsesNonExemptEncryption: false
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.watch
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        TARGETED_DEVICE_FAMILY: "4"
+    entitlements:
+      path: GT3CompanionWatch/GT3CompanionWatch.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
 
   GT3CompanionTests:
     type: bundle.unit-test
@@ -118,6 +142,22 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.tests
+        GENERATE_INFOPLIST_FILE: true
+    dependencies:
+      - target: GT3Companion
+        embed: false
+
+  GT3CompanionUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: GT3CompanionUITests
+        excludes:
+          - "**/.DS_Store"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.uitests
+        GENERATE_INFOPLIST_FILE: true
     dependencies:
       - target: GT3Companion
         embed: false
@@ -132,16 +172,22 @@ targets:
       - path: Shared
         excludes:
           - "**/.DS_Store"
+      - path: GT3Companion/Views/AggregateAnalyticsView.swift
+      - path: GT3Companion/Views/ScooterInfoView.swift
+      - path: GT3Companion/Views/Components/InfoRow.swift
     info:
       path: GT3CompanionMac/Info.plist
       properties:
         CFBundleDisplayName: GT3 Companion
         CFBundleName: GT3CompanionMac
+        ITSAppUsesNonExemptEncryption: false
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.mac
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.lifestyle
 
   GT3CompanionVision:
     type: application
@@ -153,16 +199,22 @@ targets:
       - path: Shared
         excludes:
           - "**/.DS_Store"
+      - path: GT3Companion/Views/AggregateAnalyticsView.swift
+      - path: GT3Companion/Views/ScooterInfoView.swift
+      - path: GT3Companion/Views/Components/InfoRow.swift
     info:
       path: GT3CompanionVision/Info.plist
       properties:
         CFBundleDisplayName: GT3 Companion
         CFBundleName: GT3CompanionVision
+        ITSAppUsesNonExemptEncryption: false
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.vision
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        TARGETED_DEVICE_FAMILY: "7"
 
 schemes:
   GT3Companion:
@@ -176,6 +228,7 @@ schemes:
       config: Debug
       targets:
         - GT3CompanionTests
+        - GT3CompanionUITests
     profile:
       config: Release
     analyze:

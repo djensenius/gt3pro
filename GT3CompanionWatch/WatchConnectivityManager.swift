@@ -14,8 +14,10 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
     @Published var speed: Double = 0
     @Published var battery: Int = 0
     @Published var tripDistance: Double = 0
+    @Published var estimatedRange: Double = 0
+    @Published var gearMode: Int = 0
     @Published var isRiding: Bool = false
-    @Published var heartRate: Int = 0
+    @Published var isConnected: Bool = false
 
     override init() {
         super.init()
@@ -23,6 +25,16 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
             WCSession.default.delegate = self
             WCSession.default.activate()
         }
+    }
+
+    /// Send heart rate back to iPhone.
+    func sendHeartRate(_ heartRate: Int) {
+        guard WCSession.default.isReachable else { return }
+        WCSession.default.sendMessage(
+            ["heartRate": heartRate],
+            replyHandler: nil,
+            errorHandler: nil
+        )
     }
 
     func session(
@@ -33,10 +45,13 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
 
     func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
         DispatchQueue.main.async {
-            self.speed = message["speed"] as? Double ?? 0
-            self.battery = message["battery"] as? Int ?? 0
-            self.tripDistance = message["tripDistance"] as? Double ?? 0
-            self.isRiding = message["isRiding"] as? Bool ?? false
+            self.speed = message["speed"] as? Double ?? self.speed
+            self.battery = message["battery"] as? Int ?? self.battery
+            self.tripDistance = message["tripDistance"] as? Double ?? self.tripDistance
+            self.estimatedRange = message["estimatedRange"] as? Double ?? self.estimatedRange
+            self.gearMode = message["gearMode"] as? Int ?? self.gearMode
+            self.isRiding = self.speed > 0
+            self.isConnected = true
         }
     }
 
@@ -46,6 +61,7 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
     ) {
         DispatchQueue.main.async {
             self.battery = applicationContext["battery"] as? Int ?? self.battery
+            self.isConnected = applicationContext["isConnected"] as? Bool ?? self.isConnected
         }
     }
 }

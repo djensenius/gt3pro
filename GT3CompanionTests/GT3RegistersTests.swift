@@ -10,11 +10,11 @@ import XCTest
 
 final class GT3RegistersTests: XCTestCase {
     func testLiveTelemetryCount() {
-        XCTAssertEqual(GT3Registers.liveTelemetry.count, 20)
+        XCTAssertEqual(GT3Registers.liveTelemetry.count, 18)
     }
 
     func testCumulativeCount() {
-        XCTAssertGreaterThanOrEqual(GT3Registers.cumulative.count, 40)
+        XCTAssertGreaterThanOrEqual(GT3Registers.cumulative.count, 28)
     }
 
     func testAllRegistersNoDuplicateNames() {
@@ -29,9 +29,9 @@ final class GT3RegistersTests: XCTestCase {
         XCTAssertEqual(reg.size, 2)
     }
 
-    func testBMS1VoltageRegister() {
-        let reg = GT3Registers.bms1Voltage
-        XCTAssertEqual(reg.board, .bms1)
+    func testBMSVoltageRegister() {
+        let reg = GT3Registers.bmsVoltage
+        XCTAssertEqual(reg.board, .bms2)
         XCTAssertEqual(reg.index, 0x8C)
         XCTAssertEqual(reg.size, 2)
     }

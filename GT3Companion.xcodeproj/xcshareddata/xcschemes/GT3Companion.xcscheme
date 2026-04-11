@@ -64,6 +64,17 @@
                ReferencedContainer = "container:GT3Companion.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "6C19F0F71ED7949B2A8A4C21"
+               BuildableName = "GT3CompanionUITests.xctest"
+               BlueprintName = "GT3CompanionUITests"
+               ReferencedContainer = "container:GT3Companion.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
       <CommandLineArguments>
       </CommandLineArguments>

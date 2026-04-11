@@ -11,16 +11,18 @@ struct DashboardView: View {
     #if os(iOS)
     @EnvironmentObject private var coordinator: AppCoordinator
     @ObservedObject private var auth = AuthManager.shared
+    @State private var powerToggle = false
 
     private var isDemo: Bool { auth.isDemoMode }
     private var isConnected: Bool { isDemo || coordinator.connectionState == .connected }
+    private var isAwake: Bool { isDemo || coordinator.isScooterAwake }
     private var speed: Double { isDemo ? 32.5 : coordinator.currentSpeed }
     private var battery: Int { isDemo ? 78 : coordinator.currentBattery }
     private var tripDistance: Double { isDemo ? 12.4 : coordinator.tripDistance }
     private var estimatedRange: Double { isDemo ? 45 : coordinator.estimatedRange }
     private var gearMode: Int { isDemo ? 2 : coordinator.gearMode }
-    private var bms1Temp: Double { isDemo ? 28 : coordinator.bms1Temp }
-    private var bms2Temp: Double { isDemo ? 30 : coordinator.bms2Temp }
+    private var bmsTemp: Double { isDemo ? 28 : coordinator.bmsTemp }
+    private var bodyTemp: Double { isDemo ? 25 : coordinator.bodyTemp }
     #else
     @ObservedObject private var auth = AuthManager.shared
     private var isDemo: Bool { auth.isDemoMode }
@@ -30,8 +32,7 @@ struct DashboardView: View {
     private var tripDistance: Double { isDemo ? 12.4 : 0 }
     private var estimatedRange: Double { isDemo ? 45 : 0 }
     private var gearMode: Int { isDemo ? 2 : 0 }
-    private var bms1Temp: Double { isDemo ? 28 : 0 }
-    private var bms2Temp: Double { isDemo ? 30 : 0 }
+    private var bmsTemp: Double { isDemo ? 28 : 0 }
     #endif
 
     var body: some View {
@@ -43,7 +44,11 @@ struct DashboardView: View {
                         demoBanner
                     }
                     if isConnected {
-                        connectedView
+                        if isAwake {
+                            connectedView
+                        } else {
+                            standbyView
+                        }
                     } else {
                         disconnectedView
                     }
@@ -70,6 +75,7 @@ struct DashboardView: View {
             Image(systemName: "scooter")
                 .font(.system(size: 80))
                 .foregroundStyle(Theme.Colors.textSecondary)
+                .environment(\.layoutDirection, .rightToLeft)
             Text("Waiting for GT3 Pro")
                 .font(Theme.Fonts.headerLarge())
                 .foregroundStyle(Theme.Colors.textPrimary)
@@ -77,6 +83,47 @@ struct DashboardView: View {
                 .font(Theme.Fonts.bodyMedium)
                 .foregroundStyle(Theme.Colors.textSecondary)
                 .multilineTextAlignment(.center)
+            #if os(iOS)
+            Button {
+                coordinator.retryScan()
+            } label: {
+                Label("Retry Connection", systemImage: "arrow.clockwise")
+                    .font(Theme.Fonts.bodyMedium)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(Theme.Colors.accent)
+            #endif
+            Spacer()
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
+    }
+
+    private var standbyView: some View {
+        VStack(spacing: Theme.Spacing.extraLarge) {
+            Spacer().frame(height: 60)
+            Image(systemName: "moon.zzz.fill")
+                .font(.system(size: 80))
+                .foregroundStyle(Theme.Colors.accent.opacity(0.6))
+            Text("Connected · Standby")
+                .font(Theme.Fonts.headerLarge())
+                .foregroundStyle(Theme.Colors.textPrimary)
+            Text("Press the scooter power button to wake up")
+                .font(Theme.Fonts.bodyMedium)
+                .foregroundStyle(Theme.Colors.textSecondary)
+                .multilineTextAlignment(.center)
+            ProgressView()
+                .tint(Theme.Colors.accent)
+            #if os(iOS)
+            Button {
+                coordinator.sendPowerOn()
+            } label: {
+                Label("Send Power On", systemImage: "power")
+                    .font(Theme.Fonts.bodyMedium)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(Theme.Colors.accent)
+            #endif
             Spacer()
         }
         .frame(maxWidth: .infinity)
@@ -93,7 +140,6 @@ struct DashboardView: View {
                     .font(Theme.Fonts.bodyMedium)
                     .foregroundStyle(Theme.Colors.textSecondary)
             }
-            .glassCard()
 
             HStack(spacing: Theme.Spacing.medium) {
                 StatCard(
@@ -127,18 +173,38 @@ struct DashboardView: View {
 
             HStack(spacing: Theme.Spacing.medium) {
                 StatCard(
-                    title: "BMS 1",
-                    value: String(format: "%.0f°C", bms1Temp),
+                    title: "BMS Temp",
+                    value: String(format: "%.0f°C", bmsTemp),
                     icon: "thermometer.medium",
-                    color: tempColor(bms1Temp)
+                    color: tempColor(bmsTemp)
                 )
                 StatCard(
-                    title: "BMS 2",
-                    value: String(format: "%.0f°C", bms2Temp),
-                    icon: "thermometer.medium",
-                    color: tempColor(bms2Temp)
+                    title: "Vehicle Temp",
+                    value: String(format: "%.0f°C", bodyTemp),
+                    icon: "thermometer.sun",
+                    color: tempColor(bodyTemp)
                 )
             }
+
+            #if os(iOS)
+            Toggle(isOn: $powerToggle) {
+                Label("Power", systemImage: "power")
+                    .font(Theme.Fonts.bodyMedium)
+            }
+            .tint(Theme.Colors.accent)
+            .padding(.horizontal)
+            .onChange(of: powerToggle) { _, isOn in
+                if isOn {
+                    coordinator.sendPowerOn()
+                } else {
+                    coordinator.sendPowerOff()
+                }
+            }
+            .onChange(of: battery) { _, newBattery in
+                powerToggle = newBattery > 0
+            }
+            .onAppear { powerToggle = battery > 0 }
+            #endif
         }
         .padding()
     }
@@ -157,9 +223,10 @@ struct DashboardView: View {
 
     private var gearModeName: String {
         switch gearMode {
-        case 1: return "Eco"
-        case 2: return "Standard"
+        case 1: return "Walk"
+        case 2: return "Eco"
         case 3: return "Sport"
+        case 4: return "Race"
         default: return "Mode \(gearMode)"
         }
     }

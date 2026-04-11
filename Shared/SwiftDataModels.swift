@@ -35,6 +35,7 @@ class PersistedRide {
     var startBattery: Int
     var endBattery: Int?
     var uploaded: Bool
+    var primaryGearMode: Int
     @Relationship(deleteRule: .cascade) var samples: [PersistedSample]?
     var gpsTrackJSON: Data?
     var healthDataJSON: Data?
@@ -50,6 +51,7 @@ class PersistedRide {
         self.startBattery = startBattery
         self.endBattery = nil
         self.uploaded = false
+        self.primaryGearMode = 0
         self.samples = []
     }
 }
@@ -59,14 +61,10 @@ class PersistedSample {
     var timestamp: Date
     var speed: Double
     var battery: Int
-    var bms1Voltage: Double
-    var bms1Current: Double
-    var bms1SOC: Int
-    var bms1Temp: Double
-    var bms2Voltage: Double
-    var bms2Current: Double
-    var bms2SOC: Int
-    var bms2Temp: Double
+    var bmsVoltage: Double
+    var bmsCurrent: Double
+    var bmsSOC: Int
+    var bmsTemp: Double
     var tripDistance: Double
     var bodyTemp: Double
     var gearMode: Int
@@ -90,14 +88,10 @@ class PersistedSample {
         self.timestamp = timestamp
         self.speed = speed
         self.battery = battery
-        self.bms1Voltage = 0
-        self.bms1Current = 0
-        self.bms1SOC = 0
-        self.bms1Temp = 0
-        self.bms2Voltage = 0
-        self.bms2Current = 0
-        self.bms2SOC = 0
-        self.bms2Temp = 0
+        self.bmsVoltage = 0
+        self.bmsCurrent = 0
+        self.bmsSOC = 0
+        self.bmsTemp = 0
         self.tripDistance = 0
         self.bodyTemp = 0
         self.gearMode = 0

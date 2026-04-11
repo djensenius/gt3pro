@@ -10,7 +10,7 @@ import XCTest
 
 final class NinebotCryptoTests: XCTestCase {
     func testNonSNEncryptDecryptRoundTrip() throws {
-        let key = KeyDerivation.deriveKey(key1: Data("NB-GT3Pro".utf8), key2: nil)
+        let key = KeyDerivation.deriveKey(key1: Data("NB-GT3Pro".utf8), key2: BLEConstants.dataBasic)
         let crypto = NinebotCrypto(key: key, counter: 0)
 
         let plaintext = Data([
@@ -148,5 +148,67 @@ final class NinebotCryptoTests: XCTestCase {
         let enc2 = try crypto2.encrypt(plaintext: plaintext)
 
         XCTAssertNotEqual(enc1, enc2)
+    }
+
+    /// Verify the PRE_COMM checksum is computed over the full payload (not payload[3:]).
+    /// For payload 3E 04 5B 00: sum = 0x9D, checksum = ~0x9D & 0xFFFF = 0xFF62.
+    func testNonSNChecksumCoversFullPayload() throws {
+        let key = KeyDerivation.deriveKey(key1: Data("03GGG2539C0023".utf8), key2: BLEConstants.dataBasic)
+        let crypto = NinebotCrypto(key: key, counter: 0)
+
+        // PRE_COMM payload (after 3-byte frame header is stripped)
+        let payload = Data([0x3E, 0x04, 0x5B, 0x00])
+        let encrypted = try crypto.encrypt(plaintext: payload)
+
+        // Tail is the last 6 bytes: [0x00, 0x00, checksum_lo, checksum_hi, 0x00, 0x00]
+        // sum(3E 04 5B 00) = 0x9D → checksum = ~0x9D & 0xFFFF = 0xFF62
+        let tail = Data(encrypted[(encrypted.count - 6)...])
+        let checksumLo = tail[tail.startIndex + 2]
+        let checksumHi = tail[tail.startIndex + 3]
+        let checksum = UInt16(checksumHi) << 8 | UInt16(checksumLo)
+
+        XCTAssertEqual(checksum, 0xFF62,
+            "Checksum must cover full payload (sum=0x9D, ~sum=0xFF62), not just payload[3:]")
+    }
+
+    /// End-to-end test verified against a real Bluetooth packet capture from the Segway app.
+    /// Reproduces the encrypted PRE_COMM (Frame 1 in capture) sent to B5A3-0002.
+    func testCaptureVerifiedPreCommEncryption() throws {
+        // From capture: name = "03GGG2539C0023"
+        let name = "03GGG2539C0023"
+        let key = KeyDerivation.deriveKey(key1: Data(name.utf8), key2: BLEConstants.dataBasic)
+
+        // Verified from packet capture analysis:
+        // key = SHA1(pad("03GGG2539C0023",16) + dataBasic)[0:16] = 41332579467d814852f122b62bc88411
+        XCTAssertEqual(key.map { String(format: "%02x", $0) }.joined(),
+                       "41332579467d814852f122b62bc88411")
+
+        let crypto = NinebotCrypto(key: key, counter: 0)
+
+        // PRE_COMM payload: BT_ID=0x3E, TARGET=0x04, CMD=0x5B, INDEX=0x00
+        let payload = Data([0x3E, 0x04, 0x5B, 0x00])
+        let encrypted = try crypto.encrypt(plaintext: payload)
+
+        // Non-SN keystream = AES_ECB(key, dataBasic) = 99e0fd99d32f247cd8d6e1429ea9fac6
+        // XOR: [3E^99, 04^e0, 5B^fd, 00^99] = [a7, e4, a6, 99]
+        // Checksum: ~(3E+04+5B+00) = ~0x9D = 0xFF62 → [62, FF]
+        // Expected: a7 e4 a6 99 00 00 62 ff 00 00
+        let expected = Data([0xA7, 0xE4, 0xA6, 0x99, 0x00, 0x00, 0x62, 0xFF, 0x00, 0x00])
+        XCTAssertEqual(encrypted, expected,
+            "Encrypted PRE_COMM must match packet capture Frame 1")
+    }
+
+    /// Verify non-SN round-trip decryption with the real GT3 Pro key.
+    func testCaptureVerifiedPreCommRoundTrip() throws {
+        let name = "03GGG2539C0023"
+        let key = KeyDerivation.deriveKey(key1: Data(name.utf8), key2: BLEConstants.dataBasic)
+        let payload = Data([0x3E, 0x04, 0x5B, 0x00])
+
+        let encryptCrypto = NinebotCrypto(key: key, counter: 0)
+        let encrypted = try encryptCrypto.encrypt(plaintext: payload)
+
+        let decryptCrypto = NinebotCrypto(key: key, counter: 0)
+        let decrypted = try decryptCrypto.decrypt(encrypted: encrypted)
+        XCTAssertEqual(decrypted, payload)
     }
 }

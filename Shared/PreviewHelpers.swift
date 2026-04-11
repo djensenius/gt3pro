@@ -117,14 +117,10 @@ enum PreviewData {
                 speed: 15.0 + Double(index) * 1.8,
                 battery: max(60, 95 - index)
             )
-            sample.bms1Voltage = 58.8
-            sample.bms1Current = 5.0 + Double(index) * 0.7
-            sample.bms1SOC = max(60, 95 - index)
-            sample.bms1Temp = 30.0 + Double(index) * 0.5
-            sample.bms2Voltage = 58.6
-            sample.bms2Current = 5.0 + Double(index) * 0.65
-            sample.bms2SOC = max(58, 93 - index)
-            sample.bms2Temp = 28.0 + Double(index) * 0.47
+            sample.bmsVoltage = 58.8
+            sample.bmsCurrent = 5.0 + Double(index) * 0.7
+            sample.bmsSOC = max(60, 95 - index)
+            sample.bmsTemp = 30.0 + Double(index) * 0.5
             sample.tripDistance = Double(index) * 0.4
             sample.bodyTemp = 35.0 + Double(index) * 0.5
             sample.gearMode = 3

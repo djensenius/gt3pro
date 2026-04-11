@@ -30,16 +30,58 @@ enum BLEConstants {
         string: "6E400004-0000-0000-006E-696E65626F74"
     )
 
+    /// Secondary write characteristic (app → device). May be the auth channel.
+    nonisolated(unsafe) static let authWriteCharUUID = CBUUID(
+        string: "6E400005-0000-0000-006E-696E65626F74"
+    )
+
+    /// Secondary notify characteristic (device → app). May be the auth response channel.
+    nonisolated(unsafe) static let authNotifyCharUUID = CBUUID(
+        string: "6E400006-0000-0000-006E-696E65626F74"
+    )
+
+    // MARK: - Classic Nordic UART Service (6E400001-B5A3-...)
+    // The Segway Mobility app uses this older service for its auth+telemetry protocol.
+    // On first connect the scooter advertises BOTH services; after reconnect only the
+    // ninebot (006E-...) service remains.
+
+    /// Legacy Nordic UART service — present on initial advertising
+    nonisolated(unsafe) static let oldServiceUUID = CBUUID(
+        string: "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
+    )
+
+    /// Legacy UART_RX — write from app to scooter (old service)
+    nonisolated(unsafe) static let oldWriteCharUUID = CBUUID(
+        string: "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
+    )
+
+    /// Legacy UART_TX — notify from scooter to app (old service)
+    nonisolated(unsafe) static let oldNotifyCharUUID = CBUUID(
+        string: "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
+    )
+
     // MARK: - Board Target IDs
 
+    /// x3 series (GT3 Pro) board addresses — verified from packet capture.
+    /// VCU is 0x16 (NOT 0x02 which is MCU on the x3 series).
     enum Board: UInt8 {
-        case ble = 0x04
-        case vcu = 0x02  // ESC / Vehicle Control Unit
-        case mcu = 0x05
+        /// BLE module (Ninebot standard address for BLE chip = 0x21)
+        case ble = 0x21
+        case vcu = 0x16  // Vehicle Control Unit (x3 series)
+        case mcu = 0x04  // BLE auth target / Motor Control Unit
         case bms1 = 0x06
         case bms2 = 0x07
         case tft = 0x09
     }
+
+    // MARK: - Protocol Constants
+
+    /// Fixed 16-byte IV for initial key derivation and non-SN mode keystream.
+    /// From the NinebotCrypto reference implementation (scooterhacking/NinebotCrypto).
+    static let dataBasic = Data([
+        0x97, 0xCF, 0xB8, 0x02, 0x84, 0x41, 0x43, 0xDE,
+        0x56, 0x00, 0x2B, 0x3B, 0x34, 0x78, 0x0A, 0x5D
+    ])
 
     // MARK: - Frame Constants
 
@@ -61,6 +103,7 @@ enum BLEConstants {
         case preComm = 0x5B
         case setPwd = 0x5C
         case auth = 0x5D
+        case powerOn = 0x79
     }
 
     // MARK: - Timing
@@ -83,7 +126,6 @@ enum BLEConstants {
     static let setPwdTimeoutMs: UInt64 = 2000
     static let authTimeoutMs: UInt64 = 2000
     static let setPwdMaxRetries = 30
-    static let preCommMaxRetries = 10
     static let authMaxRetries = 3
     static let authMaxRestarts = 5
 

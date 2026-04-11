@@ -83,20 +83,24 @@ actor RegisterReader {
     func processResponse(_ parsed: NinebotFrameBuilder.ParsedFrame) -> RegisterReadResult? {
         guard parsed.cmd == BLEConstants.Command.readAck.rawValue else { return nil }
 
+        let boardHex = String(parsed.btID, radix: 16)
+        let indexHex = String(parsed.index, radix: 16)
+        let payloadHex = parsed.payload.map { String(format: "%02x", $0) }.joined(separator: " ")
+        print("[GT3] [REG] board=0x\(boardHex) idx=0x\(indexHex) len=\(parsed.payload.count) data=[\(payloadHex)]")
+
+        // Match on board + index only; payload size may differ from definition
         let matchingRegister = GT3Registers.all.first { register in
-            register.board.rawValue == parsed.source
+            register.board.rawValue == parsed.btID
             && register.index == parsed.index
-            && register.size == UInt8(parsed.payload.count)
         }
 
         guard let register = matchingRegister else {
-            let boardHex = String(parsed.source, radix: 16)
-            let indexHex = String(parsed.index, radix: 16)
-            logger.debug("Unknown register response: board=0x\(boardHex) index=0x\(indexHex)")
+            print("[GT3] [REG] ⚠️ UNMATCHED board=0x\(boardHex) idx=0x\(indexHex)")
             return nil
         }
 
         let value = TelemetryParser.parseRegister(register, data: parsed.payload)
+        print("[GT3] [REG] ✅ \(register.name) = \(value)")
 
         if GT3Registers.liveTelemetry.contains(where: { $0.name == register.name }) {
             telemetryValues[register.name] = value

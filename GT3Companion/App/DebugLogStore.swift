@@ -21,12 +21,13 @@ final class DebugLogStore: ObservableObject {
     private static let maxEntries = 500
 
     @Published private(set) var entries: [LogEntry] = []
-    @AppStorage("verboseLoggingEnabled") var verboseLoggingEnabled = false
+    @AppStorage("verboseLoggingEnabled") var verboseLoggingEnabled = true
 
     private init() {}
 
     func log(_ message: String, category: String = "App", level: LogEntry.Level = .info) {
         guard verboseLoggingEnabled || level == .warning || level == .error else { return }
+        print("[GT3] [\(level.rawValue.uppercased())] [\(category)] \(message)")
         entries.append(LogEntry(timestamp: Date(), category: category, level: level, message: message))
         if entries.count > Self.maxEntries {
             entries.removeFirst(entries.count - Self.maxEntries)

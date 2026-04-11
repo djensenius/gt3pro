@@ -11,12 +11,13 @@ import XCTest
 final class NinebotFrameBuilderTests: XCTestCase {
     func testBuildReadFrame() {
         let frame = NinebotFrameBuilder.buildReadFrame(board: .vcu, register: 0x57, length: 2)
-        // [5A, A5, LEN, 3E, 02, 01, 57, 02]
+        // GT3 Pro format: LEN = data.count only (1 data byte = the length byte)
+        // [5A, A5, LEN, 3E, 16, 01, 57, 02]
         XCTAssertEqual(frame[0], 0x5A) // sync
         XCTAssertEqual(frame[1], 0xA5) // sync
-        XCTAssertEqual(frame[2], 5)    // length: 1(data) + 4 = 5
+        XCTAssertEqual(frame[2], 1)    // length: 1 data byte
         XCTAssertEqual(frame[3], 0x3E) // BT_ID
-        XCTAssertEqual(frame[4], 0x02) // VCU board
+        XCTAssertEqual(frame[4], 0x16) // VCU board (x3 series)
         XCTAssertEqual(frame[5], 0x01) // read command
         XCTAssertEqual(frame[6], 0x57) // speed register
         XCTAssertEqual(frame[7], 0x02) // read 2 bytes
@@ -25,12 +26,12 @@ final class NinebotFrameBuilderTests: XCTestCase {
 
     func testBuildWriteFrame() {
         let data = Data([0xAA, 0xBB])
-        let frame = NinebotFrameBuilder.buildWriteFrame(board: .bms1, register: 0x10, data: data)
+        let frame = NinebotFrameBuilder.buildWriteFrame(board: .bms2, register: 0x10, data: data)
         XCTAssertEqual(frame[0], 0x5A)
         XCTAssertEqual(frame[1], 0xA5)
-        XCTAssertEqual(frame[2], 6)    // 2(data) + 4 = 6
+        XCTAssertEqual(frame[2], 2)    // 2 data bytes
         XCTAssertEqual(frame[3], 0x3E)
-        XCTAssertEqual(frame[4], 0x06) // BMS1
+        XCTAssertEqual(frame[4], 0x07) // BMS2
         XCTAssertEqual(frame[5], 0x03) // write command
         XCTAssertEqual(frame[6], 0x10)
         XCTAssertEqual(frame[7], 0xAA)
@@ -39,9 +40,30 @@ final class NinebotFrameBuilderTests: XCTestCase {
 
     func testBuildAuthFrame() {
         let frame = NinebotFrameBuilder.buildAuthFrame(cmd: .preComm, data: Data())
-        XCTAssertEqual(frame[4], 0x04) // BLE board
+        XCTAssertEqual(frame[4], 0x04) // MCU target (0x04 on GT3 Pro encrypted auth)
         XCTAssertEqual(frame[5], 0x5B) // PRE_COMM
         XCTAssertEqual(frame[6], 0x00) // index 0
+    }
+
+    func testBuildPlainPreComm() {
+        let frame = NinebotFrameBuilder.buildPlainPreComm()
+        XCTAssertEqual(frame[4], 0x21) // BLE target (0x21 for legacy plain probe)
+        XCTAssertEqual(frame[5], 0x5B) // PRE_COMM
+        XCTAssertEqual(frame[6], 0x00) // index 0
+    }
+
+    func testBuildPowerOnFrame() {
+        let frame = NinebotFrameBuilder.buildPowerOnFrame()
+        XCTAssertEqual(frame[0], 0x5A) // sync
+        XCTAssertEqual(frame[1], 0xA5) // sync
+        XCTAssertEqual(frame[2], 2)    // 2 data bytes
+        XCTAssertEqual(frame[3], 0x3E) // BT_ID
+        XCTAssertEqual(frame[4], 0x16) // VCU board (x3 series)
+        XCTAssertEqual(frame[5], 0x79) // power-on command
+        XCTAssertEqual(frame[6], 0x00) // index 0
+        XCTAssertEqual(frame[7], 0x01) // data: 0x0001 LE
+        XCTAssertEqual(frame[8], 0x00)
+        XCTAssertEqual(frame.count, 9)
     }
 
     func testParseFrame() {

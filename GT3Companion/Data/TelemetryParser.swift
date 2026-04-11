@@ -56,6 +56,17 @@ enum TelemetryParser {
         Double(parseInt16(data)) / 10.0
     }
 
+    /// BMS temperature: 4 bytes = 2 sensors (Int16 each, raw °C, no scaling)
+    /// Returns average of two sensor readings
+    static func parseBmsTemperature(_ data: Data) -> Double {
+        let sensor1 = Double(parseInt16(data))
+        if data.count >= 4 {
+            let sensor2 = Double(parseInt16(Data(data.suffix(from: data.startIndex + 2))))
+            return (sensor1 + sensor2) / 2.0
+        }
+        return sensor1
+    }
+
     /// Distance: raw ÷ 100 → km
     static func parseDistance(_ data: Data) -> Double {
         Double(parseUInt16(data)) / 100.0
@@ -64,6 +75,11 @@ enum TelemetryParser {
     /// Odometer (4 bytes): raw ÷ 100 → km
     static func parseOdometer(_ data: Data) -> Double {
         Double(parseUInt32(data)) / 100.0
+    }
+
+    /// Precise mileage: raw value in meters → km
+    static func parsePreciseMileage(_ data: Data) -> Double {
+        Double(parseUInt16(data)) / 1000.0
     }
 
     /// Percentage (raw value is already %)
@@ -120,7 +136,8 @@ enum TelemetryParser {
         switch register.name {
         case "rSpeed": return parseSpeed(data)
         case "rBattery": return parsePercent(data)
-        case "rSingleMileage", "rLeftMileage", "rPreciseMileage": return parseDistance(data)
+        case "rSingleMileage", "rLeftMileage": return parseDistance(data)
+        case "rPreciseMileage": return parsePreciseMileage(data)
         case "rSingleRideTime", "rRunningTime": return parseSeconds(data)
         case "rBodyTemp": return parseTemperature(data)
         case "rGearMode", "rErrorCode", "rWarnCode",
@@ -129,10 +146,10 @@ enum TelemetryParser {
              "rAlarmLevel", "rBumpyRoad", "rVoiceVolume",
              "rMaxPower", "rBmsCapacity",
              "rFindMyStatus", "rFindMyEnable": return Int(parseUInt16(data))
-        case "rBMSVolt", "rBMSVolt2": return parseVoltage(data)
-        case "rBMSCur", "rBMSCur2": return parseCurrent(data)
-        case "rBmsSOC", "rBmsSOC2": return parsePercent(data)
-        case "rBmsTmp", "rBmsTmp2": return parseTemperature(data)
+        case "rBMSVolt2": return parseVoltage(data)
+        case "rBMSCur2": return parseCurrent(data)
+        case "rBmsSOC2": return parsePercent(data)
+        case "rBmsTmp2": return parseBmsTemperature(data)
         case "rMileage": return parseOdometer(data)
         case "rRuntime", "rRideTime",
              "rBmsExtremeUseTimeLT", "rBmsExtremeChargeTimeLT": return parseSecondsLong(data)

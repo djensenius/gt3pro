@@ -8,15 +8,14 @@
 import SwiftUI
 
 struct WatchRideView: View {
-    @State private var speed: Double = 0
-    @State private var battery: Int = 0
-    @State private var heartRate: Int = 0
-    @State private var tripDistance: Double = 0
-    @State private var isRiding = false
+    @EnvironmentObject private var connectivity: WatchConnectivityManager
+    @EnvironmentObject private var workout: RideWorkoutManager
 
     var body: some View {
-        if isRiding {
+        if connectivity.isRiding {
             ridingView
+        } else if connectivity.isConnected {
+            standbyView
         } else {
             idleView
         }
@@ -24,30 +23,65 @@ struct WatchRideView: View {
 
     private var ridingView: some View {
         VStack(spacing: 4) {
-            Text("\(Int(speed))")
+            Text("\(Int(connectivity.speed))")
                 .font(.system(size: 48, weight: .bold, design: .rounded))
                 .foregroundStyle(.cyan)
             Text("km/h")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
 
-            HStack {
-                Image(systemName: "heart.fill")
-                    .foregroundStyle(.red)
-                Text("\(heartRate)")
-                    .font(.headline)
+            if workout.heartRate > 0 {
+                HStack {
+                    Image(systemName: "heart.fill")
+                        .foregroundStyle(.red)
+                    Text("\(Int(workout.heartRate))")
+                        .font(.headline)
+                }
             }
 
             HStack(spacing: 12) {
-                Label("\(battery)%", systemImage: "battery.75percent")
+                Label("\(connectivity.battery)%", systemImage: "battery.75percent")
                     .font(.caption)
                 Label(
-                    String(format: "%.1f km", tripDistance),
+                    String(format: "%.1f km", connectivity.tripDistance),
                     systemImage: "point.topleft.down.to.point.bottomright.curvepath"
                 )
                 .font(.caption)
             }
             .foregroundStyle(.secondary)
+
+            Text(gearModeName)
+                .font(.caption2)
+                .foregroundStyle(.cyan.opacity(0.7))
+        }
+        .onAppear {
+            workout.requestAuthorization()
+            workout.startWorkout()
+        }
+        .onDisappear {
+            workout.endWorkout()
+        }
+        .onChange(of: connectivity.isRiding) { _, riding in
+            if !riding { workout.endWorkout() }
+        }
+        .onChange(of: workout.heartRate) { _, hr in
+            connectivity.sendHeartRate(Int(hr))
+        }
+    }
+
+    private var standbyView: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "moon.zzz.fill")
+                .font(.system(size: 40))
+                .foregroundStyle(.cyan.opacity(0.5))
+            Text("Connected")
+                .font(.headline)
+            Text("\(connectivity.battery)%")
+                .font(.title3.bold())
+                .foregroundStyle(.cyan)
+            Text("Waiting for ride")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -56,11 +90,22 @@ struct WatchRideView: View {
             Image(systemName: "scooter")
                 .font(.system(size: 40))
                 .foregroundStyle(.cyan)
+                .environment(\.layoutDirection, .rightToLeft)
             Text("GT3 Companion")
                 .font(.headline)
-            Text("Waiting for ride")
+            Text("Open app on iPhone")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    private var gearModeName: String {
+        switch connectivity.gearMode {
+        case 1: return "Walk"
+        case 2: return "Eco"
+        case 3: return "Sport"
+        case 4: return "Race"
+        default: return ""
         }
     }
 }

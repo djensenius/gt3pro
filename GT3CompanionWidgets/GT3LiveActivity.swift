@@ -13,66 +13,137 @@ struct GT3LiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: GT3RideAttributes.self) { context in
             // Lock Screen banner
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text(context.attributes.scooterName)
-                        .font(.headline)
-                    Spacer()
-                    Text("\(Int(context.state.speed)) km/h")
-                        .font(.title2.bold())
-                }
-                HStack {
-                    Label("\(context.state.battery)%", systemImage: "battery.75percent")
-                    Spacer()
-                    Label(
-                        String(format: "%.1f km", context.state.tripDistance),
-                        systemImage: "point.topleft.down.to.point.bottomright.curvepath"
-                    )
-                }
-                .font(.subheadline)
+            if context.state.isAwake {
+                awakeLockScreen(context)
+            } else {
+                standbyLockScreen(context)
             }
-            .padding()
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    VStack(alignment: .leading) {
-                        Text("\(Int(context.state.speed))")
-                            .font(.title.bold())
-                        Text("km/h")
-                            .font(.caption)
+                    if context.state.isAwake {
+                        VStack(alignment: .leading) {
+                            Text("\(Int(context.state.speed))")
+                                .font(.title.bold())
+                            Text("km/h")
+                                .font(.caption)
+                        }
+                    } else {
+                        VStack(alignment: .leading) {
+                            Image(systemName: "moon.zzz.fill")
+                                .font(.title2)
+                            Text("Standby")
+                                .font(.caption)
+                        }
+                        .foregroundStyle(.secondary)
                     }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    VStack(alignment: .trailing) {
-                        Text("\(context.state.battery)%")
-                            .font(.title2.bold())
-                        Text("battery")
-                            .font(.caption)
+                    if context.state.isAwake {
+                        VStack(alignment: .trailing) {
+                            Text("\(context.state.battery)%")
+                                .font(.title2.bold())
+                            Text("battery")
+                                .font(.caption)
+                        }
+                    } else {
+                        VStack(alignment: .trailing) {
+                            Image(systemName: "bolt.fill")
+                                .font(.title2)
+                            Text("Power on")
+                                .font(.caption)
+                        }
+                        .foregroundStyle(.secondary)
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    HStack {
-                        Label(
-                            String(format: "%.1f km", context.state.tripDistance),
-                            systemImage: "point.topleft.down.to.point.bottomright.curvepath"
-                        )
-                        Spacer()
-                        Label(
-                            String(format: "%.0f km", context.state.estimatedRange),
-                            systemImage: "fuelpump"
-                        )
+                    if context.state.isAwake {
+                        HStack {
+                            Label(
+                                String(format: "%.1f km", context.state.tripDistance),
+                                systemImage: "point.topleft.down.to.point.bottomright.curvepath"
+                            )
+                            Spacer()
+                            Label(
+                                String(format: "%.0f km", context.state.estimatedRange),
+                                systemImage: "fuelpump"
+                            )
+                        }
+                        .font(.subheadline)
+                    } else {
+                        Text("Connected — press scooter power button")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
                     }
-                    .font(.subheadline)
                 }
             } compactLeading: {
-                Label("\(Int(context.state.speed))", systemImage: "bolt.fill")
-                    .font(.caption.bold())
+                if context.state.isAwake {
+                    Label("\(Int(context.state.speed))", systemImage: "bolt.fill")
+                        .font(.caption.bold())
+                } else {
+                    Image(systemName: "moon.zzz.fill")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             } compactTrailing: {
-                Text("\(context.state.battery)%")
-                    .font(.caption.bold())
+                if context.state.isAwake {
+                    Text("\(context.state.battery)%")
+                        .font(.caption.bold())
+                } else {
+                    Text("Standby")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             } minimal: {
-                Image(systemName: "scooter")
+                if context.state.isAwake {
+                    Image(systemName: "scooter")
+                        .environment(\.layoutDirection, .rightToLeft)
+                } else {
+                    Image(systemName: "moon.zzz.fill")
+                        .foregroundStyle(.secondary)
+                }
             }
         }
+    }
+
+    @ViewBuilder
+    private func awakeLockScreen(_ context: ActivityViewContext<GT3RideAttributes>) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(context.attributes.scooterName)
+                    .font(.headline)
+                Spacer()
+                Text("\(Int(context.state.speed)) km/h")
+                    .font(.title2.bold())
+            }
+            HStack {
+                Label("\(context.state.battery)%", systemImage: "battery.75percent")
+                Spacer()
+                Label(
+                    String(format: "%.1f km", context.state.tripDistance),
+                    systemImage: "point.topleft.down.to.point.bottomright.curvepath"
+                )
+            }
+            .font(.subheadline)
+        }
+        .padding()
+    }
+
+    @ViewBuilder
+    private func standbyLockScreen(_ context: ActivityViewContext<GT3RideAttributes>) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(context.attributes.scooterName)
+                    .font(.headline)
+                Spacer()
+                Label("Standby", systemImage: "moon.zzz.fill")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            Text("Connected — press scooter power button to start")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .padding()
     }
 }

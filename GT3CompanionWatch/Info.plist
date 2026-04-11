@@ -20,7 +20,15 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>NSHealthShareUsageDescription</key>
+	<string>GT3 Companion reads your heart rate during scooter rides.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>GT3 Companion saves scooter ride workouts to Apple Health.</string>
 	<key>WKApplication</key>
 	<true/>
+	<key>WKCompanionAppBundleIdentifier</key>
+	<string>org.davidjensenius.GT3Companion</string>
 </dict>
 </plist>
