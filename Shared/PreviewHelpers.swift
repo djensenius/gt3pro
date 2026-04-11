@@ -80,6 +80,15 @@ enum PreviewData {
         ride2.endBattery = 90
         ride2.uploaded = true
         ride2.samples = sampleSamples(start: ride2.startTime, count: 30)
+        ride2.weatherTemp = 28
+        ride2.weatherFeelsLike = 30
+        ride2.weatherHumidity = 40
+        ride2.weatherWindSpeed = 8
+        ride2.weatherWindDirection = 180
+        ride2.weatherCondition = "Clear"
+        ride2.weatherConditionSymbol = "sun.max.fill"
+        ride2.weatherUVIndex = 7
+        ride2.weatherPressure = 1018
 
         let ride3 = PersistedRide(
             rideId: "preview-ride-3",
@@ -94,6 +103,15 @@ enum PreviewData {
         ride3.endBattery = 60
         ride3.uploaded = false
         ride3.samples = sampleSamples(start: ride3.startTime, count: 30)
+        ride3.weatherTemp = 14
+        ride3.weatherFeelsLike = 11
+        ride3.weatherHumidity = 78
+        ride3.weatherWindSpeed = 22
+        ride3.weatherWindDirection = 315
+        ride3.weatherCondition = "Rain"
+        ride3.weatherConditionSymbol = "cloud.rain.fill"
+        ride3.weatherUVIndex = 1
+        ride3.weatherPressure = 1005
 
         return [ride1, ride2, ride3]
     }
