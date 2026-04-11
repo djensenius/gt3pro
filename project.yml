@@ -53,6 +53,7 @@ targets:
         CFBundleURLTypes:
           - CFBundleURLSchemes:
               - gt3companion
+        ITSAppUsesNonExemptEncryption: false
         OIDCIssuerBase: https://auth.fluxhaus.io/application/o/gt3-companion
         OIDCClientID: gcQHXtphJwbyF6az9rMLavWOqR1vrQqq12t6cjvH
     settings:
@@ -114,6 +115,7 @@ targets:
         WKCompanionAppBundleIdentifier: org.davidjensenius.GT3Companion
         NSHealthShareUsageDescription: GT3 Companion reads your heart rate during scooter rides.
         NSHealthUpdateUsageDescription: GT3 Companion saves scooter ride workouts to Apple Health.
+        ITSAppUsesNonExemptEncryption: false
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.watch
@@ -170,6 +172,7 @@ targets:
       properties:
         CFBundleDisplayName: GT3 Companion
         CFBundleName: GT3CompanionMac
+        ITSAppUsesNonExemptEncryption: false
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.mac
@@ -193,6 +196,7 @@ targets:
       properties:
         CFBundleDisplayName: GT3 Companion
         CFBundleName: GT3CompanionVision
+        ITSAppUsesNonExemptEncryption: false
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.vision

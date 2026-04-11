@@ -29,6 +29,8 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>GT3 Companion connects to your Segway GT3 Pro to read ride telemetry and sync data.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
