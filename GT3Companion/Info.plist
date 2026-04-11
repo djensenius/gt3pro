@@ -31,6 +31,8 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.lifestyle</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>GT3 Companion connects to your Segway GT3 Pro to read ride telemetry and sync data.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>

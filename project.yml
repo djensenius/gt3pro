@@ -57,6 +57,7 @@ targets:
           - CFBundleURLSchemes:
               - gt3companion
         ITSAppUsesNonExemptEncryption: false
+        LSApplicationCategoryType: public.app-category.lifestyle
         OIDCIssuerBase: https://auth.fluxhaus.io/application/o/gt3-companion
         OIDCClientID: gcQHXtphJwbyF6az9rMLavWOqR1vrQqq12t6cjvH
     settings:
@@ -67,7 +68,6 @@ targets:
         CODE_SIGN_IDENTITY: "iPhone Developer"
         GENERATE_INFOPLIST_FILE: false
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.lifestyle
     entitlements:
       path: GT3Companion/GT3Companion.entitlements
       properties:
@@ -250,7 +250,6 @@ targets:
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.lifestyle
 
   GT3CompanionVision:
     type: application
