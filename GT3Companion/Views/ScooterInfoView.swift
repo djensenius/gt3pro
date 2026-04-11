@@ -26,10 +26,13 @@ struct ScooterInfoView: View {
     private var isConnected: Bool { isDemo || coordinator.connectionState == .connected }
     private var chargeStatusText: String {
         if isDemo { return "Not Charging" }
+        // BMS register 0x92: 0=idle, 1=discharging, 2=charging, 3=full
         switch coordinator.chargeStatus {
-        case 1: return "Charging"
-        case 2: return "Fully Charged"
-        default: return "Not Charging"
+        case 0: return "Idle"
+        case 1: return "Not Charging"
+        case 2: return "Charging"
+        case 3: return "Fully Charged"
+        default: return "Unknown (\(coordinator.chargeStatus))"
         }
     }
     private var timeToFullText: String {
