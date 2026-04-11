@@ -11,6 +11,7 @@ struct DashboardView: View {
     #if os(iOS)
     @EnvironmentObject private var coordinator: AppCoordinator
     @ObservedObject private var auth = AuthManager.shared
+    @State private var powerToggle = false
 
     private var isDemo: Bool { auth.isDemoMode }
     private var isConnected: Bool { isDemo || coordinator.connectionState == .connected }
@@ -151,29 +152,23 @@ struct DashboardView: View {
             }
 
             #if os(iOS)
-            Toggle(isOn: powerOnBinding) {
+            Toggle(isOn: $powerToggle) {
                 Label("Power", systemImage: "power")
                     .font(Theme.Fonts.bodyMedium)
             }
             .tint(Theme.Colors.accent)
             .padding(.horizontal)
+            .onChange(of: powerToggle) { _, isOn in
+                if isOn { coordinator.sendPowerOn() }
+            }
+            .onChange(of: battery) { _, newBattery in
+                powerToggle = newBattery > 0
+            }
+            .onAppear { powerToggle = battery > 0 }
             #endif
         }
         .padding()
     }
-
-    #if os(iOS)
-    private var powerOnBinding: Binding<Bool> {
-        Binding(
-            get: { battery > 0 },
-            set: { newValue in
-                if newValue {
-                    coordinator.sendPowerOn()
-                }
-            }
-        )
-    }
-    #endif
 
     private var batteryColor: Color {
         if battery > 60 { return Theme.Colors.success }

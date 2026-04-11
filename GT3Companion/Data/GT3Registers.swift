@@ -220,7 +220,8 @@ enum GT3Registers {
         leftMileage, bodyTemp, gearMode, errorCode, warnCode,
         bms1Voltage, bms1Current, bms1SOC, bms1Temp,
         bms2Voltage, bms2Current, bms2SOC, bms2Temp,
-        gearED, gearSR
+        gearED, gearSR,
+        odometer, chargeStatus
     ]
 
     /// Registers to read once on connect
