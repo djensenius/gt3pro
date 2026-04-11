@@ -189,9 +189,10 @@ struct DashboardView: View {
 
     private var gearModeName: String {
         switch gearMode {
-        case 1: return "Eco"
-        case 2: return "Standard"
+        case 1: return "Walk"
+        case 2: return "Eco"
         case 3: return "Sport"
+        case 4: return "Race"
         default: return "Mode \(gearMode)"
         }
     }
