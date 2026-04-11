@@ -34,6 +34,13 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     @Published var bleFirmware: String = "—"
     @Published var chargeStatus: Int = 0
     @Published var timeToFull: Int = 0
+    @Published var partNumber: String = "—"
+    @Published var totalRuntime: Int = 0
+    @Published var bmsVoltage: Double = 0
+    @Published var bmsCurrent: Double = 0
+    @Published var chargeCycles: Int = 0
+    @Published var bmsRemainingCapacity: Int = 0
+    @Published var bmsManufactureDate: Int = 0
 
     private let connectionManager = ScooterConnectionManager()
     private let registerReader = RegisterReader()
@@ -196,6 +203,8 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         case "rGearMode":         gearMode = result.intValue ?? 0
         case "rBmsTmp2":          bmsTemp = result.doubleValue ?? 0
         case "rBodyTemp":         bodyTemp = result.doubleValue ?? 0
+        case "rBMSVolt2":        bmsVoltage = result.doubleValue ?? 0
+        case "rBMSCur2":         bmsCurrent = result.doubleValue ?? 0
         default:                  break
         }
     }
@@ -206,9 +215,20 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         case "rMileage":
             if odometer == 0 { odometer = result.doubleValue ?? 0 }
         case "rRideTime":         totalRideTime = result.intValue ?? 0
+        case "rRuntime":          totalRuntime = result.intValue ?? 0
         case "rChargeStatus":     chargeStatus = result.intValue ?? 0
         case "rTimeFull":         timeToFull = result.intValue ?? 0
-        default:                  updateFirmwareValues(for: result)
+        case "rPN":               partNumber = result.stringValue ?? "—"
+        default:                  updateBatteryInfoValues(for: result)
+        }
+    }
+
+    private func updateBatteryInfoValues(for result: RegisterReadResult) {
+        switch result.name {
+        case "rBms2CycleCountLT":       chargeCycles = result.intValue ?? 0
+        case "rBms2RemainCapacityLT":   bmsRemainingCapacity = result.intValue ?? 0
+        case "rBms2ManufactureDateLT":  bmsManufactureDate = result.intValue ?? 0
+        default:                        updateFirmwareValues(for: result)
         }
     }
 
