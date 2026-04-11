@@ -13,15 +13,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
-      - name: Install simulator runtimes
-        run: |
-          xcodebuild -downloadPlatform watchOS
-          xcodebuild -downloadPlatform iOS
       - name: Build iOS App
         run: |
           xcodebuild build \
             -project GT3Companion.xcodeproj \
-            -scheme "GT3Companion" \
+            -scheme "GT3CompanionCI" \
             -destination "generic/platform=iOS Simulator" \
             -configuration Debug \
             -skipPackagePluginValidation \

@@ -286,6 +286,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
 
     private func handleBatteryUpdate(_ value: Int) {
         let wasAwake = isScooterAwake
+        let previousBattery = currentBattery
         currentBattery = value
 
         if value > 0 {
@@ -298,17 +299,16 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
                 roughnessTracker.startTracking()
             }
         } else if wasAwake {
-            Task { await handleScooterSleep() }
+            Task { await handleScooterSleep(lastBattery: previousBattery) }
         }
     }
 
     /// Handle the scooter powering off while still BLE-connected.
-    private func handleScooterSleep() async {
+    private func handleScooterSleep(lastBattery: Int) async {
         logger.info("Scooter entered standby — cleaning up ride state")
         isScooterAwake = false
 
-        // End any active ride
-        let lastBattery = currentBattery
+        // End any active ride with the last valid battery reading
         await rideTracker.forceEndRide(endBattery: lastBattery)
         isRiding = false
 

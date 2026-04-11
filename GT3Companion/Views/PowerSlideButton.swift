@@ -92,6 +92,13 @@ struct PowerSlideButton: View {
         }
         .frame(height: trackHeight)
         .allowsHitTesting(!isComplete)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(title)
+        .accessibilityHint("Double tap to confirm")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction {
+            triggerAccessibilityCompletion()
+        }
         .onChange(of: isComplete) { _, complete in
             if complete {
                 // Reset after a short delay
@@ -123,6 +130,12 @@ struct PowerSlideButton: View {
             dragOffset = maxOffset
         }
 
+        onComplete()
+    }
+
+    private func triggerAccessibilityCompletion() {
+        guard !isComplete else { return }
+        isComplete = true
         onComplete()
     }
 }
