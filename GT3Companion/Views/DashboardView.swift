@@ -78,6 +78,16 @@ struct DashboardView: View {
                 .font(Theme.Fonts.bodyMedium)
                 .foregroundStyle(Theme.Colors.textSecondary)
                 .multilineTextAlignment(.center)
+            #if os(iOS)
+            Button {
+                coordinator.retryScan()
+            } label: {
+                Label("Retry Connection", systemImage: "arrow.clockwise")
+                    .font(Theme.Fonts.bodyMedium)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(Theme.Colors.accent)
+            #endif
             Spacer()
         }
         .frame(maxWidth: .infinity)

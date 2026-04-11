@@ -68,6 +68,11 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         logger.info("AppCoordinator started — watching for GT3 Pro")
     }
 
+    /// Restart BLE scanning — used when the user taps "Retry Connection".
+    func retryScan() {
+        connectionManager.scan()
+    }
+
     // MARK: - ScooterConnectionDelegate
 
     func connectionStateChanged(_ state: ConnectionState) {
