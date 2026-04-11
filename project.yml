@@ -169,6 +169,9 @@ targets:
       - path: Shared
         excludes:
           - "**/.DS_Store"
+      - path: GT3Companion/Views/AggregateAnalyticsView.swift
+      - path: GT3Companion/Views/ScooterInfoView.swift
+      - path: GT3Companion/Views/Components/InfoRow.swift
     info:
       path: GT3CompanionMac/Info.plist
       properties:
@@ -193,6 +196,9 @@ targets:
       - path: Shared
         excludes:
           - "**/.DS_Store"
+      - path: GT3Companion/Views/AggregateAnalyticsView.swift
+      - path: GT3Companion/Views/ScooterInfoView.swift
+      - path: GT3Companion/Views/Components/InfoRow.swift
     info:
       path: GT3CompanionVision/Info.plist
       properties:

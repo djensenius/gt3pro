@@ -81,6 +81,13 @@ struct ScooterInfoView: View {
     private var odometer: String { isDemo ? "2,450 km" : "—" }
     private var totalRideTime: String { isDemo ? "86h 12m" : "—" }
     private var isConnected: Bool { isDemo }
+    private var partNumber: String { isDemo ? "Z03QB4G25JK400" : "—" }
+    private var totalRuntime: String { isDemo ? "150h 30m" : "—" }
+    private var bmsVoltage: String { isDemo ? "82.9 V" : "—" }
+    private var bmsCurrent: String { isDemo ? "0.0 A" : "—" }
+    private var chargeCycles: String { isDemo ? "12" : "—" }
+    private var remainingCapacity: String { isDemo ? "3000 mAh" : "—" }
+    private var manufactureDate: String { isDemo ? "Sep 15, 2025" : "—" }
     private var chargeStatusText: String { isDemo ? "Not Charging" : "—" }
     private var timeToFullText: String { "—" }
     #endif
