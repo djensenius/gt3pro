@@ -11,8 +11,6 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
       - name: Generate Xcode project
         run: |
           brew install xcodegen
@@ -22,8 +20,8 @@ jobs:
           xcodebuild build \
             -project GT3Companion.xcodeproj \
             -scheme "GT3CompanionCI" \
-            -destination "generic/platform=iOS" \
+            -destination "generic/platform=iOS Simulator" \
             -configuration Debug \
             -skipPackagePluginValidation \
             CODE_SIGNING_ALLOWED=NO \
-            ENABLE_PREVIEWS=NO
+            EXCLUDED_ARCHS=x86_64

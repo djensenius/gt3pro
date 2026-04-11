@@ -11,14 +11,10 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
       - name: Generate Xcode project
         run: |
           brew install xcodegen
           xcodegen generate
-      - name: Install iOS Simulator Runtime
-        run: xcodebuild -downloadPlatform iOS
       - name: Run Tests
         run: |
           DEST=$(xcrun simctl list devices available -j | python3 -c "
