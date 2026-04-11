@@ -243,6 +243,7 @@ targets:
         CFBundleDisplayName: GT3 Companion
         CFBundleName: GT3CompanionMac
         ITSAppUsesNonExemptEncryption: false
+        LSApplicationCategoryType: public.app-category.lifestyle
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.mac
