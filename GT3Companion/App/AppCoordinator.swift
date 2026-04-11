@@ -86,6 +86,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
 
         self.storedPassword = storedPassword
         connectionManager.start(storedPassword: storedPassword)
+        Task { await liveActivityManager.endRideActivity() }
         logger.info("AppCoordinator started — watching for GT3 Pro")
     }
 
