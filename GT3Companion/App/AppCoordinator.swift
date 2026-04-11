@@ -56,7 +56,6 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
 
     private var storedPassword: Data?
     private var hasStarted = false
-    private var pendingEndTask: Task<Void, Never>?
     private var telemetryWatchdog: Task<Void, Never>?
     private var lastTelemetryTime: Date?
 
@@ -121,9 +120,6 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     // MARK: - Connection Lifecycle
 
     private func onConnected() async {
-        pendingEndTask?.cancel()
-        pendingEndTask = nil
-
         await registerReader.configure { [weak self] frame in
             self?.connectionManager.sendFrame(frame)
         }
@@ -155,12 +151,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         watchSession.updateContext(battery: 0, isConnected: false)
 
         await rideTracker.forceEndRide(endBattery: lastBattery)
-
-        pendingEndTask = Task {
-            try? await Task.sleep(for: .seconds(30))
-            guard !Task.isCancelled else { return }
-            await liveActivityManager.endRideActivity()
-        }
+        await liveActivityManager.endRideActivity()
 
         logger.info("Disconnected — trackers stopped, ride finalized")
     }
