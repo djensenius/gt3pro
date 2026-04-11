@@ -117,7 +117,7 @@ struct GT3LiveActivity: Widget {
                     .font(.title2.bold())
             }
             HStack {
-                Label("\(context.state.battery)%", systemImage: "battery.75percent")
+                Label("\(context.state.battery)%", systemImage: batteryIconName(for: context.state.battery))
                 Spacer()
                 Label(
                     String(format: "%.1f km", context.state.tripDistance),

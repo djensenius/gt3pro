@@ -73,6 +73,7 @@ targets:
       properties:
         com.apple.developer.healthkit: true
         com.apple.developer.healthkit.access: []
+        com.apple.developer.weatherkit: true
     dependencies:
       - target: GT3CompanionWidgets
         embed: true
@@ -118,6 +119,9 @@ targets:
     platform: watchOS
     sources:
       - path: GT3CompanionWatch
+        excludes:
+          - "**/.DS_Store"
+      - path: Shared
         excludes:
           - "**/.DS_Store"
     info:

@@ -52,6 +52,15 @@ enum PreviewData {
         ride.endBattery = 80
         ride.uploaded = true
         ride.samples = sampleSamples(start: ride.startTime, count: 30)
+        ride.weatherTemp = 22
+        ride.weatherFeelsLike = 20
+        ride.weatherHumidity = 55
+        ride.weatherWindSpeed = 12
+        ride.weatherWindDirection = 225
+        ride.weatherCondition = "Partly Cloudy"
+        ride.weatherConditionSymbol = "cloud.sun.fill"
+        ride.weatherUVIndex = 4
+        ride.weatherPressure = 1013
         return ride
     }
 

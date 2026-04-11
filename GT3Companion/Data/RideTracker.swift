@@ -57,6 +57,7 @@ struct RideLog: Codable, Sendable {
     let endBattery: Int
     /// Most-used gear mode during the ride (1=Walk, 2=Eco, 3=Sport, 4=Race).
     let primaryGearMode: Int
+    let weather: WeatherSnapshot?
 }
 
 /// Tracks ride lifecycle: start detection, sample collection, stop detection.
@@ -77,6 +78,7 @@ actor RideTracker {
     private var speedCount: Int = 0
     private var stoppedSince: Date?
     private var gearModeHistogram: [Int: Int] = [:]
+    private var currentWeather: WeatherSnapshot?
     // 5 minutes of no movement → end ride
     private let stopTimeout: TimeInterval = 300
 
@@ -109,7 +111,7 @@ actor RideTracker {
                 stoppedSince = nil
             } else if let stopped = stoppedSince,
                       Date().timeIntervalSince(stopped) > stopTimeout {
-                endRide(endBattery: sample.battery)
+                endRide(endBattery: sample.battery, weather: currentWeather)
             }
         }
     }
@@ -117,7 +119,12 @@ actor RideTracker {
     /// Force-end the current ride (e.g., BLE disconnect).
     func forceEndRide(endBattery: Int) {
         guard state != .idle else { return }
-        endRide(endBattery: endBattery)
+        endRide(endBattery: endBattery, weather: nil)
+    }
+
+    /// Set the weather snapshot for the current ride.
+    func setWeather(_ weather: WeatherSnapshot?) {
+        self.currentWeather = weather
     }
 
     private func startRide(firstSample: TelemetrySample) {
@@ -128,6 +135,7 @@ actor RideTracker {
         speedSum = 0
         speedCount = 0
         gearModeHistogram = [:]
+        currentWeather = nil
         samples = [firstSample]
         state = .riding
         updateStats(firstSample)
@@ -143,7 +151,7 @@ actor RideTracker {
         }
     }
 
-    private func endRide(endBattery: Int) {
+    private func endRide(endBattery: Int, weather: WeatherSnapshot?) {
         guard let rideId = currentRideId, let startTime = rideStartTime else { return }
 
         let primaryMode = gearModeHistogram.max(by: { $0.value < $1.value })?.key ?? 0
@@ -158,7 +166,8 @@ actor RideTracker {
             batteryUsed: max(0, startBattery - endBattery),
             startBattery: startBattery,
             endBattery: endBattery,
-            primaryGearMode: primaryMode
+            primaryGearMode: primaryMode,
+            weather: weather
         )
 
         logger.info("Ride ended: \(rideId) distance=\(rideLog.totalDistance)km mode=\(primaryMode)")
@@ -170,6 +179,7 @@ actor RideTracker {
         samples.removeAll()
         stoppedSince = nil
         gearModeHistogram = [:]
+        currentWeather = nil
     }
 
     func getCurrentRideId() -> String? { currentRideId }
