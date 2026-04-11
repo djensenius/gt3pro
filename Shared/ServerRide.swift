@@ -25,6 +25,14 @@ struct ServerRide: Decodable {
     let batteryUsed: Int
     let startBattery: Int
     let endBattery: Int?
+    let weatherTemp: Double?
+    let weatherFeelsLike: Double?
+    let weatherHumidity: Double?
+    let weatherWindSpeed: Double?
+    let weatherWindDirection: Double?
+    let weatherCondition: String?
+    let weatherUVIndex: Double?
+    let weatherPressure: Double?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -36,5 +44,13 @@ struct ServerRide: Decodable {
         case batteryUsed = "battery_used"
         case startBattery = "start_battery"
         case endBattery = "end_battery"
+        case weatherTemp = "weather_temp"
+        case weatherFeelsLike = "weather_feels_like"
+        case weatherHumidity = "weather_humidity"
+        case weatherWindSpeed = "weather_wind_speed"
+        case weatherWindDirection = "weather_wind_direction"
+        case weatherCondition = "weather_condition"
+        case weatherUVIndex = "weather_uv_index"
+        case weatherPressure = "weather_pressure"
     }
 }

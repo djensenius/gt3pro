@@ -35,7 +35,6 @@
 		31572ECF63F373A2BCAC326E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB87773429ACD607F25A8BF3 /* ContentView.swift */; };
 		326A8EAD4EA3A92FECD50F3F /* PreviewHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEC6013FFE64589ED662804D /* PreviewHelpers.swift */; };
 		349A8C3B5D23DFA1CC8AB497 /* SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 189ACD3403BEBC384D6A42CE /* SwiftDataModels.swift */; };
-		35DC1F94F90431557AF95F00 /* GT3RideAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0BC7212A2BD252D996C21B /* GT3RideAttributes.swift */; };
 		377A07118A0C2F41F0A40D31 /* NinebotFrameBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FDD78758A79865ACE4CE701 /* NinebotFrameBuilder.swift */; };
 		37CF00D5FFFA017AA1C2B81A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7EA8C9B9596FCD2188B27DCB /* Assets.xcassets */; };
 		37E955B952D040BD813B6BA6 /* ScooterInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55D4452F70F7EF550BC5F879 /* ScooterInfoView.swift */; };
@@ -58,7 +57,6 @@
 		5380FA77C5A87906A5A84985 /* WatchConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 863AE1336A31A4B389EB86D6 /* WatchConnectivityManager.swift */; };
 		571D0940C9C51CBBDB35589D /* SurfaceRoughnessTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C76AE1C74BD9FB056599493D /* SurfaceRoughnessTracker.swift */; };
 		5895CDEDBED135E910777F7D /* StatCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFA059564462F3ED6EFEE13A /* StatCard.swift */; };
-		5B028F71B9D99F66FAB282A0 /* ServerRide.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B7F41D6D8220A7D36237600 /* ServerRide.swift */; };
 		5B8B2DEF2BEAD0E2F187FC2A /* GT3CompanionVisionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58211C5A6E89A9919BDE331B /* GT3CompanionVisionApp.swift */; };
 		5C87DAD23B4EFD25C8768839 /* RideTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493E6A4BC6CC47F6D1F9762B /* RideTrackerTests.swift */; };
 		5D1C2C708109269FA6E8BCA2 /* GPSTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3529E2F04653B7962C5A5B /* GPSTrackerTests.swift */; };
@@ -76,7 +74,6 @@
 		78B30E9CCB2D336DE5905A69 /* WeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49AFE69FC651CF81ACD64ED3 /* WeatherService.swift */; };
 		7900D8D2F1815E4F13DB020F /* GT3LiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A98F52FDEE889FF02990D9F0 /* GT3LiveActivityManager.swift */; };
 		7A925BD6B53F8E6668D072C8 /* GT3CompanionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CFA6EEC6FC4981ACF73576B /* GT3CompanionTests.swift */; };
-		7B2789D4CA8DFD8D5501A260 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E9E161CA55B49466B7C67D5 /* LoginView.swift */; };
 		7BCA1A87C3E4288C37743552 /* AggregateAnalyticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAEBB62130BDD68B0D3B2695 /* AggregateAnalyticsView.swift */; };
 		8129DDC3E23E43B303E71586 /* KeyDerivationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF41BC7A131F7835D3D5FC88 /* KeyDerivationTests.swift */; };
 		8193ABBD8A123282200926E7 /* GT3RideAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0BC7212A2BD252D996C21B /* GT3RideAttributes.swift */; };
@@ -86,7 +83,6 @@
 		8AC6BE1F111FBC7989B18415 /* BatteryIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = E379C350721281EE18112EFE /* BatteryIcon.swift */; };
 		8C8633C36AE3426F055EE202 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E9E161CA55B49466B7C67D5 /* LoginView.swift */; };
 		8F085638E5D961EC00DE31CE /* RegisterReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 424F02984953C13821C555EE /* RegisterReader.swift */; };
-		91C7F6A93D48A9A31E3B148F /* SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 189ACD3403BEBC384D6A42CE /* SwiftDataModels.swift */; };
 		91F3CB9E0228FA0D0AFB59B7 /* UploadQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44F46F784FC8CE9B05A670EC /* UploadQueue.swift */; };
 		923ECACC43B67071CB146A14 /* RideHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05FA94F2A81DC172E483E5B4 /* RideHistoryView.swift */; };
 		928A708482AF1A011B59847B /* GT3CompanionMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 047BB1B09415CC35C15712AE /* GT3CompanionMacApp.swift */; };
@@ -97,7 +93,6 @@
 		A022DE3920811B71E141BB0F /* NinebotAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58F5E78620013EA4336A56E9 /* NinebotAuth.swift */; };
 		A0596FB113CF22FEB4B9523B /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E9E161CA55B49466B7C67D5 /* LoginView.swift */; };
 		A10D89015E329474E1CA78F2 /* SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 189ACD3403BEBC384D6A42CE /* SwiftDataModels.swift */; };
-		A219ED95EE2A366CE7E85B2E /* PreviewHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEC6013FFE64589ED662804D /* PreviewHelpers.swift */; };
 		A8E0223E41ADE054D28A2EA4 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15ECCFB9DA9B244FB4261E4E /* DashboardView.swift */; };
 		A902A69E59363833093B62F7 /* GT3Registers.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7BEE3B916F38F756C2A05FA /* GT3Registers.swift */; };
 		AD9AE97BEBC7105939F36C3A /* NinebotAuthTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45160E9C4AC8147D2A6D6029 /* NinebotAuthTests.swift */; };
@@ -120,7 +115,6 @@
 		CD3CFFE66FCAD787FA6DAFD4 /* NinebotTransportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83460368F60A53C5A30952A7 /* NinebotTransportTests.swift */; };
 		D10EA4C12CF515E173B4F943 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B7F0F62CF736A1FF5E9A25D /* AppDelegate.swift */; };
 		D7536E330454E44B176F4E62 /* ServerRide.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B7F41D6D8220A7D36237600 /* ServerRide.swift */; };
-		D7812B3778D3326B68E71490 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F60D7016AF895D2E94ABCA0 /* AuthManager.swift */; };
 		D941EC95DE6544512A52074A /* GT3RegistersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ABE49BC4B627FB608831639 /* GT3RegistersTests.swift */; };
 		D9FF1C381FA92E582C8C9EC8 /* WatchRideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0B48C9C3F689A08A9DF0FDE /* WatchRideView.swift */; };
 		DA01F12CC8720B29F4525FBA /* ServerRide.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B7F41D6D8220A7D36237600 /* ServerRide.swift */; };
@@ -130,7 +124,6 @@
 		E1ED05EDD6E6DB7B35ADBED0 /* InfoRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0856E72AC9FBE6ED37B60387 /* InfoRow.swift */; };
 		E2945ED06BB15957725B2660 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00985FF0F4FBE77CCCE61CE6 /* PersistenceController.swift */; };
 		E300BDFA14D4E387C71CB1A9 /* SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 189ACD3403BEBC384D6A42CE /* SwiftDataModels.swift */; };
-		E365F218B8C63C19963ED576 /* RideSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5321F13F45361AC2D0345AF4 /* RideSyncService.swift */; };
 		E3F3EEA9281E474FF6287EE6 /* BatteryIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = E379C350721281EE18112EFE /* BatteryIcon.swift */; };
 		E849A2BAB32AACC0A8D08C37 /* MacContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA58425277ED9CA3252868B8 /* MacContentView.swift */; };
 		E98E90FD43E65AD77479B30B /* RideDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55FE211690F8E6728DBC3A59 /* RideDetailView.swift */; };
@@ -143,7 +136,6 @@
 		F1D1F5483C287C55FE31CE85 /* BatteryIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = E379C350721281EE18112EFE /* BatteryIcon.swift */; };
 		F2B79470FDE4372930456539 /* NavigationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B4AB9F1F1CAE720C0A2B9B /* NavigationManager.swift */; };
 		F2CD2B1D502623C41495B602 /* NinebotTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4E04531F9A6C7BD543444A1 /* NinebotTransport.swift */; };
-		F37AF0A886DF6AEF9A012931 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00985FF0F4FBE77CCCE61CE6 /* PersistenceController.swift */; };
 		F3E43A2E9CD4321FFDF4AB01 /* NinebotFrameBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5312D85AD3849B1B86711DF6 /* NinebotFrameBuilderTests.swift */; };
 		F446839ED07C359D80263844 /* RideSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5321F13F45361AC2D0345AF4 /* RideSyncService.swift */; };
 		F8CCDB6EEDE70D23A759D87E /* PairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11C5682B34F0870664C57915 /* PairingView.swift */; };
@@ -967,18 +959,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D7812B3778D3326B68E71490 /* AuthManager.swift in Sources */,
 				82238DDA68805873585F9899 /* BatteryIcon.swift in Sources */,
 				2B401A698FFB367DE95FD69F /* ComplicationProvider.swift in Sources */,
 				1BCC17969E11E97F3D009E00 /* GT3CompanionWatchApp.swift in Sources */,
-				35DC1F94F90431557AF95F00 /* GT3RideAttributes.swift in Sources */,
-				7B2789D4CA8DFD8D5501A260 /* LoginView.swift in Sources */,
-				F37AF0A886DF6AEF9A012931 /* PersistenceController.swift in Sources */,
-				A219ED95EE2A366CE7E85B2E /* PreviewHelpers.swift in Sources */,
-				E365F218B8C63C19963ED576 /* RideSyncService.swift in Sources */,
 				4015788E36F5E39F65B91E0A /* RideWorkoutManager.swift in Sources */,
-				5B028F71B9D99F66FAB282A0 /* ServerRide.swift in Sources */,
-				91C7F6A93D48A9A31E3B148F /* SwiftDataModels.swift in Sources */,
 				BBA6BDE03424DDEE7E6B874D /* Theme.swift in Sources */,
 				5380FA77C5A87906A5A84985 /* WatchConnectivityManager.swift in Sources */,
 				D9FF1C381FA92E582C8C9EC8 /* WatchRideView.swift in Sources */,

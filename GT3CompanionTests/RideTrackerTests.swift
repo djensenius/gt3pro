@@ -159,6 +159,44 @@ final class RideTrackerTests: XCTestCase {
         let count = await tracker.getSampleCount()
         XCTAssertEqual(count, 0)
     }
+
+    func testWeatherPreservedInRideLog() async {
+        let tracker = RideTracker()
+        let expectation = XCTestExpectation(description: "Ride has weather")
+
+        let weather = WeatherSnapshot(
+            temp: 22, feelsLike: 20, humidity: 55,
+            windSpeed: 12, windDirection: 225,
+            condition: "Partly Cloudy", conditionSymbol: "cloud.sun.fill",
+            uvIndex: 4, pressure: 1013
+        )
+
+        await tracker.setCallback { rideLog in
+            XCTAssertNotNil(rideLog.weather)
+            XCTAssertEqual(rideLog.weather?.temp, 22)
+            XCTAssertEqual(rideLog.weather?.condition, "Partly Cloudy")
+            expectation.fulfill()
+        }
+        await tracker.addSample(self.makeSample(speed: 15.0, battery: 90))
+        await tracker.setWeather(weather)
+        await tracker.forceEndRide(endBattery: 85)
+
+        await fulfillment(of: [expectation], timeout: 2.0)
+    }
+
+    func testWeatherNilWhenNotSet() async {
+        let tracker = RideTracker()
+        let expectation = XCTestExpectation(description: "Ride without weather")
+
+        await tracker.setCallback { rideLog in
+            XCTAssertNil(rideLog.weather)
+            expectation.fulfill()
+        }
+        await tracker.addSample(self.makeSample(speed: 15.0, battery: 90))
+        await tracker.forceEndRide(endBattery: 85)
+
+        await fulfillment(of: [expectation], timeout: 2.0)
+    }
 }
 
 private extension RideTracker {

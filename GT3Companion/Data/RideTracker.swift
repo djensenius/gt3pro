@@ -119,7 +119,7 @@ actor RideTracker {
     /// Force-end the current ride (e.g., BLE disconnect).
     func forceEndRide(endBattery: Int) {
         guard state != .idle else { return }
-        endRide(endBattery: endBattery, weather: nil)
+        endRide(endBattery: endBattery, weather: currentWeather)
     }
 
     /// Set the weather snapshot for the current ride.

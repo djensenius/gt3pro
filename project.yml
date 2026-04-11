@@ -122,8 +122,10 @@ targets:
         excludes:
           - "**/.DS_Store"
       - path: Shared
-        excludes:
-          - "**/.DS_Store"
+        includes:
+          - BatteryIcon.swift
+          - Theme.swift
+          - WeatherSnapshot.swift
     info:
       path: GT3CompanionWatch/Info.plist
       properties:

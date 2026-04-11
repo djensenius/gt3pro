@@ -400,8 +400,10 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
                     latitude: gpsSample.latitude,
                     longitude: gpsSample.longitude
                 )
+                let rideId = await self.rideTracker.getCurrentRideId()
                 Task {
                     let weather = await WeatherService.shared.fetchWeather(at: location)
+                    guard await self.rideTracker.getCurrentRideId() == rideId else { return }
                     await self.rideTracker.setWeather(weather)
                 }
             }

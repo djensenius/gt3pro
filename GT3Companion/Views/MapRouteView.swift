@@ -15,14 +15,17 @@ struct RouteCoordinate {
     let speed: Double
 }
 
-/// A segment of 2 consecutive coordinates with an averaged speed for coloring.
+/// A segment of consecutive coordinates sharing a similar speed color.
 private struct SpeedSegment: Identifiable {
     let id: Int
-    let start: CLLocationCoordinate2D
-    let end: CLLocationCoordinate2D
+    let coordinates: [CLLocationCoordinate2D]
     let speed: Double
+}
 
-    var coordinates: [CLLocationCoordinate2D] { [start, end] }
+/// Maps a speed ratio (0–1) to an integer color bucket for batching.
+private func colorBucket(speed: Double, maxSpeed: Double) -> Int {
+    guard maxSpeed > 0 else { return 0 }
+    return min(Int(speed / maxSpeed * 10), 10)
 }
 
 /// Maps a speed value to a gradient from green (slow) → yellow → red (fast).
@@ -51,16 +54,33 @@ struct MapRouteView: View {
 
     private var segments: [SpeedSegment] {
         guard coordinates.count >= 2 else { return [] }
-        return (0..<coordinates.count - 1).map { index in
-            let curr = coordinates[index]
-            let next = coordinates[index + 1]
-            return SpeedSegment(
-                id: index,
-                start: CLLocationCoordinate2D(latitude: curr.latitude, longitude: curr.longitude),
-                end: CLLocationCoordinate2D(latitude: next.latitude, longitude: next.longitude),
-                speed: (curr.speed + next.speed) / 2
-            )
+        let max = maxSpeed
+        var result: [SpeedSegment] = []
+        var currentCoords: [CLLocationCoordinate2D] = []
+        var currentBucket = -1
+        var currentSpeed = 0.0
+        var segmentId = 0
+
+        for idx in 0..<coordinates.count {
+            let coord = coordinates[idx]
+            let speed = coord.speed
+            let bucket = colorBucket(speed: speed, maxSpeed: max)
+            let loc = CLLocationCoordinate2D(latitude: coord.latitude, longitude: coord.longitude)
+
+            if bucket != currentBucket && !currentCoords.isEmpty {
+                // Close previous segment (share the boundary point)
+                result.append(SpeedSegment(id: segmentId, coordinates: currentCoords, speed: currentSpeed))
+                segmentId += 1
+                currentCoords = [currentCoords.last!]
+            }
+            currentCoords.append(loc)
+            currentBucket = bucket
+            currentSpeed = speed
         }
+        if currentCoords.count >= 2 {
+            result.append(SpeedSegment(id: segmentId, coordinates: currentCoords, speed: currentSpeed))
+        }
+        return result
     }
 
     private var maxSpeed: Double {

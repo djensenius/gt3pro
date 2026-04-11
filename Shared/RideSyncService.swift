@@ -100,6 +100,17 @@ final class RideSyncService {
         ride.batteryUsed = serverRide.batteryUsed
         ride.endBattery = serverRide.endBattery
         ride.uploaded = true
+        ride.weatherTemp = serverRide.weatherTemp
+        ride.weatherFeelsLike = serverRide.weatherFeelsLike
+        ride.weatherHumidity = serverRide.weatherHumidity
+        ride.weatherWindSpeed = serverRide.weatherWindSpeed
+        ride.weatherWindDirection = serverRide.weatherWindDirection
+        ride.weatherCondition = serverRide.weatherCondition
+        ride.weatherUVIndex = serverRide.weatherUVIndex
+        ride.weatherPressure = serverRide.weatherPressure
+        if let condition = serverRide.weatherCondition {
+            ride.weatherConditionSymbol = weatherSymbol(for: condition)
+        }
         context.insert(ride)
     }
 }
