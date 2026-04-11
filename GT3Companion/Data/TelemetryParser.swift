@@ -77,6 +77,11 @@ enum TelemetryParser {
         Double(parseUInt32(data)) / 100.0
     }
 
+    /// Precise mileage: raw value in meters → km
+    static func parsePreciseMileage(_ data: Data) -> Double {
+        Double(parseUInt16(data)) / 1000.0
+    }
+
     /// Percentage (raw value is already %)
     static func parsePercent(_ data: Data) -> Int {
         Int(parseUInt16(data))
@@ -131,7 +136,8 @@ enum TelemetryParser {
         switch register.name {
         case "rSpeed": return parseSpeed(data)
         case "rBattery": return parsePercent(data)
-        case "rSingleMileage", "rLeftMileage", "rPreciseMileage": return parseDistance(data)
+        case "rSingleMileage", "rLeftMileage": return parseDistance(data)
+        case "rPreciseMileage": return parsePreciseMileage(data)
         case "rSingleRideTime", "rRunningTime": return parseSeconds(data)
         case "rBodyTemp": return parseTemperature(data)
         case "rGearMode", "rErrorCode", "rWarnCode",
