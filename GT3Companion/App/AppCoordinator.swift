@@ -33,6 +33,8 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     @Published var bms1Firmware: String = "—"
     @Published var bms2Firmware: String = "—"
     @Published var bleFirmware: String = "—"
+    @Published var chargeStatus: Int = 0
+    @Published var timeToFull: Int = 0
 
     private let connectionManager = ScooterConnectionManager()
     private let registerReader = RegisterReader()
@@ -170,6 +172,11 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     }
 
     private func updatePublishedValue(for result: RegisterReadResult) {
+        updateDashboardValues(for: result)
+        updateInfoValues(for: result)
+    }
+
+    private func updateDashboardValues(for result: RegisterReadResult) {
         switch result.name {
         case "rSpeed":            currentSpeed = result.doubleValue ?? 0
         case "rBattery":          handleBatteryUpdate(result.intValue ?? 0)
@@ -178,8 +185,21 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         case "rGearMode":         gearMode = result.intValue ?? 0
         case "rBmsTmp":           bms1Temp = result.doubleValue ?? 0
         case "rBmsTmp2":          bms2Temp = result.doubleValue ?? 0
-        case "rTotalMileage":     odometer = result.doubleValue ?? 0
-        case "rTotalRideTime":    totalRideTime = result.intValue ?? 0
+        default:                  break
+        }
+    }
+
+    private func updateInfoValues(for result: RegisterReadResult) {
+        switch result.name {
+        case "rMileage":          odometer = result.doubleValue ?? 0
+        case "rRideTime":         totalRideTime = result.intValue ?? 0
+        case "rCtrlV":            controllerFirmware = result.stringValue ?? "—"
+        case "rMCUV":             mcuFirmware = result.stringValue ?? "—"
+        case "rBmsV":             bms1Firmware = result.stringValue ?? "—"
+        case "rBms2V":            bms2Firmware = result.stringValue ?? "—"
+        case "rBleV":             bleFirmware = result.stringValue ?? "—"
+        case "rChargeStatus":     chargeStatus = result.intValue ?? 0
+        case "rTimeFull":         timeToFull = result.intValue ?? 0
         default:                  break
         }
     }

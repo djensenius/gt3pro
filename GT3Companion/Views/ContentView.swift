@@ -8,6 +8,17 @@
 import SwiftUI
 
 struct ContentView: View {
+    #if os(iOS)
+    /// SF Symbol "scooter" faces left by default; mirror it so it faces right.
+    private static let flippedScooterImage: UIImage? = {
+        let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .regular)
+        guard let base = UIImage(systemName: "scooter", withConfiguration: config),
+              let cgImage = base.cgImage else { return nil }
+        return UIImage(cgImage: cgImage, scale: base.scale, orientation: .upMirrored)
+            .withRenderingMode(.alwaysTemplate)
+    }()
+    #endif
+
     var body: some View {
         TabView {
             DashboardView()
@@ -26,8 +37,16 @@ struct ContentView: View {
                 }
             ScooterInfoView()
                 .tabItem {
-                    Label("Scooter", systemImage: "scooter")
-                        .environment(\.layoutDirection, .rightToLeft)
+                    #if os(iOS)
+                    if let img = Self.flippedScooterImage {
+                        Image(uiImage: img)
+                    } else {
+                        Image(systemName: "scooter")
+                    }
+                    #else
+                    Image(systemName: "scooter")
+                    #endif
+                    Text("Scooter")
                 }
             SettingsView()
                 .tabItem {

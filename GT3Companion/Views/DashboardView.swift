@@ -78,18 +78,6 @@ struct DashboardView: View {
                 .font(Theme.Fonts.bodyMedium)
                 .foregroundStyle(Theme.Colors.textSecondary)
                 .multilineTextAlignment(.center)
-            #if os(iOS)
-            if coordinator.connectionState == .connected {
-                Button {
-                    coordinator.sendPowerOn()
-                } label: {
-                    Label("Power On Scooter", systemImage: "power")
-                        .font(Theme.Fonts.bodyMedium)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(Theme.Colors.accent)
-            }
-            #endif
             Spacer()
         }
         .frame(maxWidth: .infinity)
@@ -108,16 +96,14 @@ struct DashboardView: View {
             }
 
             #if os(iOS)
-            if battery == 0 {
-                Button {
-                    coordinator.sendPowerOn()
-                } label: {
-                    Label("Power On Scooter", systemImage: "power")
-                        .font(Theme.Fonts.bodyMedium)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(Theme.Colors.accent)
+            Button {
+                coordinator.sendPowerOn()
+            } label: {
+                Label("Power On Scooter", systemImage: "power")
+                    .font(Theme.Fonts.bodyMedium)
             }
+            .buttonStyle(.borderedProminent)
+            .tint(Theme.Colors.accent)
             #endif
 
             HStack(spacing: Theme.Spacing.medium) {

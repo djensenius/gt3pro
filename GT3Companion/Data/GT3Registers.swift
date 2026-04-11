@@ -155,10 +155,10 @@ enum GT3Registers {
         name: "rBatterySN2", board: .bms2, index: 0x02, size: 14,
         description: "Battery 2 serial number (ASCII)")
     static let chargeStatus = RegisterDefinition(
-        name: "rChargeStatus", board: .bms1, index: 0x92, size: 4,
+        name: "rChargeStatus", board: .bms2, index: 0x92, size: 4,
         description: "Charging status")
     static let timeToFull = RegisterDefinition(
-        name: "rTimeFull", board: .bms1, index: 0x94, size: 2,
+        name: "rTimeFull", board: .bms2, index: 0x94, size: 2,
         description: "Time to full charge (minutes)")
     static let partNumber = RegisterDefinition(
         name: "rPN", board: .vcu, index: 0x20, size: 14,

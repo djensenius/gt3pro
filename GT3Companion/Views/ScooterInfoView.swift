@@ -24,6 +24,20 @@ struct ScooterInfoView: View {
         return coordinator.totalRideTime > 0 ? "\(hours)h \(mins)m" : "—"
     }
     private var isConnected: Bool { isDemo || coordinator.connectionState == .connected }
+    private var chargeStatusText: String {
+        if isDemo { return "Not Charging" }
+        switch coordinator.chargeStatus {
+        case 1: return "Charging"
+        case 2: return "Fully Charged"
+        default: return "Not Charging"
+        }
+    }
+    private var timeToFullText: String {
+        if isDemo { return "—" }
+        let mins = coordinator.timeToFull
+        guard mins > 0 else { return "—" }
+        return "\(mins / 60)h \(mins % 60)m"
+    }
     #else
     @ObservedObject private var auth = AuthManager.shared
     private var isDemo: Bool { auth.isDemoMode }
@@ -31,6 +45,8 @@ struct ScooterInfoView: View {
     private var odometer: String { isDemo ? "2,450 km" : "—" }
     private var totalRideTime: String { isDemo ? "86h 12m" : "—" }
     private var isConnected: Bool { isDemo }
+    private var chargeStatusText: String { isDemo ? "Not Charging" : "—" }
+    private var timeToFullText: String { "—" }
     #endif
 
     var body: some View {
@@ -59,9 +75,9 @@ struct ScooterInfoView: View {
                     #endif
                 }
 
-                Section("Charge Status") {
-                    InfoRow(label: "Status", value: isConnected ? "Connected" : "Not Connected")
-                    InfoRow(label: "Time to Full", value: "—")
+                Section("Battery") {
+                    InfoRow(label: "Charge Status", value: chargeStatusText)
+                    InfoRow(label: "Time to Full", value: timeToFullText)
                 }
             }
             .scrollContentBackground(.hidden)

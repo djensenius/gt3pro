@@ -123,12 +123,23 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
         // short-circuit when CoreBluetooth already reports it as connected.
         if let savedUUID = ScooterConnectionManager.loadPeripheralUUID() {
             let known = central.retrievePeripherals(withIdentifiers: [savedUUID])
-            if let existing = known.first, existing.state == .connected {
+            if let existing = known.first {
+                if existing.state == .connected {
+                    btName = existing.name
+                    logger.info("Reconnecting to saved connected peripheral: \(self.btName ?? "unknown")")
+                    bleLog("Reconnecting to saved peripheral: \(existing.name ?? savedUUID.uuidString)")
+                    connectToPeripheral(existing)
+                    return
+                }
+                // Peripheral is known but not connected — issue a persistent connect
+                // request so CoreBluetooth auto-connects when the scooter turns on.
+                self.peripheral = existing
+                existing.delegate = self
+                central.connect(existing, options: nil)
                 btName = existing.name
-                logger.info("Reconnecting to saved connected peripheral: \(self.btName ?? "unknown")")
-                bleLog("Reconnecting to saved peripheral: \(existing.name ?? savedUUID.uuidString)")
-                connectToPeripheral(existing)
-                return
+                connectionState = .reconnecting
+                logger.info("Queued reconnect for saved peripheral: \(self.btName ?? savedUUID.uuidString)")
+                bleLog("Waiting for saved peripheral: \(existing.name ?? savedUUID.uuidString)")
             }
         }
 
@@ -144,7 +155,10 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
             return
         }
 
-        connectionState = .scanning
+        // Also scan for new peripherals in case this is the first connection.
+        if connectionState != .reconnecting {
+            connectionState = .scanning
+        }
         // Scan without service filter — the GT3 Pro does not include the Ninebot service UUID
         // in its advertisement packet (it only exposes it post-connection). Filter by name instead.
         central.scanForPeripherals(
