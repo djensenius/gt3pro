@@ -66,14 +66,15 @@ enum NinebotFrameBuilder {
         )
     }
 
-    /// Build a power-off command frame for the VCU.
-    /// Same CMD as power-on (0x79) but DATA=[0x00, 0x00].
+    /// Build a power-off (closeAcc) command frame for the VCU.
+    /// CMD=0x79, INDEX=0x00, DATA=[0x01, 0x00] (2 bytes per Codeberg GT3 docs).
+    /// The 2-byte payload distinguishes closeAcc from openAcc (1 byte).
     static func buildPowerOffFrame() -> Data {
         return buildFrame(
             target: BLEConstants.Board.vcu.rawValue,
             cmd: BLEConstants.Command.powerOn.rawValue,
             index: 0x00,
-            data: Data([0x00, 0x00])
+            data: Data([0x01, 0x00])
         )
     }
 

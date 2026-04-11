@@ -199,14 +199,14 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         connectionManager.sendFrame(frame1)
         logger.info("Sent power-off CMD 0x79 to VCU")
 
-        // Also try writing 0x0000 to MCU register 0x51 (segMod approach)
+        // Also try writing 0x0100 to MCU register 0x51 (segMod approach — locks the scooter)
         let frame2 = NinebotFrameBuilder.buildWriteFrame(
             board: .mcu,
             register: 0x51,
-            data: Data([0x00, 0x00])
+            data: Data([0x01, 0x00])
         )
         connectionManager.sendFrame(frame2)
-        logger.info("Sent power-off write MCU:0x51=0x0000")
+        logger.info("Sent power-off write MCU:0x51=0x0100")
     }
 
     private func startPowerOnPolling() {
