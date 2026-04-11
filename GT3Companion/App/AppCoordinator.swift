@@ -59,9 +59,6 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     private var pendingEndTask: Task<Void, Never>?
     private var telemetryWatchdog: Task<Void, Never>?
     private var lastTelemetryTime: Date?
-    /// Set when rBool confirms standby; prevents battery > 0 from
-    /// re-waking the scooter (battery stays positive in standby).
-    private var rBoolStandbyConfirmed = false
 
     /// How long to wait without a telemetry response before assuming
     /// the scooter VCU has powered off (BLE module may still be alive).
@@ -151,7 +148,6 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         let lastBattery = currentBattery
         resetDashboardValues()
         isScooterAwake = false
-        rBoolStandbyConfirmed = false
 
         gpsTracker.stopTracking()
         roughnessTracker.stopTracking()
@@ -256,13 +252,11 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         if isPowered && !isStandby && !isScooterAwake {
             logger.info("rBool=0x\(String(rawValue, radix: 16)): scooter powered ON")
             isScooterAwake = true
-            rBoolStandbyConfirmed = false
             gpsTracker.startTracking()
             roughnessTracker.startTracking()
             startTelemetryWatchdog()
         } else if isStandby && !isPowered && isScooterAwake {
             logger.info("rBool=0x\(String(rawValue, radix: 16)): scooter entered STANDBY")
-            rBoolStandbyConfirmed = true
             let lastBattery = currentBattery
             Task { await handleScooterSleep(lastBattery: lastBattery) }
         }
@@ -270,17 +264,6 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
 
     private func handleBatteryUpdate(_ value: Int) {
         currentBattery = value
-
-        // Battery > 0 can indicate the VCU is alive, but only trust it
-        // when rBool hasn't confirmed standby (battery stays positive in
-        // standby, which would cause wake/sleep oscillation).
-        if value > 0 && !isScooterAwake && !rBoolStandbyConfirmed {
-            logger.info("Battery \(value)% — setting scooter awake")
-            isScooterAwake = true
-            gpsTracker.startTracking()
-            roughnessTracker.startTracking()
-            startTelemetryWatchdog()
-        }
     }
 
     /// Handle the scooter powering off while still BLE-connected.
