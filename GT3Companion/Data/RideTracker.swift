@@ -16,14 +16,10 @@ struct TelemetrySample: Codable, Sendable {
     let timestamp: Date
     let speed: Double
     let battery: Int
-    let bms1Voltage: Double
-    let bms1Current: Double
-    let bms1SOC: Int
-    let bms1Temp: Double
-    let bms2Voltage: Double
-    let bms2Current: Double
-    let bms2SOC: Int
-    let bms2Temp: Double
+    let bmsVoltage: Double
+    let bmsCurrent: Double
+    let bmsSOC: Int
+    let bmsTemp: Double
     let tripDistance: Double
     let tripTime: Int
     let bodyTemp: Double

@@ -49,33 +49,19 @@ enum GT3Registers {
         name: "rWarnCode", board: .vcu, index: 0x59, size: 2,
         description: "Active warning code")
 
-    // BMS1 live
-    static let bms1Voltage = RegisterDefinition(
-        name: "rBMSVolt", board: .bms1, index: 0x8C, size: 2,
-        description: "Battery 1 voltage (÷100 = V)")
-    static let bms1Current = RegisterDefinition(
-        name: "rBMSCur", board: .bms1, index: 0x8D, size: 2,
-        description: "Battery 1 current (÷100 = A, signed)")
-    static let bms1SOC = RegisterDefinition(
-        name: "rBmsSOC", board: .bms1, index: 0x8F, size: 2,
-        description: "Battery 1 state of charge (%)")
-    static let bms1Temp = RegisterDefinition(
-        name: "rBmsTmp", board: .bms1, index: 0x96, size: 4,
-        description: "Battery 1 temperature (÷10 = °C)")
-
-    // BMS2 live
-    static let bms2Voltage = RegisterDefinition(
+    // BMS live (only BMS2 responds on GT3 Pro — board 0x07)
+    static let bmsVoltage = RegisterDefinition(
         name: "rBMSVolt2", board: .bms2, index: 0x8C, size: 2,
-        description: "Battery 2 voltage (÷100 = V)")
-    static let bms2Current = RegisterDefinition(
+        description: "Battery voltage (÷100 = V)")
+    static let bmsCurrent = RegisterDefinition(
         name: "rBMSCur2", board: .bms2, index: 0x8D, size: 2,
-        description: "Battery 2 current (÷100 = A, signed)")
-    static let bms2SOC = RegisterDefinition(
+        description: "Battery current (÷100 = A, signed)")
+    static let bmsSOC = RegisterDefinition(
         name: "rBmsSOC2", board: .bms2, index: 0x8F, size: 2,
-        description: "Battery 2 state of charge (%)")
-    static let bms2Temp = RegisterDefinition(
+        description: "Battery state of charge (%)")
+    static let bmsTemp = RegisterDefinition(
         name: "rBmsTmp2", board: .bms2, index: 0x96, size: 4,
-        description: "Battery 2 temperature (÷10 = °C)")
+        description: "Battery temperature (°C)")
 
     // MARK: - Cumulative / Diagnostic (read once on connect)
 
@@ -99,61 +85,34 @@ enum GT3Registers {
         description: "MCU firmware version")
     static let bms1FW = RegisterDefinition(
         name: "rBmsV", board: .vcu, index: 0x19, size: 2,
-        description: "BMS1 firmware version")
+        description: "BMS firmware version (from VCU)")
     static let bms2FW = RegisterDefinition(
         name: "rBms2V", board: .vcu, index: 0x1A, size: 2,
-        description: "BMS2 firmware version")
+        description: "BMS2 firmware version (from VCU)")
     static let bleFW = RegisterDefinition(
         name: "rBleV", board: .ble, index: 0x01, size: 2,
         description: "BLE firmware version")
-    static let bms1CycleCount = RegisterDefinition(
-        name: "rBmsCycleCountLT", board: .bms1, index: 0x59, size: 2,
-        description: "Battery 1 charge cycles")
-    static let bms2CycleCount = RegisterDefinition(
+    static let bmsCycleCount = RegisterDefinition(
         name: "rBms2CycleCountLT", board: .bms2, index: 0x59, size: 2,
-        description: "Battery 2 charge cycles")
-    static let bms1EnergyThroughput = RegisterDefinition(
-        name: "rBmsEnergyThroughputLT", board: .bms1, index: 0xE3, size: 4,
-        description: "Battery 1 total energy throughput")
-    static let bms2EnergyThroughput = RegisterDefinition(
+        description: "Battery charge cycles")
+    static let bmsEnergyThroughput = RegisterDefinition(
         name: "rBms2EnergyThroughputLT", board: .bms2, index: 0xE3, size: 4,
-        description: "Battery 2 total energy throughput")
-    static let bms1CapacityThroughput = RegisterDefinition(
-        name: "rBmsCapacityThroughputLT", board: .bms1, index: 0xE1, size: 4,
-        description: "Battery 1 total capacity throughput")
-    static let bms2CapacityThroughput = RegisterDefinition(
+        description: "Battery total energy throughput")
+    static let bmsCapacityThroughput = RegisterDefinition(
         name: "rBms2CapacityThroughputLT", board: .bms2, index: 0xE1, size: 4,
-        description: "Battery 2 total capacity throughput")
-    static let bms1DeepDischargeCount = RegisterDefinition(
-        name: "rBmsDeepDischargeCountLT", board: .bms1, index: 0x89, size: 2,
-        description: "Battery 1 deep discharge count")
-    static let bms2DeepDischargeCount = RegisterDefinition(
+        description: "Battery total capacity throughput")
+    static let bmsDeepDischargeCount = RegisterDefinition(
         name: "rBms2DeepDischargeCountLT", board: .bms2, index: 0x89, size: 2,
-        description: "Battery 2 deep discharge count")
-    static let bms1RemainingCapacity = RegisterDefinition(
-        name: "rBmsRemainCapacityLT", board: .bms1, index: 0x8A, size: 2,
-        description: "Battery 1 remaining capacity")
-    static let bms2RemainingCapacity = RegisterDefinition(
+        description: "Battery deep discharge count")
+    static let bmsRemainingCapacity = RegisterDefinition(
         name: "rBms2RemainCapacityLT", board: .bms2, index: 0x8A, size: 2,
-        description: "Battery 2 remaining capacity")
-    static let bms1ManufactureDate = RegisterDefinition(
-        name: "rBmsManufactureDateLT", board: .bms1, index: 0x0A, size: 2,
-        description: "Battery 1 manufacture date")
-    static let bms2ManufactureDate = RegisterDefinition(
+        description: "Battery remaining capacity")
+    static let bmsManufactureDate = RegisterDefinition(
         name: "rBms2ManufactureDateLT", board: .bms2, index: 0x0A, size: 2,
-        description: "Battery 2 manufacture date")
-    static let bms1ExtremeUseTime = RegisterDefinition(
-        name: "rBmsExtremeUseTimeLT", board: .bms1, index: 0xF5, size: 4,
-        description: "Battery 1 extreme use time")
-    static let bms1ExtremeChargeTime = RegisterDefinition(
-        name: "rBmsExtremeChargeTimeLT", board: .bms1, index: 0xF7, size: 4,
-        description: "Battery 1 extreme charge time")
-    static let battery1SN = RegisterDefinition(
-        name: "rBatterySN", board: .bms1, index: 0x02, size: 14,
-        description: "Battery 1 serial number (ASCII)")
-    static let battery2SN = RegisterDefinition(
+        description: "Battery manufacture date")
+    static let batterySN = RegisterDefinition(
         name: "rBatterySN2", board: .bms2, index: 0x02, size: 14,
-        description: "Battery 2 serial number (ASCII)")
+        description: "Battery serial number (ASCII)")
     static let chargeStatus = RegisterDefinition(
         name: "rChargeStatus", board: .bms2, index: 0x92, size: 4,
         description: "Charging status")
@@ -194,16 +153,16 @@ enum GT3Registers {
         name: "rVoiceVolume", board: .vcu, index: 0x76, size: 2,
         description: "Speaker volume")
     static let bms1CellVoltages = RegisterDefinition(
-        name: "rBmsCellVolFrequence", board: .bms1, index: 0xA0, size: 26,
+        name: "rBmsCellVolFrequence", board: .bms2, index: 0xA0, size: 26,
         description: "Individual cell voltages (26 bytes)")
     static let bms1TempSensors = RegisterDefinition(
-        name: "rBmsTempFrequence", board: .bms1, index: 0x96, size: 16,
+        name: "rBmsTempFrequence", board: .bms2, index: 0x96, size: 16,
         description: "Temperature sensor array (16 bytes)")
     static let maxPower = RegisterDefinition(
-        name: "rMaxPower", board: .bms1, index: 0x82, size: 2,
+        name: "rMaxPower", board: .bms2, index: 0x82, size: 2,
         description: "Max power setting")
-    static let bms1DesignCapacity = RegisterDefinition(
-        name: "rBmsCapacity", board: .bms1, index: 0x13, size: 2,
+    static let bmsDesignCapacity = RegisterDefinition(
+        name: "rBmsCapacity", board: .bms2, index: 0x13, size: 2,
         description: "Battery design capacity")
     static let findMyStatus = RegisterDefinition(
         name: "rFindMyStatus", board: .ble, index: 0x1D, size: 2,
@@ -218,8 +177,7 @@ enum GT3Registers {
     static let liveTelemetry: [RegisterDefinition] = [
         speed, battery, singleMileage, singleRideTime, runningTime,
         leftMileage, bodyTemp, gearMode, errorCode, warnCode,
-        bms1Voltage, bms1Current, bms1SOC, bms1Temp,
-        bms2Voltage, bms2Current, bms2SOC, bms2Temp,
+        bmsVoltage, bmsCurrent, bmsSOC, bmsTemp,
         gearED, gearSR,
         odometer, chargeStatus
     ]
@@ -228,19 +186,18 @@ enum GT3Registers {
     static let cumulative: [RegisterDefinition] = [
         totalRuntime, totalRideTime, serialNumber,
         controllerFW, mcuFW, bms1FW, bms2FW, bleFW,
-        bms1CycleCount, bms2CycleCount,
-        bms1EnergyThroughput, bms2EnergyThroughput,
-        bms1CapacityThroughput, bms2CapacityThroughput,
-        bms1DeepDischargeCount, bms2DeepDischargeCount,
-        bms1RemainingCapacity, bms2RemainingCapacity,
-        bms1ManufactureDate, bms2ManufactureDate,
-        bms1ExtremeUseTime, bms1ExtremeChargeTime,
-        battery1SN, battery2SN,
+        bmsCycleCount,
+        bmsEnergyThroughput,
+        bmsCapacityThroughput,
+        bmsDeepDischargeCount,
+        bmsRemainingCapacity,
+        bmsManufactureDate,
+        batterySN,
         timeToFull, partNumber, preciseMileage,
         ledMode, projectionLightMode, tailLightMode,
         alarmLevel, bumpyRoad, voiceVolume,
         bms1CellVoltages, bms1TempSensors,
-        maxPower, bms1DesignCapacity,
+        maxPower, bmsDesignCapacity,
         findMyStatus, findMyEnable
     ]
 

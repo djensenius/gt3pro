@@ -31,8 +31,7 @@ class GT3LiveActivityManager {
             tripDistance: 0,
             estimatedRange: 0,
             gearMode: 0,
-            bms1Temp: 0,
-            bms2Temp: 0,
+            bmsTemp: 0,
             isCharging: false
         )
 

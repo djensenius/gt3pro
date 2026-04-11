@@ -23,8 +23,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     @Published var tripDistance: Double = 0
     @Published var estimatedRange: Double = 0
     @Published var gearMode: Int = 0
-    @Published var bms1Temp: Double = 0
-    @Published var bms2Temp: Double = 0
+    @Published var bmsTemp: Double = 0
     @Published var bodyTemp: Double = 0
     @Published var serialNumber: String?
     @Published var odometer: Double = 0
@@ -32,7 +31,6 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     @Published var controllerFirmware: String = "—"
     @Published var mcuFirmware: String = "—"
     @Published var bms1Firmware: String = "—"
-    @Published var bms2Firmware: String = "—"
     @Published var bleFirmware: String = "—"
     @Published var chargeStatus: Int = 0
     @Published var timeToFull: Int = 0
@@ -196,8 +194,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         case "rSingleMileage":    tripDistance = result.doubleValue ?? 0
         case "rLeftMileage":      estimatedRange = result.doubleValue ?? 0
         case "rGearMode":         gearMode = result.intValue ?? 0
-        case "rBmsTmp":           bms1Temp = result.doubleValue ?? 0
-        case "rBmsTmp2":          bms2Temp = result.doubleValue ?? 0
+        case "rBmsTmp2":          bmsTemp = result.doubleValue ?? 0
         case "rBodyTemp":         bodyTemp = result.doubleValue ?? 0
         default:                  break
         }
@@ -220,7 +217,6 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         case "rCtrlV":  controllerFirmware = result.stringValue ?? "—"
         case "rMCUV":   mcuFirmware = result.stringValue ?? "—"
         case "rBmsV":   bms1Firmware = result.stringValue ?? "—"
-        case "rBms2V":  bms2Firmware = result.stringValue ?? "—"
         case "rBleV":   bleFirmware = result.stringValue ?? "—"
         default:        break
         }
@@ -239,14 +235,10 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
             timestamp: Date(),
             speed: currentSpeed,
             battery: currentBattery,
-            bms1Voltage: await registerReader.getTelemetryDouble("rBMSVolt") ?? 0,
-            bms1Current: await registerReader.getTelemetryDouble("rBMSCur") ?? 0,
-            bms1SOC: await registerReader.getTelemetryInt("rBmsSOC") ?? 0,
-            bms1Temp: await registerReader.getTelemetryDouble("rBmsTmp") ?? 0,
-            bms2Voltage: await registerReader.getTelemetryDouble("rBMSVolt2") ?? 0,
-            bms2Current: await registerReader.getTelemetryDouble("rBMSCur2") ?? 0,
-            bms2SOC: await registerReader.getTelemetryInt("rBmsSOC2") ?? 0,
-            bms2Temp: await registerReader.getTelemetryDouble("rBmsTmp2") ?? 0,
+            bmsVoltage: await registerReader.getTelemetryDouble("rBMSVolt2") ?? 0,
+            bmsCurrent: await registerReader.getTelemetryDouble("rBMSCur2") ?? 0,
+            bmsSOC: await registerReader.getTelemetryInt("rBmsSOC2") ?? 0,
+            bmsTemp: await registerReader.getTelemetryDouble("rBmsTmp2") ?? 0,
             tripDistance: tripDistance,
             tripTime: await registerReader.getTelemetryInt("rSingleRideTime") ?? 0,
             bodyTemp: await registerReader.getTelemetryDouble("rBodyTemp") ?? 0,
@@ -277,8 +269,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
             tripDistance: tripDistance,
             estimatedRange: estimatedRange,
             gearMode: sample.gearMode,
-            bms1Temp: sample.bms1Temp,
-            bms2Temp: sample.bms2Temp,
+            bmsTemp: sample.bmsTemp,
             isCharging: false
         ))
     }

@@ -13,8 +13,7 @@ final class UploadQueueTests: XCTestCase {
         let queue = UploadQueue()
         let sample = TelemetrySample(
             timestamp: Date(), speed: 25.0, battery: 80,
-            bms1Voltage: 58.0, bms1Current: -10.0, bms1SOC: 80, bms1Temp: 30.0,
-            bms2Voltage: 57.0, bms2Current: -10.0, bms2SOC: 78, bms2Temp: 29.0,
+            bmsVoltage: 58.0, bmsCurrent: -10.0, bmsSOC: 80, bmsTemp: 30.0,
             tripDistance: 5.0, tripTime: 600, bodyTemp: 35.0, gearMode: 2,
             estimatedRange: 30.0, errorCode: 0, warnCode: 0,
             regenLevel: 3, speedResponse: 5,

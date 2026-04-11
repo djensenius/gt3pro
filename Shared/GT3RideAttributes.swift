@@ -17,8 +17,7 @@ struct GT3RideAttributes: ActivityAttributes {
         let tripDistance: Double
         let estimatedRange: Double
         let gearMode: Int
-        let bms1Temp: Double
-        let bms2Temp: Double
+        let bmsTemp: Double
         let isCharging: Bool
     }
 

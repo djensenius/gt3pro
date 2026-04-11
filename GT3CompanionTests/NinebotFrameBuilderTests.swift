@@ -26,12 +26,12 @@ final class NinebotFrameBuilderTests: XCTestCase {
 
     func testBuildWriteFrame() {
         let data = Data([0xAA, 0xBB])
-        let frame = NinebotFrameBuilder.buildWriteFrame(board: .bms1, register: 0x10, data: data)
+        let frame = NinebotFrameBuilder.buildWriteFrame(board: .bms2, register: 0x10, data: data)
         XCTAssertEqual(frame[0], 0x5A)
         XCTAssertEqual(frame[1], 0xA5)
         XCTAssertEqual(frame[2], 2)    // 2 data bytes
         XCTAssertEqual(frame[3], 0x3E)
-        XCTAssertEqual(frame[4], 0x06) // BMS1
+        XCTAssertEqual(frame[4], 0x07) // BMS2
         XCTAssertEqual(frame[5], 0x03) // write command
         XCTAssertEqual(frame[6], 0x10)
         XCTAssertEqual(frame[7], 0xAA)

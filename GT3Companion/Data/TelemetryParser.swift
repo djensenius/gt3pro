@@ -146,10 +146,10 @@ enum TelemetryParser {
              "rAlarmLevel", "rBumpyRoad", "rVoiceVolume",
              "rMaxPower", "rBmsCapacity",
              "rFindMyStatus", "rFindMyEnable": return Int(parseUInt16(data))
-        case "rBMSVolt", "rBMSVolt2": return parseVoltage(data)
-        case "rBMSCur", "rBMSCur2": return parseCurrent(data)
-        case "rBmsSOC", "rBmsSOC2": return parsePercent(data)
-        case "rBmsTmp", "rBmsTmp2": return parseBmsTemperature(data)
+        case "rBMSVolt2": return parseVoltage(data)
+        case "rBMSCur2": return parseCurrent(data)
+        case "rBmsSOC2": return parsePercent(data)
+        case "rBmsTmp2": return parseBmsTemperature(data)
         case "rMileage": return parseOdometer(data)
         case "rRuntime", "rRideTime",
              "rBmsExtremeUseTimeLT", "rBmsExtremeChargeTimeLT": return parseSecondsLong(data)

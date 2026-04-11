@@ -20,8 +20,7 @@ struct DashboardView: View {
     private var tripDistance: Double { isDemo ? 12.4 : coordinator.tripDistance }
     private var estimatedRange: Double { isDemo ? 45 : coordinator.estimatedRange }
     private var gearMode: Int { isDemo ? 2 : coordinator.gearMode }
-    private var bms1Temp: Double { isDemo ? 28 : coordinator.bms1Temp }
-    private var bms2Temp: Double { isDemo ? 30 : coordinator.bms2Temp }
+    private var bmsTemp: Double { isDemo ? 28 : coordinator.bmsTemp }
     private var bodyTemp: Double { isDemo ? 25 : coordinator.bodyTemp }
     #else
     @ObservedObject private var auth = AuthManager.shared
@@ -32,8 +31,7 @@ struct DashboardView: View {
     private var tripDistance: Double { isDemo ? 12.4 : 0 }
     private var estimatedRange: Double { isDemo ? 45 : 0 }
     private var gearMode: Int { isDemo ? 2 : 0 }
-    private var bms1Temp: Double { isDemo ? 28 : 0 }
-    private var bms2Temp: Double { isDemo ? 30 : 0 }
+    private var bmsTemp: Double { isDemo ? 28 : 0 }
     #endif
 
     var body: some View {
@@ -139,25 +137,18 @@ struct DashboardView: View {
 
             HStack(spacing: Theme.Spacing.medium) {
                 StatCard(
-                    title: "BMS 1",
-                    value: String(format: "%.0f°C", bms1Temp),
+                    title: "BMS Temp",
+                    value: String(format: "%.0f°C", bmsTemp),
                     icon: "thermometer.medium",
-                    color: tempColor(bms1Temp)
+                    color: tempColor(bmsTemp)
                 )
                 StatCard(
-                    title: "BMS 2",
-                    value: String(format: "%.0f°C", bms2Temp),
-                    icon: "thermometer.medium",
-                    color: tempColor(bms2Temp)
+                    title: "Vehicle Temp",
+                    value: String(format: "%.0f°C", bodyTemp),
+                    icon: "thermometer.sun",
+                    color: tempColor(bodyTemp)
                 )
             }
-
-            StatCard(
-                title: "Vehicle Temp",
-                value: String(format: "%.0f°C", bodyTemp),
-                icon: "thermometer.sun",
-                color: tempColor(bodyTemp)
-            )
 
             #if os(iOS)
             Toggle(isOn: $powerToggle) {

@@ -66,14 +66,12 @@ struct ScooterInfoView: View {
                     #if os(iOS)
                     InfoRow(label: "Controller", value: isDemo ? "1.2.3" : coordinator.controllerFirmware)
                     InfoRow(label: "MCU", value: isDemo ? "2.0.1" : coordinator.mcuFirmware)
-                    InfoRow(label: "BMS 1", value: isDemo ? "1.1.0" : coordinator.bms1Firmware)
-                    InfoRow(label: "BMS 2", value: isDemo ? "1.1.0" : coordinator.bms2Firmware)
+                    InfoRow(label: "BMS", value: isDemo ? "1.1.0" : coordinator.bms1Firmware)
                     InfoRow(label: "BLE", value: isDemo ? "3.0.2" : coordinator.bleFirmware)
                     #else
                     InfoRow(label: "Controller", value: isDemo ? "1.2.3" : "—")
                     InfoRow(label: "MCU", value: isDemo ? "2.0.1" : "—")
-                    InfoRow(label: "BMS 1", value: isDemo ? "1.1.0" : "—")
-                    InfoRow(label: "BMS 2", value: isDemo ? "1.1.0" : "—")
+                    InfoRow(label: "BMS", value: isDemo ? "1.1.0" : "—")
                     InfoRow(label: "BLE", value: isDemo ? "3.0.2" : "—")
                     #endif
                 }
