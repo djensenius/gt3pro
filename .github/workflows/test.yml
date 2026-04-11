@@ -17,6 +17,8 @@ jobs:
         run: |
           brew install xcodegen
           xcodegen generate
+      - name: Install iOS Simulator Runtime
+        run: xcodebuild -downloadPlatform iOS
       - name: Run Tests
         run: |
           DEST=$(xcrun simctl list devices available -j | python3 -c "

@@ -22,8 +22,7 @@ jobs:
           xcodebuild build \
             -project GT3Companion.xcodeproj \
             -scheme "GT3CompanionCI" \
-            -destination "generic/platform=iOS Simulator" \
+            -destination "generic/platform=iOS" \
             -configuration Debug \
             -skipPackagePluginValidation \
-            CODE_SIGNING_ALLOWED=NO \
-            EXCLUDED_ARCHS=x86_64
+            CODE_SIGNING_ALLOWED=NO
