@@ -13,33 +13,13 @@ jobs:
       - uses: actions/checkout@v4
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
-      - name: List available simulators
-        run: xcrun simctl list runtimes
-      - name: Install iOS simulator if needed
-        run: |
-          if ! xcrun simctl list runtimes | grep -q "iOS.*Available"; then
-            echo "Installing iOS simulator runtime..."
-            xcodebuild -downloadPlatform iOS
-          else
-            echo "iOS simulator runtime already available"
-          fi
       - name: Build iOS App
         run: |
-          DEST=$(xcrun simctl list devices available -j | python3 -c "
-          import sys, json
-          devices = json.load(sys.stdin)['devices']
-          for runtime, devs in sorted(devices.items(), reverse=True):
-              if 'iOS' in runtime or 'SimRuntime.iOS' in runtime:
-                  for d in devs:
-                      if 'iPhone' in d['name'] and d['isAvailable']:
-                          print(f\"platform=iOS Simulator,id={d['udid']}\")
-                          sys.exit(0)
-          sys.exit(1)
-          ")
-          echo "Building with destination: $DEST"
           xcodebuild build \
             -project GT3Companion.xcodeproj \
             -scheme "GT3Companion" \
-            -destination "$DEST" \
+            -destination "generic/platform=iOS Simulator" \
             -configuration Debug \
-            CODE_SIGNING_ALLOWED=NO
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO \
+            EXCLUDED_ARCHS=x86_64
