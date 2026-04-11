@@ -57,7 +57,6 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     private var storedPassword: Data?
     private var hasStarted = false
     private var pendingEndTask: Task<Void, Never>?
-    private var powerOnTask: Task<Void, Never>?
     private var telemetryWatchdog: Task<Void, Never>?
     private var lastTelemetryTime: Date?
 
@@ -139,15 +138,11 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         await registerReader.startPolling()
         watchSession.updateContext(battery: 0, isConnected: true)
 
-        sendPowerOn()
-        startPowerOnPolling()
-
         logger.info("Fully connected — polling, GPS, roughness, Live Activity active")
     }
 
     private func onDisconnected() async {
         await registerReader.stopPolling()
-        stopPowerOnPolling()
         stopTelemetryWatchdog()
 
         let lastBattery = currentBattery
@@ -197,26 +192,6 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         let frame = NinebotFrameBuilder.buildPowerOffFrame()
         connectionManager.sendFrame(frame)
         logger.info("Sent power-off CMD 0x79 data=[0x02,0x00] to VCU")
-    }
-
-    private func startPowerOnPolling() {
-        powerOnTask?.cancel()
-        powerOnTask = Task { [weak self] in
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(5))
-                guard !Task.isCancelled, let self else { break }
-                if !self.isScooterAwake {
-                    self.sendPowerOn()
-                } else {
-                    break
-                }
-            }
-        }
-    }
-
-    private func stopPowerOnPolling() {
-        powerOnTask?.cancel()
-        powerOnTask = nil
     }
 
     // MARK: - Telemetry Watchdog
@@ -277,7 +252,6 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         if isPowered && !isStandby && !isScooterAwake {
             logger.info("rBool=0x\(String(rawValue, radix: 16)): scooter powered ON")
             isScooterAwake = true
-            stopPowerOnPolling()
             gpsTracker.startTracking()
             roughnessTracker.startTracking()
             startTelemetryWatchdog()
@@ -297,7 +271,6 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         if value > 0 && !isScooterAwake {
             logger.info("Battery \(value)% — setting scooter awake")
             isScooterAwake = true
-            stopPowerOnPolling()
             gpsTracker.startTracking()
             roughnessTracker.startTracking()
             startTelemetryWatchdog()
@@ -334,9 +307,6 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
 
         // Tell the Watch we're in standby
         watchSession.sendTelemetry(speed: 0, battery: 0, tripDistance: 0, range: 0, mode: 0)
-
-        // Resume power-on polling so we detect wake-up
-        startPowerOnPolling()
 
         sendScooterSleepNotification()
     }
