@@ -130,6 +130,7 @@
 		F8CCDB6EEDE70D23A759D87E /* PairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11C5682B34F0870664C57915 /* PairingView.swift */; };
 		FA13A2007A1B2131ED1C0C01 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F60D7016AF895D2E94ABCA0 /* AuthManager.swift */; };
 		FC2180F4FEED50A0B0C5F60F /* GT3RideAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0BC7212A2BD252D996C21B /* GT3RideAttributes.swift */; };
+		FCFE42FB92CC3817499DC885 /* PowerSlideButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B34E5080C0FEEDFDC393EE9C /* PowerSlideButton.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -257,6 +258,7 @@
 		ACFF7915A5105F90F7895B3B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		ADC13C5A39D3483D8EEDD04B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		AEC6013FFE64589ED662804D /* PreviewHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewHelpers.swift; sourceTree = "<group>"; };
+		B34E5080C0FEEDFDC393EE9C /* PowerSlideButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerSlideButton.swift; sourceTree = "<group>"; };
 		B37C34C9C57F04F3812AA098 /* DataExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataExtensions.swift; sourceTree = "<group>"; };
 		B7BEE3B916F38F756C2A05FA /* GT3Registers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3Registers.swift; sourceTree = "<group>"; };
 		BDE60F2A3E20E8CFCAE04D6A /* GT3CompanionWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = GT3CompanionWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -378,6 +380,7 @@
 				EBEE3BF0C58F8ABAFF006549 /* MapRouteView.swift */,
 				0B3AAFD381FF70FD11643480 /* OnboardingView.swift */,
 				11C5682B34F0870664C57915 /* PairingView.swift */,
+				B34E5080C0FEEDFDC393EE9C /* PowerSlideButton.swift */,
 				55FE211690F8E6728DBC3A59 /* RideDetailView.swift */,
 				05FA94F2A81DC172E483E5B4 /* RideHistoryView.swift */,
 				71C4965BA8E974E0A6B214CF /* RouteNavigationView.swift */,
@@ -900,6 +903,7 @@
 				C5F7EF20D2B4BF78C81B9E13 /* PermissionsManager.swift in Sources */,
 				B65484A304ECCDC5B631F91C /* PersistenceController.swift in Sources */,
 				2267FF4882DF7605904F8B50 /* PhoneWatchSessionManager.swift in Sources */,
+				FCFE42FB92CC3817499DC885 /* PowerSlideButton.swift in Sources */,
 				1BA065423E7014CBEF7E5789 /* PreviewHelpers.swift in Sources */,
 				8F085638E5D961EC00DE31CE /* RegisterReader.swift in Sources */,
 				E98E90FD43E65AD77479B30B /* RideDetailView.swift in Sources */,

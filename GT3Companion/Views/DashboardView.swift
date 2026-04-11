@@ -11,7 +11,6 @@ struct DashboardView: View {
     #if os(iOS)
     @EnvironmentObject private var coordinator: AppCoordinator
     @ObservedObject private var auth = AuthManager.shared
-    @State private var powerToggle = false
 
     private var isDemo: Bool { auth.isDemoMode }
     private var isConnected: Bool { isDemo || coordinator.connectionState == .connected }
@@ -187,23 +186,14 @@ struct DashboardView: View {
             }
 
             #if os(iOS)
-            Toggle(isOn: $powerToggle) {
-                Label("Power", systemImage: "power")
-                    .font(Theme.Fonts.bodyMedium)
+            PowerSlideButton(
+                title: "Slide to Power Off",
+                systemImage: "power",
+                color: Theme.Colors.error
+            ) {
+                coordinator.sendPowerOff()
             }
-            .tint(Theme.Colors.accent)
             .padding(.horizontal)
-            .onChange(of: powerToggle) { _, isOn in
-                if isOn {
-                    coordinator.sendPowerOn()
-                } else {
-                    coordinator.sendPowerOff()
-                }
-            }
-            .onChange(of: battery) { _, newBattery in
-                powerToggle = newBattery > 0
-            }
-            .onAppear { powerToggle = battery > 0 }
             #endif
         }
         .padding()
