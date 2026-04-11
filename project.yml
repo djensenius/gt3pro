@@ -179,6 +179,51 @@ targets:
       - target: GT3Companion
         embed: false
 
+  GT3CompanionMacTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: GT3CompanionMacTests
+        excludes:
+          - "**/.DS_Store"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.mac.tests
+        GENERATE_INFOPLIST_FILE: true
+    dependencies:
+      - target: GT3CompanionMac
+        embed: false
+
+  GT3CompanionVisionTests:
+    type: bundle.unit-test
+    platform: visionOS
+    sources:
+      - path: GT3CompanionVisionTests
+        excludes:
+          - "**/.DS_Store"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.vision.tests
+        GENERATE_INFOPLIST_FILE: true
+    dependencies:
+      - target: GT3CompanionVision
+        embed: false
+
+  GT3CompanionWatchTests:
+    type: bundle.unit-test
+    platform: watchOS
+    sources:
+      - path: GT3CompanionWatchTests
+        excludes:
+          - "**/.DS_Store"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.watch.tests
+        GENERATE_INFOPLIST_FILE: true
+    dependencies:
+      - target: GT3CompanionWatch
+        embed: false
+
   GT3CompanionMac:
     type: application
     platform: macOS
@@ -274,6 +319,10 @@ schemes:
         GT3CompanionMac: all
     run:
       config: Debug
+    test:
+      config: Debug
+      targets:
+        - GT3CompanionMacTests
     profile:
       config: Release
     analyze:
@@ -285,6 +334,10 @@ schemes:
         GT3CompanionWatch: all
     run:
       config: Debug
+    test:
+      config: Debug
+      targets:
+        - GT3CompanionWatchTests
     profile:
       config: Release
     analyze:
@@ -296,6 +349,10 @@ schemes:
         GT3CompanionVision: all
     run:
       config: Debug
+    test:
+      config: Debug
+      targets:
+        - GT3CompanionVisionTests
     profile:
       config: Release
     analyze:
