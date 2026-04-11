@@ -19,6 +19,8 @@ struct GT3RideAttributes: ActivityAttributes {
         let gearMode: Int
         let bmsTemp: Double
         let isCharging: Bool
+        /// Whether the scooter VCU is powered on (battery > 0).
+        let isAwake: Bool
     }
 
     let scooterName: String

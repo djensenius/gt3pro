@@ -32,7 +32,8 @@ class GT3LiveActivityManager {
             estimatedRange: 0,
             gearMode: 0,
             bmsTemp: 0,
-            isCharging: false
+            isCharging: false,
+            isAwake: false
         )
 
         let content = ActivityContent(state: initialState, staleDate: Date().addingTimeInterval(300))

@@ -42,6 +42,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     @Published var chargeCycles: Int = 0
     @Published var bmsRemainingCapacity: Int = 0
     @Published var bmsManufactureDate: Int = 0
+    @Published var isScooterAwake: Bool = false
 
     private let connectionManager = ScooterConnectionManager()
     private let registerReader = RegisterReader()
@@ -132,6 +133,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         gpsTracker.stopTracking()
         roughnessTracker.stopTracking()
         stopPowerOnPolling()
+        isScooterAwake = false
 
         let lastBattery = currentBattery
         await rideTracker.forceEndRide(endBattery: lastBattery)
@@ -245,7 +247,10 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
 
     private func handleBatteryUpdate(_ value: Int) {
         currentBattery = value
-        if value > 0 { stopPowerOnPolling() }
+        if value > 0 {
+            isScooterAwake = true
+            stopPowerOnPolling()
+        }
     }
 
     private func emitSample() async {
@@ -301,7 +306,8 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
             estimatedRange: estimatedRange,
             gearMode: sample.gearMode,
             bmsTemp: sample.bmsTemp,
-            isCharging: false
+            isCharging: false,
+            isAwake: isScooterAwake
         ))
     }
 

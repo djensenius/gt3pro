@@ -15,6 +15,7 @@ struct DashboardView: View {
 
     private var isDemo: Bool { auth.isDemoMode }
     private var isConnected: Bool { isDemo || coordinator.connectionState == .connected }
+    private var isAwake: Bool { isDemo || coordinator.isScooterAwake }
     private var speed: Double { isDemo ? 32.5 : coordinator.currentSpeed }
     private var battery: Int { isDemo ? 78 : coordinator.currentBattery }
     private var tripDistance: Double { isDemo ? 12.4 : coordinator.tripDistance }
@@ -43,7 +44,11 @@ struct DashboardView: View {
                         demoBanner
                     }
                     if isConnected {
-                        connectedView
+                        if isAwake {
+                            connectedView
+                        } else {
+                            standbyView
+                        }
                     } else {
                         disconnectedView
                     }
@@ -83,6 +88,37 @@ struct DashboardView: View {
                 coordinator.retryScan()
             } label: {
                 Label("Retry Connection", systemImage: "arrow.clockwise")
+                    .font(Theme.Fonts.bodyMedium)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(Theme.Colors.accent)
+            #endif
+            Spacer()
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
+    }
+
+    private var standbyView: some View {
+        VStack(spacing: Theme.Spacing.extraLarge) {
+            Spacer().frame(height: 60)
+            Image(systemName: "moon.zzz.fill")
+                .font(.system(size: 80))
+                .foregroundStyle(Theme.Colors.accent.opacity(0.6))
+            Text("Connected · Standby")
+                .font(Theme.Fonts.headerLarge())
+                .foregroundStyle(Theme.Colors.textPrimary)
+            Text("Press the scooter power button to wake up")
+                .font(Theme.Fonts.bodyMedium)
+                .foregroundStyle(Theme.Colors.textSecondary)
+                .multilineTextAlignment(.center)
+            ProgressView()
+                .tint(Theme.Colors.accent)
+            #if os(iOS)
+            Button {
+                coordinator.sendPowerOn()
+            } label: {
+                Label("Send Power On", systemImage: "power")
                     .font(Theme.Fonts.bodyMedium)
             }
             .buttonStyle(.borderedProminent)
