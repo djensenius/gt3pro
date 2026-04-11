@@ -1255,7 +1255,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.mac.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.tests.mac;
 				SDKROOT = macosx;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GT3CompanionMac.app/Contents/MacOS/GT3CompanionMac";
 			};
@@ -1286,7 +1286,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.vision.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.tests.vision;
 				SDKROOT = xros;
 				TARGETED_DEVICE_FAMILY = 7;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GT3CompanionVision.app/GT3CompanionVision";
@@ -1306,7 +1306,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.mac;
+				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -1359,7 +1359,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.vision;
+				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion;
 				SDKROOT = xros;
 				TARGETED_DEVICE_FAMILY = 7;
 			};
@@ -1459,7 +1459,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.mac;
+				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion;
 				SDKROOT = macosx;
 			};
 			name = Debug;
@@ -1562,7 +1562,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.vision.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.tests.vision;
 				SDKROOT = xros;
 				TARGETED_DEVICE_FAMILY = 7;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GT3CompanionVision.app/GT3CompanionVision";
@@ -1595,7 +1595,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.vision;
+				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion;
 				SDKROOT = xros;
 				TARGETED_DEVICE_FAMILY = 7;
 			};
@@ -1612,7 +1612,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.mac.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.tests.mac;
 				SDKROOT = macosx;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GT3CompanionMac.app/Contents/MacOS/GT3CompanionMac";
 			};

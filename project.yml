@@ -188,7 +188,7 @@ targets:
           - "**/.DS_Store"
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.mac.tests
+        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.tests.mac
         GENERATE_INFOPLIST_FILE: true
     dependencies:
       - target: GT3CompanionMac
@@ -203,7 +203,7 @@ targets:
           - "**/.DS_Store"
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.vision.tests
+        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.tests.vision
         GENERATE_INFOPLIST_FILE: true
     dependencies:
       - target: GT3CompanionVision
@@ -246,7 +246,7 @@ targets:
         LSApplicationCategoryType: public.app-category.lifestyle
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.mac
+        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
@@ -273,7 +273,7 @@ targets:
         ITSAppUsesNonExemptEncryption: false
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.vision
+        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
