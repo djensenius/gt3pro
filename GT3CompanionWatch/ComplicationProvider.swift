@@ -40,6 +40,7 @@ struct GT3BatteryComplicationView: View {
         VStack {
             Image(systemName: "scooter")
                 .font(.caption)
+                .environment(\.layoutDirection, .rightToLeft)
             Text("\(entry.batteryPercent)%")
                 .font(.headline)
         }

@@ -21,7 +21,12 @@ struct MacContentView: View {
                     Label("Analytics", systemImage: "chart.xyaxis.line")
                 }
                 NavigationLink(destination: ScooterInfoView()) {
-                    Label("Scooter", systemImage: "scooter")
+                    Label {
+                        Text("Scooter")
+                    } icon: {
+                        Image(systemName: "scooter")
+                            .environment(\.layoutDirection, .rightToLeft)
+                    }
                 }
             }
             .navigationTitle("GT3 Companion")
@@ -30,6 +35,7 @@ struct MacContentView: View {
                 Image(systemName: "scooter")
                     .font(.system(size: 48))
                     .foregroundStyle(Theme.Colors.accent)
+                    .environment(\.layoutDirection, .rightToLeft)
 
                 Text("GT3 Companion")
                     .font(Theme.Fonts.headerXL())

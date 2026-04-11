@@ -90,6 +90,7 @@ struct WatchRideView: View {
             Image(systemName: "scooter")
                 .font(.system(size: 40))
                 .foregroundStyle(.cyan)
+                .environment(\.layoutDirection, .rightToLeft)
             Text("GT3 Companion")
                 .font(.headline)
             Text("Open app on iPhone")

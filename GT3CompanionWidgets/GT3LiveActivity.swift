@@ -97,6 +97,7 @@ struct GT3LiveActivity: Widget {
             } minimal: {
                 if context.state.isAwake {
                     Image(systemName: "scooter")
+                        .environment(\.layoutDirection, .rightToLeft)
                 } else {
                     Image(systemName: "moon.zzz.fill")
                         .foregroundStyle(.secondary)
