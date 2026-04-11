@@ -15,8 +15,77 @@ struct RouteCoordinate {
     let speed: Double
 }
 
+/// A segment of consecutive coordinates sharing a similar speed color.
+private struct SpeedSegment: Identifiable {
+    let id: Int
+    let coordinates: [CLLocationCoordinate2D]
+    let speed: Double
+}
+
+/// Maps a speed ratio (0–1) to an integer color bucket for batching.
+private func colorBucket(speed: Double, maxSpeed: Double) -> Int {
+    guard maxSpeed > 0 else { return 0 }
+    return min(Int(speed / maxSpeed * 10), 10)
+}
+
+/// Maps a speed value to a gradient from green (slow) → yellow → red (fast).
+private func speedColor(speed: Double, maxSpeed: Double) -> Color {
+    guard maxSpeed > 0 else { return Theme.Colors.accent }
+    let ratio = min(speed / maxSpeed, 1.0)
+    if ratio < 0.5 {
+        let progress = ratio / 0.5
+        return Color(
+            red: progress,
+            green: 0.8,
+            blue: 0.2 * (1 - progress)
+        )
+    } else {
+        let progress = (ratio - 0.5) / 0.5
+        return Color(
+            red: 0.9 + 0.1 * progress,
+            green: 0.8 * (1 - progress),
+            blue: 0
+        )
+    }
+}
+
 struct MapRouteView: View {
     let coordinates: [RouteCoordinate]
+
+    private var segments: [SpeedSegment] {
+        guard coordinates.count >= 2 else { return [] }
+        let max = maxSpeed
+        var result: [SpeedSegment] = []
+        var currentCoords: [CLLocationCoordinate2D] = []
+        var currentBucket = -1
+        var currentSpeed = 0.0
+        var segmentId = 0
+
+        for idx in 0..<coordinates.count {
+            let coord = coordinates[idx]
+            let speed = coord.speed
+            let bucket = colorBucket(speed: speed, maxSpeed: max)
+            let loc = CLLocationCoordinate2D(latitude: coord.latitude, longitude: coord.longitude)
+
+            if bucket != currentBucket && !currentCoords.isEmpty {
+                // Close previous segment (share the boundary point)
+                result.append(SpeedSegment(id: segmentId, coordinates: currentCoords, speed: currentSpeed))
+                segmentId += 1
+                currentCoords = [currentCoords.last!]
+            }
+            currentCoords.append(loc)
+            currentBucket = bucket
+            currentSpeed = speed
+        }
+        if currentCoords.count >= 2 {
+            result.append(SpeedSegment(id: segmentId, coordinates: currentCoords, speed: currentSpeed))
+        }
+        return result
+    }
+
+    private var maxSpeed: Double {
+        coordinates.map(\.speed).max() ?? 1
+    }
 
     var body: some View {
         if coordinates.isEmpty {
@@ -50,10 +119,10 @@ struct MapRouteView: View {
                             .foregroundStyle(Theme.Colors.error)
                     }
                 }
-                MapPolyline(coordinates: coordinates.map {
-                    CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude)
-                })
-                .stroke(Theme.Colors.accent, lineWidth: 4)
+                ForEach(segments) { segment in
+                    MapPolyline(coordinates: segment.coordinates)
+                        .stroke(speedColor(speed: segment.speed, maxSpeed: maxSpeed), lineWidth: 4)
+                }
             }
             .frame(height: 250)
             .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius))

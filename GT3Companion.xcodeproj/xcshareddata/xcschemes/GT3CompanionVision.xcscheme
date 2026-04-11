@@ -39,7 +39,20 @@
          </BuildableReference>
       </MacroExpansion>
       <Testables>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "84AADE8AAF795DB65778E286"
+               BuildableName = "GT3CompanionVisionTests.xctest"
+               BlueprintName = "GT3CompanionVisionTests"
+               ReferencedContainer = "container:GT3Companion.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
+      <CommandLineArguments>
+      </CommandLineArguments>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"

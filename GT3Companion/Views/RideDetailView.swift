@@ -73,17 +73,18 @@ struct RideDetailView: View {
                         StatCard(
                             title: "Start",
                             value: "\(ride.startBattery)%",
-                            icon: "battery.100percent",
+                            icon: batteryIconName(for: ride.startBattery),
                             color: Theme.Colors.success
                         )
                         StatCard(
                             title: "End",
                             value: "\(ride.endBattery ?? 0)%",
-                            icon: "battery.25percent",
+                            icon: batteryIconName(for: ride.endBattery ?? 0),
                             color: Theme.Colors.warning
                         )
                     }
 
+                    weatherSection
                     routeSection
                     speedChartSection
                     batteryChartSection
@@ -93,6 +94,75 @@ struct RideDetailView: View {
             }
         }
         .navigationTitle(ride.startTime.formatted(date: .abbreviated, time: .omitted))
+    }
+
+    @ViewBuilder
+    private var weatherSection: some View {
+        if let condition = ride.weatherCondition {
+            VStack(alignment: .leading, spacing: Theme.Spacing.small) {
+                Text("Weather")
+                    .font(Theme.Fonts.headerLarge())
+                    .foregroundStyle(Theme.Colors.textPrimary)
+                    .padding(.horizontal)
+
+                VStack(spacing: Theme.Spacing.medium) {
+                    HStack(spacing: Theme.Spacing.large) {
+                        Image(systemName: ride.weatherConditionSymbol ?? weatherSymbol(for: condition))
+                            .font(.system(size: 40))
+                            .foregroundStyle(Theme.Colors.accent)
+                            .frame(width: 50)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(condition.capitalized)
+                                .font(Theme.Fonts.bodyMedium)
+                                .foregroundStyle(Theme.Colors.textPrimary)
+                            if let temp = ride.weatherTemp {
+                                Text(String(format: "%.0f°C", temp))
+                                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                                    .foregroundStyle(Theme.Colors.textPrimary)
+                            }
+                            if let feelsLike = ride.weatherFeelsLike {
+                                Text(String(format: "Feels like %.0f°C", feelsLike))
+                                    .font(Theme.Fonts.bodySmall)
+                                    .foregroundStyle(Theme.Colors.textSecondary)
+                            }
+                        }
+                        Spacer()
+                    }
+
+                    HStack(spacing: Theme.Spacing.medium) {
+                        if let humidity = ride.weatherHumidity {
+                            let formatted = String(format: "%.0f%%", humidity)
+                            weatherDetail(icon: "humidity.fill", label: "Humidity", value: formatted)
+                        }
+                        if let windSpeed = ride.weatherWindSpeed {
+                            weatherDetail(icon: "wind", label: "Wind", value: String(format: "%.0f km/h", windSpeed))
+                        }
+                        if let uvIndex = ride.weatherUVIndex {
+                            weatherDetail(icon: "sun.max.fill", label: "UV", value: String(format: "%.0f", uvIndex))
+                        }
+                    }
+                }
+                .padding()
+                .background(Theme.Colors.elevatedBackground)
+                .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius))
+                .padding(.horizontal)
+            }
+        }
+    }
+
+    private func weatherDetail(icon: String, label: String, value: String) -> some View {
+        VStack(spacing: 4) {
+            Image(systemName: icon)
+                .foregroundStyle(Theme.Colors.accent)
+            Text(value)
+                .font(Theme.Fonts.bodySmall)
+                .foregroundStyle(Theme.Colors.textPrimary)
+            Text(label)
+                .font(Theme.Fonts.caption)
+                .foregroundStyle(Theme.Colors.textSecondary)
+        }
+        .frame(maxWidth: .infinity)
     }
 
     private var routeSection: some View {

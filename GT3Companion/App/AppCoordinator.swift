@@ -6,6 +6,7 @@
 //
 
 #if os(iOS)
+import CoreLocation
 import Foundation
 import os
 import UserNotifications
@@ -392,6 +393,20 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
             isRiding = true
             sendRideStartNotification()
             logger.info("Ride auto-started — notifying user")
+
+            // Fetch weather at ride start
+            if let gpsSample {
+                let location = CLLocation(
+                    latitude: gpsSample.latitude,
+                    longitude: gpsSample.longitude
+                )
+                let rideId = await self.rideTracker.getCurrentRideId()
+                Task {
+                    let weather = await WeatherService.shared.fetchWeather(at: location)
+                    guard await self.rideTracker.getCurrentRideId() == rideId else { return }
+                    await self.rideTracker.setWeather(weather)
+                }
+            }
         }
         isRiding = await rideTracker.state != .idle
 
@@ -452,6 +467,19 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         persisted.batteryUsed = rideLog.batteryUsed
         persisted.endBattery = rideLog.endBattery
         persisted.primaryGearMode = rideLog.primaryGearMode
+
+        if let weather = rideLog.weather {
+            persisted.weatherTemp = weather.temp
+            persisted.weatherFeelsLike = weather.feelsLike
+            persisted.weatherHumidity = weather.humidity
+            persisted.weatherWindSpeed = weather.windSpeed
+            persisted.weatherWindDirection = weather.windDirection
+            persisted.weatherCondition = weather.condition
+            persisted.weatherConditionSymbol = weather.conditionSymbol
+            persisted.weatherUVIndex = weather.uvIndex
+            persisted.weatherPressure = weather.pressure
+        }
+
         context.insert(persisted)
         try? context.save()
 

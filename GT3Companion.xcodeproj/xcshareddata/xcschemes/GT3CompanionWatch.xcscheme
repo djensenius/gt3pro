@@ -37,6 +37,17 @@
          </BuildableReference>
       </MacroExpansion>
       <Testables>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "45064F3F871A248DF162AA25"
+               BuildableName = "GT3CompanionWatchTests.xctest"
+               BlueprintName = "GT3CompanionWatchTests"
+               ReferencedContainer = "container:GT3Companion.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

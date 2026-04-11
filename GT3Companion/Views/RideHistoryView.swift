@@ -40,17 +40,35 @@ struct RideRowView: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(ride.startTime, style: .date)
-                    .font(Theme.Fonts.bodyMedium)
-                    .foregroundStyle(Theme.Colors.textPrimary)
-                Text(String(
-                    format: "%.1f km · %@ · %d%% battery used",
-                    ride.totalDistance,
-                    ride.formattedDuration,
-                    ride.batteryUsed
-                ))
-                    .font(Theme.Fonts.bodySmall)
-                    .foregroundStyle(Theme.Colors.textSecondary)
+                HStack(spacing: 6) {
+                    Text(ride.startTime, style: .date)
+                        .font(Theme.Fonts.bodyMedium)
+                        .foregroundStyle(Theme.Colors.textPrimary)
+
+                    if let condition = ride.weatherCondition {
+                        Image(systemName: ride.weatherConditionSymbol ?? weatherSymbol(for: condition))
+                            .font(Theme.Fonts.bodySmall)
+                            .foregroundStyle(Theme.Colors.accent)
+                        if let temp = ride.weatherTemp {
+                            Text(String(format: "%.0f°", temp))
+                                .font(Theme.Fonts.bodySmall)
+                                .foregroundStyle(Theme.Colors.textSecondary)
+                        }
+                    }
+                }
+                HStack(spacing: 4) {
+                    Image(systemName: batteryIconName(for: ride.startBattery))
+                        .font(Theme.Fonts.caption)
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                    Text(String(
+                        format: "%.1f km · %@ · %d%% used",
+                        ride.totalDistance,
+                        ride.formattedDuration,
+                        ride.batteryUsed
+                    ))
+                        .font(Theme.Fonts.bodySmall)
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                }
             }
             Spacer()
             Text(String(format: "%.0f", ride.maxSpeed))

@@ -40,7 +40,7 @@ struct WatchRideView: View {
             }
 
             HStack(spacing: 12) {
-                Label("\(connectivity.battery)%", systemImage: "battery.75percent")
+                Label("\(connectivity.battery)%", systemImage: batteryIconName(for: connectivity.battery))
                     .font(.caption)
                 Label(
                     String(format: "%.1f km", connectivity.tripDistance),

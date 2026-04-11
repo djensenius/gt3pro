@@ -40,6 +40,15 @@ class PersistedRide {
     var gpsTrackJSON: Data?
     var healthDataJSON: Data?
     var metadataJSON: Data?
+    var weatherTemp: Double?
+    var weatherFeelsLike: Double?
+    var weatherHumidity: Double?
+    var weatherWindSpeed: Double?
+    var weatherWindDirection: Double?
+    var weatherCondition: String?
+    var weatherConditionSymbol: String?
+    var weatherUVIndex: Double?
+    var weatherPressure: Double?
 
     init(rideId: String, startTime: Date, startBattery: Int) {
         self.rideId = rideId

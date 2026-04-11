@@ -144,7 +144,7 @@ struct DashboardView: View {
                 StatCard(
                     title: "Battery",
                     value: "\(battery)%",
-                    icon: "battery.75percent",
+                    icon: batteryIconName(for: battery),
                     color: batteryColor
                 )
                 StatCard(
