@@ -25,4 +25,5 @@ jobs:
             -destination "generic/platform=iOS" \
             -configuration Debug \
             -skipPackagePluginValidation \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO \
+            ENABLE_PREVIEWS=NO
