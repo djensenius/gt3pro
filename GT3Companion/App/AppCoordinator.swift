@@ -132,6 +132,12 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         gpsTracker.startTracking()
         roughnessTracker.startTracking()
 
+        // Ensure a Live Activity is running (guards against missed
+        // .authenticating state change on background reconnect).
+        if !liveActivityManager.isActive {
+            await liveActivityManager.startRideActivity()
+        }
+
         await registerReader.startPolling()
         watchSession.updateContext(battery: 0, isConnected: true)
 
