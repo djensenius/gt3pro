@@ -60,6 +60,14 @@ Build and submit to App Store
 
 ## Mac
 
+### mac upload_screenshots
+
+```sh
+[bundle exec] fastlane mac upload_screenshots
+```
+
+Upload Mac screenshots to App Store Connect
+
 ### mac beta
 
 ```sh
@@ -75,6 +83,19 @@ Build and upload Mac app to TestFlight
 ```
 
 Build and submit Mac app to App Store
+
+----
+
+
+## visionos
+
+### visionos upload_screenshots
+
+```sh
+[bundle exec] fastlane visionos upload_screenshots
+```
+
+Upload Vision Pro screenshots to App Store Connect
 
 ----
 
