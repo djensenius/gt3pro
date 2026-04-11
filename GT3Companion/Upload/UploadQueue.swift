@@ -56,6 +56,11 @@ actor UploadQueue {
         }
     }
 
+    /// Retry a previously failed upload from persisted payload.
+    func retryUpload(payload: Data) async throws -> Data {
+        try await apiClient.retryPost(path: "/gt3/ride", body: payload)
+    }
+
     func getPendingCount() -> Int { pendingSamples.count }
 }
 #endif

@@ -9,6 +9,7 @@
 import CoreLocation
 import Foundation
 import os
+import SwiftData
 import UserNotifications
 
 private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", category: "Coordinator")
@@ -85,7 +86,10 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
 
         self.storedPassword = storedPassword
         connectionManager.start(storedPassword: storedPassword)
-        Task { await liveActivityManager.endRideActivity() }
+        Task {
+            await liveActivityManager.endRideActivity()
+            await retryPendingUploads()
+        }
         logger.info("AppCoordinator started — watching for GT3 Pro")
     }
 
@@ -140,6 +144,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
 
         await registerReader.startPolling()
         watchSession.updateContext(battery: 0, isConnected: true)
+        await retryPendingUploads()
 
         logger.info("Fully connected — polling, GPS, roughness, Live Activity active")
     }
@@ -441,6 +446,48 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
             persisted.rideId = serverId
             persisted.uploaded = true
             try? context.save()
+        } else {
+            // Persist for retry — encode the full RideLog as JSON
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .iso8601
+            if let payload = try? encoder.encode(rideLog) {
+                let queueItem = UploadQueueItem(payload: payload, endpoint: "/gt3/ride")
+                context.insert(queueItem)
+                try? context.save()
+                logger.info("Queued ride \(rideLog.rideId) for retry")
+            }
+        }
+    }
+
+    /// Retry uploading any rides that failed previously.
+    private func retryPendingUploads() async {
+        let context = PersistenceController.shared.context
+        guard let items = try? context.fetch(FetchDescriptor<UploadQueueItem>()),
+              !items.isEmpty else { return }
+        logger.info("Found \(items.count) pending upload(s) to retry")
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        for item in items {
+            do {
+                let data = try await uploadQueue.retryUpload(payload: item.payload)
+                if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let serverId = json["id"] as? String,
+                   let ride = try? decoder.decode(RideLog.self, from: item.payload) {
+                    let pred = #Predicate<PersistedRide> { $0.rideId == ride.rideId }
+                    if let persisted = try? context.fetch(FetchDescriptor(predicate: pred)).first {
+                        persisted.rideId = serverId
+                        persisted.uploaded = true
+                    }
+                }
+                context.delete(item)
+                try? context.save()
+                logger.info("Retry succeeded for queued upload")
+            } catch {
+                item.retryCount += 1
+                item.lastAttempt = Date()
+                try? context.save()
+                logger.warning("Retry failed (attempt \(item.retryCount)): \(error)")
+            }
         }
     }
 }
