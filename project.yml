@@ -132,6 +132,20 @@ targets:
       - target: GT3Companion
         embed: false
 
+  GT3CompanionUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: GT3CompanionUITests
+        excludes:
+          - "**/.DS_Store"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.uitests
+    dependencies:
+      - target: GT3Companion
+        embed: false
+
   GT3CompanionMac:
     type: application
     platform: macOS

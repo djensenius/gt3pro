@@ -1,0 +1,76 @@
+default_platform(:ios)
+
+platform :ios do
+  before_all do
+    app_store_connect_api_key(
+      key_id: "XP65R4N5A2",
+      issuer_id: "69a6de7e-a5f5-47e3-e053-5b8c7c11a4d1",
+      key_filepath: File.expand_path("~/.appstoreconnect/AuthKey_XP65R4N5A2.p8")
+    )
+  end
+
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    increment_build_number(
+      build_number: Time.now.strftime("%Y%m%d%H%M")
+    )
+    build_app(
+      project: "GT3Companion.xcodeproj",
+      scheme: "GT3Companion",
+      export_method: "app-store",
+      xcargs: "-allowProvisioningUpdates"
+    )
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  desc "Capture App Store screenshots"
+  lane :screenshots do
+    capture_screenshots
+  end
+
+  desc "Upload screenshots to App Store Connect"
+  lane :upload_screenshots do
+    deliver(
+      skip_binary_upload: true,
+      skip_metadata: true,
+      force: true,
+      overwrite_screenshots: true,
+      app_identifier: "org.davidjensenius.GT3Companion"
+    )
+  end
+
+  desc "Upload metadata to App Store Connect"
+  lane :metadata do
+    deliver(
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      force: true,
+      app_identifier: "org.davidjensenius.GT3Companion",
+      submit_for_review: false,
+      automatic_release: false,
+      price_tier: 0
+    )
+  end
+
+  desc "Build and submit to App Store"
+  lane :release do
+    increment_build_number(
+      build_number: Time.now.strftime("%Y%m%d%H%M")
+    )
+    build_app(
+      project: "GT3Companion.xcodeproj",
+      scheme: "GT3Companion",
+      export_method: "app-store",
+      xcargs: "-allowProvisioningUpdates"
+    )
+    deliver(
+      skip_screenshots: true,
+      force: true,
+      submit_for_review: false,
+      automatic_release: false,
+      price_tier: 0
+    )
+  end
+end

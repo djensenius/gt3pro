@@ -16,6 +16,7 @@
 		12BC724CF4BE3DEDED407778 /* GPSTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C1ECE09CFA84C86FA1A4892 /* GPSTracker.swift */; };
 		14081CD2FA3DE9C3454C6EF0 /* RideSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5321F13F45361AC2D0345AF4 /* RideSyncService.swift */; };
 		18816EF42D84BEE79BAECC77 /* VisionContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DCD3F4E090513234E3E93D4 /* VisionContentView.swift */; };
+		197556F75B3820A1000D15DA /* GT3CompanionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21D1E227816962A170A4BB65 /* GT3CompanionUITests.swift */; };
 		1A073CC2F36A0042C580A3B0 /* DataExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B37C34C9C57F04F3812AA098 /* DataExtensions.swift */; };
 		1B3980D421AC54B23ADC469A /* NinebotCrypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1DF0B6837DF0A29239682E /* NinebotCrypto.swift */; };
 		1BA065423E7014CBEF7E5789 /* PreviewHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEC6013FFE64589ED662804D /* PreviewHelpers.swift */; };
@@ -125,6 +126,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		26458BC8DDA19F2A43CCBB8F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F9DD18F549BB83F9A6477CFC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8DAAB8E08DF7CB2411D8C05B;
+			remoteInfo = GT3Companion;
+		};
 		3AEAC9533885EBC232B5C97B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F9DD18F549BB83F9A6477CFC /* Project object */;
@@ -193,10 +201,12 @@
 		19905BAB58FB3DB581F8B592 /* GPXExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPXExporter.swift; sourceTree = "<group>"; };
 		1DCD3F4E090513234E3E93D4 /* VisionContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionContentView.swift; sourceTree = "<group>"; };
 		1E34BA6710E1650D5275870E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		21D1E227816962A170A4BB65 /* GT3CompanionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3CompanionUITests.swift; sourceTree = "<group>"; };
 		2CFA6EEC6FC4981ACF73576B /* GT3CompanionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3CompanionTests.swift; sourceTree = "<group>"; };
 		2D0BC7212A2BD252D996C21B /* GT3RideAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3RideAttributes.swift; sourceTree = "<group>"; };
 		2E6E068D2FFD52B5C440C611 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2F60D7016AF895D2E94ABCA0 /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
+		331C823A352F2D7F81A411AB /* GT3CompanionUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GT3CompanionUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		35AB36E7D729C0D68B6B3A03 /* GT3LiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3LiveActivity.swift; sourceTree = "<group>"; };
 		374129A26773B2CE08A45568 /* ScooterKeychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScooterKeychain.swift; sourceTree = "<group>"; };
 		3ABE49BC4B627FB608831639 /* GT3RegistersTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3RegistersTests.swift; sourceTree = "<group>"; };
@@ -226,7 +236,7 @@
 		83460368F60A53C5A30952A7 /* NinebotTransportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NinebotTransportTests.swift; sourceTree = "<group>"; };
 		863AE1336A31A4B389EB86D6 /* WatchConnectivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityManager.swift; sourceTree = "<group>"; };
 		867A0316339825606B7EBFEA /* GT3APIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3APIClientTests.swift; sourceTree = "<group>"; };
-		86B8226EFDA7D34866B48B2E /* GT3CompanionVision.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GT3CompanionVision.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		86B8226EFDA7D34866B48B2E /* GT3CompanionVision.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GT3CompanionVision.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		891BD92EAAEA3BFE7C483FEA /* GT3CompanionWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3CompanionWatchApp.swift; sourceTree = "<group>"; };
 		8934033CB09959903D59EF5C /* KeyDerivation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyDerivation.swift; sourceTree = "<group>"; };
 		8FC8DF5E472D510C6DDEDF69 /* GT3Companion.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GT3Companion.entitlements; sourceTree = "<group>"; };
@@ -241,19 +251,19 @@
 		AEC6013FFE64589ED662804D /* PreviewHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewHelpers.swift; sourceTree = "<group>"; };
 		B37C34C9C57F04F3812AA098 /* DataExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataExtensions.swift; sourceTree = "<group>"; };
 		B7BEE3B916F38F756C2A05FA /* GT3Registers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3Registers.swift; sourceTree = "<group>"; };
-		BDE60F2A3E20E8CFCAE04D6A /* GT3CompanionWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GT3CompanionWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		BDE60F2A3E20E8CFCAE04D6A /* GT3CompanionWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = GT3CompanionWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		BEEE5678757A80552FB8CD6E /* JavaLCGTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JavaLCGTests.swift; sourceTree = "<group>"; };
 		BFD55D92AFA58C5FCCB083F7 /* ScooterPeripheralDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScooterPeripheralDelegate.swift; sourceTree = "<group>"; };
 		C52F4AD50049BAA6D58C7B83 /* GT3CompanionMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GT3CompanionMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C578ACBA36D95C48E179455A /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
 		C76AE1C74BD9FB056599493D /* SurfaceRoughnessTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurfaceRoughnessTracker.swift; sourceTree = "<group>"; };
-		C822EB76A11042B82719F773 /* GT3Companion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GT3Companion.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C822EB76A11042B82719F773 /* GT3Companion.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GT3Companion.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C894222A35BFDE918279DBCA /* GT3APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3APIClient.swift; sourceTree = "<group>"; };
 		C96A0466670E6039D58C90A6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		CA0670D4CC9E61B989E835AC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		CB87773429ACD607F25A8BF3 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		CE53582C2CC4F2EFA20AD815 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
-		D79298EC0DD3C0258F248BCC /* GT3CompanionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GT3CompanionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D79298EC0DD3C0258F248BCC /* GT3CompanionTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GT3CompanionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D8D8302BED52B6CDA212C08A /* AESHelperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AESHelperTests.swift; sourceTree = "<group>"; };
 		DEE7C3B06D5FF3708534DD86 /* JavaLCG.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JavaLCG.swift; sourceTree = "<group>"; };
 		DFA059564462F3ED6EFEE13A /* StatCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatCard.swift; sourceTree = "<group>"; };
@@ -466,6 +476,7 @@
 				21095628F71C2695BA153843 /* GT3Companion */,
 				5E0816D35C639C775E670EDD /* GT3CompanionMac */,
 				480146D7597BFCCDA52CE893 /* GT3CompanionTests */,
+				B7DB5F4F6D66F3BB2051A63A /* GT3CompanionUITests */,
 				0DE1ADF533323F50B81D357F /* GT3CompanionVision */,
 				1D5E70F7D9DCE658B083FF39 /* GT3CompanionWatch */,
 				74FAD1F0A2DF52180357AE1A /* GT3CompanionWidgets */,
@@ -488,12 +499,21 @@
 			path = App;
 			sourceTree = "<group>";
 		};
+		B7DB5F4F6D66F3BB2051A63A /* GT3CompanionUITests */ = {
+			isa = PBXGroup;
+			children = (
+				21D1E227816962A170A4BB65 /* GT3CompanionUITests.swift */,
+			);
+			path = GT3CompanionUITests;
+			sourceTree = "<group>";
+		};
 		EE5CF9188D790443CFFFEFCA /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				C822EB76A11042B82719F773 /* GT3Companion.app */,
 				C52F4AD50049BAA6D58C7B83 /* GT3CompanionMac.app */,
 				D79298EC0DD3C0258F248BCC /* GT3CompanionTests.xctest */,
+				331C823A352F2D7F81A411AB /* GT3CompanionUITests.xctest */,
 				86B8226EFDA7D34866B48B2E /* GT3CompanionVision.app */,
 				60A31234CEAAD986C4952B40 /* GT3CompanionWatch.app */,
 				BDE60F2A3E20E8CFCAE04D6A /* GT3CompanionWidgets.appex */,
@@ -574,6 +594,24 @@
 			productReference = C52F4AD50049BAA6D58C7B83 /* GT3CompanionMac.app */;
 			productType = "com.apple.product-type.application";
 		};
+		6C19F0F71ED7949B2A8A4C21 /* GT3CompanionUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 84091EF1FD3BAF1FC5A024B9 /* Build configuration list for PBXNativeTarget "GT3CompanionUITests" */;
+			buildPhases = (
+				CA765E74ACD2806A5DA92307 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4EC28053C4DF26518B128643 /* PBXTargetDependency */,
+			);
+			name = GT3CompanionUITests;
+			packageProductDependencies = (
+			);
+			productName = GT3CompanionUITests;
+			productReference = 331C823A352F2D7F81A411AB /* GT3CompanionUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		8DAAB8E08DF7CB2411D8C05B /* GT3Companion */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 3B8F51E557609D01DBC93BCF /* Build configuration list for PBXNativeTarget "GT3Companion" */;
@@ -638,13 +676,16 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 2640;
+				LastUpgradeCheck = 1630;
 				TargetAttributes = {
 					1F8F4FC8E50B9764CB67E92E = {
 						ProvisioningStyle = Automatic;
 					};
 					60CF77045CBDFA1F08899A3E = {
 						ProvisioningStyle = Automatic;
+					};
+					6C19F0F71ED7949B2A8A4C21 = {
+						TestTargetID = 8DAAB8E08DF7CB2411D8C05B;
 					};
 					8DAAB8E08DF7CB2411D8C05B = {
 						ProvisioningStyle = Automatic;
@@ -674,6 +715,7 @@
 				8DAAB8E08DF7CB2411D8C05B /* GT3Companion */,
 				60CF77045CBDFA1F08899A3E /* GT3CompanionMac */,
 				3150836385EF705E4F18E305 /* GT3CompanionTests */,
+				6C19F0F71ED7949B2A8A4C21 /* GT3CompanionUITests */,
 				1F8F4FC8E50B9764CB67E92E /* GT3CompanionVision */,
 				A83A7797F28590F653E2440A /* GT3CompanionWatch */,
 				D7725A84B2A0C61CCFC07BC5 /* GT3CompanionWidgets */,
@@ -868,9 +910,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CA765E74ACD2806A5DA92307 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				197556F75B3820A1000D15DA /* GT3CompanionUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		4EC28053C4DF26518B128643 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8DAAB8E08DF7CB2411D8C05B /* GT3Companion */;
+			targetProxy = 26458BC8DDA19F2A43CCBB8F /* PBXContainerItemProxy */;
+		};
 		A624852DCD1B821CCAD9218B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = A83A7797F28590F653E2440A /* GT3CompanionWatch */;
@@ -898,12 +953,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GT3Companion/Info.plist;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -935,7 +988,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GT3CompanionWatch/Info.plist;
-				MARKETING_VERSION = 0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.watch;
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -949,15 +1001,12 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEAD_CODE_STRIPPING = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GT3CompanionMac/Info.plist;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.mac;
 				SDKROOT = macosx;
 			};
@@ -988,12 +1037,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GT3Companion/Info.plist;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1011,7 +1058,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.vision;
 				SDKROOT = xros;
 				TARGETED_DEVICE_FAMILY = 7;
@@ -1052,12 +1098,9 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = 9JALHNGRBQ;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -1071,12 +1114,27 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5;
 				WATCHOS_DEPLOYMENT_TARGET = 11.0;
 				XROS_DEPLOYMENT_TARGET = 2.0;
+			};
+			name = Release;
+		};
+		A008E691FF25F0830FDC028E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = GT3Companion;
 			};
 			name = Release;
 		};
@@ -1086,15 +1144,12 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEAD_CODE_STRIPPING = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GT3CompanionMac/Info.plist;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.mac;
 				SDKROOT = macosx;
 			};
@@ -1134,12 +1189,9 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = 9JALHNGRBQ;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -1160,7 +1212,6 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5;
@@ -1193,7 +1244,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GT3CompanionWatch/Info.plist;
-				MARKETING_VERSION = 0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.watch;
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -1212,10 +1262,25 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.vision;
 				SDKROOT = xros;
 				TARGETED_DEVICE_FAMILY = 7;
+			};
+			name = Debug;
+		};
+		E234548CCC1BD0B7C2879382 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.davidjensenius.GT3Companion.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = GT3Companion;
 			};
 			name = Debug;
 		};
@@ -1262,6 +1327,15 @@
 			buildConfigurations = (
 				13DE7979992E1BD22955C3C4 /* Debug */,
 				7A0F135F9E51C1E6F7E2D3A5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		84091EF1FD3BAF1FC5A024B9 /* Build configuration list for PBXNativeTarget "GT3CompanionUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E234548CCC1BD0B7C2879382 /* Debug */,
+				A008E691FF25F0830FDC028E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

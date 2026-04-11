@@ -72,9 +72,43 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     func start(storedPassword: Data? = nil) {
         guard !hasStarted else { return }
         hasStarted = true
+
+        if ProcessInfo.processInfo.arguments.contains("--screenshot-mode") {
+            loadScreenshotData()
+            return
+        }
+
         self.storedPassword = storedPassword
         connectionManager.start(storedPassword: storedPassword)
         logger.info("AppCoordinator started — watching for GT3 Pro")
+    }
+
+    /// Populate mock data for App Store screenshots.
+    private func loadScreenshotData() {
+        connectionState = .connected
+        isScooterAwake = true
+        isRiding = true
+        currentSpeed = 47
+        currentBattery = 82
+        tripDistance = 6.3
+        estimatedRange = 38
+        gearMode = 3
+        bmsTemp = 32.5
+        bodyTemp = 28.0
+        serialNumber = "03GGG2539C0023"
+        odometer = 109.4
+        totalRideTime = 7200
+        controllerFirmware = "2.1.8"
+        mcuFirmware = "1.3.4"
+        bms1Firmware = "1.0.9"
+        bleFirmware = "1.2.1"
+        chargeStatus = 0
+        partNumber = "AA.50.0026.10"
+        bmsVoltage = 58.2
+        bmsCurrent = 12.4
+        chargeCycles = 15
+        bmsRemainingCapacity = 1890
+        logger.info("Screenshot mode — loaded mock data")
     }
 
     /// Restart BLE scanning — used when the user taps "Retry Connection".
