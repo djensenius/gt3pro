@@ -244,6 +244,7 @@
 		3ABE49BC4B627FB608831639 /* GT3RegistersTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3RegistersTests.swift; sourceTree = "<group>"; };
 		3B7F41D6D8220A7D36237600 /* ServerRide.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerRide.swift; sourceTree = "<group>"; };
 		3D6E8F36E6C056415E4BB47A /* TelemetryParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelemetryParserTests.swift; sourceTree = "<group>"; };
+		40C967F3359326162B021D71 /* GT3CompanionMac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GT3CompanionMac.entitlements; sourceTree = "<group>"; };
 		424F02984953C13821C555EE /* RegisterReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterReader.swift; sourceTree = "<group>"; };
 		44F46F784FC8CE9B05A670EC /* UploadQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadQueue.swift; sourceTree = "<group>"; };
 		45160E9C4AC8147D2A6D6029 /* NinebotAuthTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NinebotAuthTests.swift; sourceTree = "<group>"; };
@@ -484,6 +485,7 @@
 			isa = PBXGroup;
 			children = (
 				7EA8C9B9596FCD2188B27DCB /* Assets.xcassets */,
+				40C967F3359326162B021D71 /* GT3CompanionMac.entitlements */,
 				047BB1B09415CC35C15712AE /* GT3CompanionMacApp.swift */,
 				ADC13C5A39D3483D8EEDD04B /* Info.plist */,
 				FA58425277ED9CA3252868B8 /* MacContentView.swift */,
@@ -1296,8 +1298,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = GT3CompanionMac/GT3CompanionMac.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GT3CompanionMac/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1447,8 +1451,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = GT3CompanionMac/GT3CompanionMac.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GT3CompanionMac/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

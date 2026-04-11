@@ -250,6 +250,9 @@ targets:
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ENABLE_HARDENED_RUNTIME: true
+    entitlements:
+      path: GT3CompanionMac/GT3CompanionMac.entitlements
 
   GT3CompanionVision:
     type: application
