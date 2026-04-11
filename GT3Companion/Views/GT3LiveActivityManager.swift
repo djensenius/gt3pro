@@ -69,7 +69,7 @@ class GT3LiveActivityManager {
     private func endAllActivities() async {
         for activity in Activity<GT3RideAttributes>.activities {
             nonisolated(unsafe) let sendableActivity = activity
-            await sendableActivity.end(nil, dismissalPolicy: .default)
+            await sendableActivity.end(nil, dismissalPolicy: .immediate)
         }
         currentActivity = nil
         logger.info("Ended all ride Live Activities")
