@@ -291,10 +291,16 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     private func handleBatteryUpdate(_ value: Int) {
         currentBattery = value
 
-        // Battery > 0 confirms the VCU is alive. Use this as a secondary
-        // wake indicator for the initial connect before rBool is polled.
+        // Battery > 0 confirms the VCU is alive — use as a secondary wake
+        // indicator alongside rBool (rBool is authoritative, but battery
+        // responds before rBool is polled in the cycle).
         if value > 0 && !isScooterAwake {
-            logger.info("Battery \(value)% detected — scooter may be waking (rBool will confirm)")
+            logger.info("Battery \(value)% — setting scooter awake")
+            isScooterAwake = true
+            stopPowerOnPolling()
+            gpsTracker.startTracking()
+            roughnessTracker.startTracking()
+            startTelemetryWatchdog()
         }
     }
 

@@ -145,7 +145,8 @@ enum TelemetryParser {
              "rProjectionLightMode", "rTailLightMode",
              "rAlarmLevel", "rBumpyRoad", "rVoiceVolume",
              "rMaxPower", "rBmsCapacity",
-             "rFindMyStatus", "rFindMyEnable": return Int(parseUInt16(data))
+             "rFindMyStatus", "rFindMyEnable",
+             "rBool": return Int(parseUInt16(data))
         case "rBMSVolt2": return parseVoltage(data)
         case "rBMSCur2": return parseCurrent(data)
         case "rBmsSOC2": return parsePercent(data)
