@@ -58,6 +58,12 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     private var hasStarted = false
     private var pendingEndTask: Task<Void, Never>?
     private var powerOnTask: Task<Void, Never>?
+    private var telemetryWatchdog: Task<Void, Never>?
+    private var lastTelemetryTime: Date?
+
+    /// How long to wait without a telemetry response before assuming
+    /// the scooter VCU has powered off (BLE module may still be alive).
+    private let telemetryTimeout: TimeInterval = 10
 
     private init() {
         connectionManager.delegate = self
@@ -82,34 +88,6 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         self.storedPassword = storedPassword
         connectionManager.start(storedPassword: storedPassword)
         logger.info("AppCoordinator started — watching for GT3 Pro")
-    }
-
-    /// Populate mock data for App Store screenshots.
-    private func loadScreenshotData() {
-        connectionState = .connected
-        isScooterAwake = true
-        isRiding = true
-        currentSpeed = 47
-        currentBattery = 82
-        tripDistance = 6.3
-        estimatedRange = 38
-        gearMode = 3
-        bmsTemp = 32.5
-        bodyTemp = 28.0
-        serialNumber = "03GGG2539C0023"
-        odometer = 109.4
-        totalRideTime = 7200
-        controllerFirmware = "2.1.8"
-        mcuFirmware = "1.3.4"
-        bms1Firmware = "1.0.9"
-        bleFirmware = "1.2.1"
-        chargeStatus = 0
-        partNumber = "AA.50.0026.10"
-        bmsVoltage = 58.2
-        bmsCurrent = 12.4
-        chargeCycles = 15
-        bmsRemainingCapacity = 1890
-        logger.info("Screenshot mode — loaded mock data")
     }
 
     /// Restart BLE scanning — used when the user taps "Retry Connection".
@@ -169,13 +147,17 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
 
     private func onDisconnected() async {
         await registerReader.stopPolling()
-        gpsTracker.stopTracking()
-        roughnessTracker.stopTracking()
         stopPowerOnPolling()
-        isScooterAwake = false
-        watchSession.updateContext(battery: 0, isConnected: false)
+        stopTelemetryWatchdog()
 
         let lastBattery = currentBattery
+        resetDashboardValues()
+        isScooterAwake = false
+
+        gpsTracker.stopTracking()
+        roughnessTracker.stopTracking()
+        watchSession.updateContext(battery: 0, isConnected: false)
+
         await rideTracker.forceEndRide(endBattery: lastBattery)
 
         pendingEndTask = Task {
@@ -189,6 +171,19 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
 
     // MARK: - Power Control
 
+    /// Reset all dashboard telemetry values to zero.
+    private func resetDashboardValues() {
+        currentSpeed = 0
+        currentBattery = 0
+        tripDistance = 0
+        estimatedRange = 0
+        gearMode = 0
+        bmsTemp = 0
+        bodyTemp = 0
+        bmsVoltage = 0
+        bmsCurrent = 0
+    }
+
     /// Send the power-on command to the VCU.
     func sendPowerOn() {
         let frame = NinebotFrameBuilder.buildPowerOnFrame()
@@ -196,11 +191,22 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         logger.info("Sent power-on command to VCU")
     }
 
-    /// Send the power-off command to the VCU.
+    /// Send the power-off command to the scooter.
+    /// Tries two approaches: CMD=0x79 to VCU (inverse of power-on),
+    /// and a write to MCU register 0x51 (from segMod reverse engineering).
     func sendPowerOff() {
-        let frame = NinebotFrameBuilder.buildPowerOffFrame()
-        connectionManager.sendFrame(frame)
-        logger.info("Sent power-off command to VCU")
+        let frame1 = NinebotFrameBuilder.buildPowerOffFrame()
+        connectionManager.sendFrame(frame1)
+        logger.info("Sent power-off CMD 0x79 to VCU")
+
+        // Also try writing 0x0000 to MCU register 0x51 (segMod approach)
+        let frame2 = NinebotFrameBuilder.buildWriteFrame(
+            board: .mcu,
+            register: 0x51,
+            data: Data([0x00, 0x00])
+        )
+        connectionManager.sendFrame(frame2)
+        logger.info("Sent power-off write MCU:0x51=0x0000")
     }
 
     private func startPowerOnPolling() {
@@ -223,66 +229,47 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         powerOnTask = nil
     }
 
+    // MARK: - Telemetry Watchdog
+
+    /// Start a watchdog that fires if no telemetry arrives within `telemetryTimeout`.
+    /// Handles the case where the scooter VCU powers off but the BLE module
+    /// stays connected briefly — reads get no response, so battery never
+    /// reaches 0 and `handleBatteryUpdate` never triggers the sleep path.
+    private func startTelemetryWatchdog() {
+        telemetryWatchdog?.cancel()
+        lastTelemetryTime = Date()
+        telemetryWatchdog = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(5))
+                guard !Task.isCancelled, let self else { break }
+                guard self.isScooterAwake else { break }
+                guard let lastTime = self.lastTelemetryTime else { continue }
+                if Date().timeIntervalSince(lastTime) > self.telemetryTimeout {
+                    logger.info("Telemetry watchdog: no response for \(self.telemetryTimeout)s — assuming standby")
+                    let lastBattery = self.currentBattery
+                    await self.handleScooterSleep(lastBattery: lastBattery)
+                    break
+                }
+            }
+        }
+    }
+
+    private func stopTelemetryWatchdog() {
+        telemetryWatchdog?.cancel()
+        telemetryWatchdog = nil
+        lastTelemetryTime = nil
+    }
+
     // MARK: - Telemetry Processing
 
     private func handleTelemetryFrame(_ frame: NinebotFrameBuilder.ParsedFrame) async {
         guard let result = await registerReader.processResponse(frame) else { return }
-        updatePublishedValue(for: result)
+        lastTelemetryTime = Date()
+        if let batteryValue = updatePublishedValue(for: result) {
+            handleBatteryUpdate(batteryValue)
+        }
         guard result.name == "rSpeed" else { return }
         await emitSample()
-    }
-
-    private func updatePublishedValue(for result: RegisterReadResult) {
-        updateDashboardValues(for: result)
-        updateInfoValues(for: result)
-    }
-
-    private func updateDashboardValues(for result: RegisterReadResult) {
-        switch result.name {
-        case "rSpeed":            currentSpeed = result.doubleValue ?? 0
-        case "rBattery":          handleBatteryUpdate(result.intValue ?? 0)
-        case "rSingleMileage":    tripDistance = result.doubleValue ?? 0
-        case "rLeftMileage":      estimatedRange = result.doubleValue ?? 0
-        case "rGearMode":         gearMode = result.intValue ?? 0
-        case "rBmsTmp2":          bmsTemp = result.doubleValue ?? 0
-        case "rBodyTemp":         bodyTemp = result.doubleValue ?? 0
-        case "rBMSVolt2":        bmsVoltage = result.doubleValue ?? 0
-        case "rBMSCur2":         bmsCurrent = result.doubleValue ?? 0
-        default:                  break
-        }
-    }
-
-    private func updateInfoValues(for result: RegisterReadResult) {
-        switch result.name {
-        case "rPreciseMileage":    odometer = result.doubleValue ?? 0
-        case "rMileage":
-            if odometer == 0 { odometer = result.doubleValue ?? 0 }
-        case "rRideTime":         totalRideTime = result.intValue ?? 0
-        case "rRuntime":          totalRuntime = result.intValue ?? 0
-        case "rChargeStatus":     chargeStatus = result.intValue ?? 0
-        case "rTimeFull":         timeToFull = result.intValue ?? 0
-        case "rPN":               partNumber = result.stringValue ?? "—"
-        default:                  updateBatteryInfoValues(for: result)
-        }
-    }
-
-    private func updateBatteryInfoValues(for result: RegisterReadResult) {
-        switch result.name {
-        case "rBms2CycleCountLT":       chargeCycles = result.intValue ?? 0
-        case "rBms2RemainCapacityLT":   bmsRemainingCapacity = result.intValue ?? 0
-        case "rBms2ManufactureDateLT":  bmsManufactureDate = result.intValue ?? 0
-        default:                        updateFirmwareValues(for: result)
-        }
-    }
-
-    private func updateFirmwareValues(for result: RegisterReadResult) {
-        switch result.name {
-        case "rCtrlV":  controllerFirmware = result.stringValue ?? "—"
-        case "rMCUV":   mcuFirmware = result.stringValue ?? "—"
-        case "rBmsV":   bms1Firmware = result.stringValue ?? "—"
-        case "rBleV":   bleFirmware = result.stringValue ?? "—"
-        default:        break
-        }
     }
 
     private func handleBatteryUpdate(_ value: Int) {
@@ -298,6 +285,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
                 logger.info("Scooter woke up — battery \(value)%")
                 gpsTracker.startTracking()
                 roughnessTracker.startTracking()
+                startTelemetryWatchdog()
             }
         } else if wasAwake {
             Task { await handleScooterSleep(lastBattery: previousBattery) }
@@ -308,6 +296,9 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     private func handleScooterSleep(lastBattery: Int) async {
         logger.info("Scooter entered standby — cleaning up ride state")
         isScooterAwake = false
+        stopTelemetryWatchdog()
+        resetDashboardValues()
+        await registerReader.clearTelemetry()
 
         // End any active ride with the last valid battery reading
         await rideTracker.forceEndRide(endBattery: lastBattery)
@@ -339,17 +330,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     }
 
     private func sendScooterSleepNotification() {
-        let content = UNMutableNotificationContent()
-        content.title = "Scooter Standby 💤"
-        content.body = "GT3 Pro powered off. Still connected via Bluetooth."
-        content.sound = .default
-
-        let request = UNNotificationRequest(
-            identifier: "scooter-sleep-\(UUID().uuidString)",
-            content: content,
-            trigger: nil
-        )
-        UNUserNotificationCenter.current().add(request)
+        sendNotification(title: "Scooter Standby 💤", body: "GT3 Pro powered off. Still connected via Bluetooth.")
     }
 
     private func emitSample() async {
@@ -436,13 +417,16 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     // MARK: - Notifications
 
     private func sendRideStartNotification() {
-        let content = UNMutableNotificationContent()
-        content.title = "Ride Started 🛴"
-        content.body = "GT3 Pro ride logging is active. Battery: \(currentBattery)%"
-        content.sound = .default
+        sendNotification(title: "Ride Started 🛴", body: "GT3 Pro ride logging is active. Battery: \(currentBattery)%")
+    }
 
+    private func sendNotification(title: String, body: String) {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
         let request = UNNotificationRequest(
-            identifier: "ride-start-\(UUID().uuidString)",
+            identifier: "\(title)-\(UUID().uuidString)",
             content: content,
             trigger: nil
         )
