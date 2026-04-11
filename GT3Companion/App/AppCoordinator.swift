@@ -51,6 +51,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     private let gpsTracker = GPSTracker()
     private let roughnessTracker = SurfaceRoughnessTracker()
     private let liveActivityManager = GT3LiveActivityManager.shared
+    private let watchSession = PhoneWatchSessionManager.shared
 
     private var storedPassword: Data?
     private var hasStarted = false
@@ -121,6 +122,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
 
         await registerReader.startPolling()
         await liveActivityManager.startRideActivity()
+        watchSession.updateContext(battery: 0, isConnected: true)
 
         sendPowerOn()
         startPowerOnPolling()
@@ -134,6 +136,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         roughnessTracker.stopTracking()
         stopPowerOnPolling()
         isScooterAwake = false
+        watchSession.updateContext(battery: 0, isConnected: false)
 
         let lastBattery = currentBattery
         await rideTracker.forceEndRide(endBattery: lastBattery)
@@ -282,7 +285,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
             horizontalAccuracy: gpsSample?.horizontalAccuracy,
             roughnessScore: roughness?.roughnessScore,
             maxAcceleration: roughness?.maxAcceleration,
-            heartRate: nil
+            heartRate: watchSession.latestHeartRate > 0 ? watchSession.latestHeartRate : nil
         )
 
         let wasIdle = await rideTracker.state == .idle
@@ -298,6 +301,15 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         isRiding = await rideTracker.state != .idle
 
         await uploadQueue.enqueueSamples([sample])
+
+        // Send telemetry to Watch
+        watchSession.sendTelemetry(
+            speed: currentSpeed,
+            battery: currentBattery,
+            tripDistance: tripDistance,
+            range: estimatedRange,
+            mode: sample.gearMode
+        )
 
         await liveActivityManager.updateActivity(state: .init(
             speed: currentSpeed,
@@ -344,6 +356,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         persisted.avgSpeed = rideLog.avgSpeed
         persisted.batteryUsed = rideLog.batteryUsed
         persisted.endBattery = rideLog.endBattery
+        persisted.primaryGearMode = rideLog.primaryGearMode
         context.insert(persisted)
         try? context.save()
 

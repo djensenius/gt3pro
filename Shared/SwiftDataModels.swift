@@ -35,6 +35,7 @@ class PersistedRide {
     var startBattery: Int
     var endBattery: Int?
     var uploaded: Bool
+    var primaryGearMode: Int
     @Relationship(deleteRule: .cascade) var samples: [PersistedSample]?
     var gpsTrackJSON: Data?
     var healthDataJSON: Data?
@@ -50,6 +51,7 @@ class PersistedRide {
         self.startBattery = startBattery
         self.endBattery = nil
         self.uploaded = false
+        self.primaryGearMode = 0
         self.samples = []
     }
 }

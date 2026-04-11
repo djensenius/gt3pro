@@ -65,6 +65,8 @@ targets:
     dependencies:
       - target: GT3CompanionWidgets
         embed: true
+      - target: GT3CompanionWatch
+        embed: true
 
   GT3CompanionWidgets:
     type: app-extension
@@ -102,11 +104,19 @@ targets:
         CFBundleDisplayName: GT3 Companion
         CFBundleName: GT3CompanionWatch
         WKApplication: true
+        WKCompanionAppBundleIdentifier: org.davidjensenius.GT3Companion
+        NSHealthShareUsageDescription: GT3 Companion reads your heart rate during scooter rides.
+        NSHealthUpdateUsageDescription: GT3 Companion saves scooter ride workouts to Apple Health.
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.watch
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
+    entitlements:
+      path: GT3CompanionWatch/GT3CompanionWatch.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
 
   GT3CompanionTests:
     type: bundle.unit-test
