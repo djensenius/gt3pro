@@ -25,6 +25,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     @Published var gearMode: Int = 0
     @Published var bms1Temp: Double = 0
     @Published var bms2Temp: Double = 0
+    @Published var bodyTemp: Double = 0
     @Published var serialNumber: String?
     @Published var odometer: Double = 0
     @Published var totalRideTime: Int = 0
@@ -138,13 +139,20 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         logger.info("Disconnected — trackers stopped, ride finalized")
     }
 
-    // MARK: - Power On
+    // MARK: - Power Control
 
     /// Send the power-on command to the VCU.
     func sendPowerOn() {
         let frame = NinebotFrameBuilder.buildPowerOnFrame()
         connectionManager.sendFrame(frame)
         logger.info("Sent power-on command to VCU")
+    }
+
+    /// Send the power-off command to the VCU.
+    func sendPowerOff() {
+        let frame = NinebotFrameBuilder.buildPowerOffFrame()
+        connectionManager.sendFrame(frame)
+        logger.info("Sent power-off command to VCU")
     }
 
     private func startPowerOnPolling() {
@@ -190,6 +198,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         case "rGearMode":         gearMode = result.intValue ?? 0
         case "rBmsTmp":           bms1Temp = result.doubleValue ?? 0
         case "rBmsTmp2":          bms2Temp = result.doubleValue ?? 0
+        case "rBodyTemp":         bodyTemp = result.doubleValue ?? 0
         default:                  break
         }
     }

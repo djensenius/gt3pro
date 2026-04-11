@@ -226,7 +226,7 @@ enum GT3Registers {
 
     /// Registers to read once on connect
     static let cumulative: [RegisterDefinition] = [
-        odometer, totalRuntime, totalRideTime, serialNumber,
+        totalRuntime, totalRideTime, serialNumber,
         controllerFW, mcuFW, bms1FW, bms2FW, bleFW,
         bms1CycleCount, bms2CycleCount,
         bms1EnergyThroughput, bms2EnergyThroughput,
@@ -236,7 +236,7 @@ enum GT3Registers {
         bms1ManufactureDate, bms2ManufactureDate,
         bms1ExtremeUseTime, bms1ExtremeChargeTime,
         battery1SN, battery2SN,
-        chargeStatus, timeToFull, partNumber, preciseMileage,
+        timeToFull, partNumber, preciseMileage,
         ledMode, projectionLightMode, tailLightMode,
         alarmLevel, bumpyRoad, voiceVolume,
         bms1CellVoltages, bms1TempSensors,

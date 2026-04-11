@@ -83,7 +83,8 @@ final class RegisterReaderTests: XCTestCase {
         let result = await reader.processResponse(parsed)
         XCTAssertNotNil(result)
         XCTAssertEqual(result?.name, "rMileage")
-        let odometer = await reader.getSnapshotDouble("rMileage")
+        // Odometer is in liveTelemetry, so stored in telemetry values
+        let odometer = await reader.getTelemetryDouble("rMileage")
         XCTAssertEqual(odometer ?? 0, 1234.50, accuracy: 0.01)
     }
 

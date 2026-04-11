@@ -10,11 +10,11 @@ import XCTest
 
 final class GT3RegistersTests: XCTestCase {
     func testLiveTelemetryCount() {
-        XCTAssertEqual(GT3Registers.liveTelemetry.count, 20)
+        XCTAssertEqual(GT3Registers.liveTelemetry.count, 22)
     }
 
     func testCumulativeCount() {
-        XCTAssertGreaterThanOrEqual(GT3Registers.cumulative.count, 40)
+        XCTAssertGreaterThanOrEqual(GT3Registers.cumulative.count, 39)
     }
 
     func testAllRegistersNoDuplicateNames() {

@@ -22,6 +22,7 @@ struct DashboardView: View {
     private var gearMode: Int { isDemo ? 2 : coordinator.gearMode }
     private var bms1Temp: Double { isDemo ? 28 : coordinator.bms1Temp }
     private var bms2Temp: Double { isDemo ? 30 : coordinator.bms2Temp }
+    private var bodyTemp: Double { isDemo ? 25 : coordinator.bodyTemp }
     #else
     @ObservedObject private var auth = AuthManager.shared
     private var isDemo: Bool { auth.isDemoMode }
@@ -151,6 +152,13 @@ struct DashboardView: View {
                 )
             }
 
+            StatCard(
+                title: "Vehicle Temp",
+                value: String(format: "%.0f°C", bodyTemp),
+                icon: "thermometer.sun",
+                color: tempColor(bodyTemp)
+            )
+
             #if os(iOS)
             Toggle(isOn: $powerToggle) {
                 Label("Power", systemImage: "power")
@@ -159,7 +167,11 @@ struct DashboardView: View {
             .tint(Theme.Colors.accent)
             .padding(.horizontal)
             .onChange(of: powerToggle) { _, isOn in
-                if isOn { coordinator.sendPowerOn() }
+                if isOn {
+                    coordinator.sendPowerOn()
+                } else {
+                    coordinator.sendPowerOff()
+                }
             }
             .onChange(of: battery) { _, newBattery in
                 powerToggle = newBattery > 0
