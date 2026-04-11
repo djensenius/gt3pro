@@ -8,6 +8,7 @@
 #if os(iOS)
 import Foundation
 import os
+import UserNotifications
 
 private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", category: "Coordinator")
 
@@ -279,8 +280,18 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
             heartRate: nil
         )
 
+        let wasIdle = await rideTracker.state == .idle
         await rideTracker.addSample(sample)
+        let nowRiding = await rideTracker.state == .riding
+
+        // Detect ride start transition and notify user
+        if wasIdle && nowRiding {
+            isRiding = true
+            sendRideStartNotification()
+            logger.info("Ride auto-started — notifying user")
+        }
         isRiding = await rideTracker.state != .idle
+
         await uploadQueue.enqueueSamples([sample])
 
         await liveActivityManager.updateActivity(state: .init(
@@ -292,6 +303,22 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
             bmsTemp: sample.bmsTemp,
             isCharging: false
         ))
+    }
+
+    // MARK: - Notifications
+
+    private func sendRideStartNotification() {
+        let content = UNMutableNotificationContent()
+        content.title = "Ride Started 🛴"
+        content.body = "GT3 Pro ride logging is active. Battery: \(currentBattery)%"
+        content.sound = .default
+
+        let request = UNNotificationRequest(
+            identifier: "ride-start-\(UUID().uuidString)",
+            content: content,
+            trigger: nil
+        )
+        UNUserNotificationCenter.current().add(request)
     }
 
     // MARK: - Ride Completion

@@ -11,6 +11,7 @@ import SwiftUI
 @main
 struct GT3CompanionApp: App {
     #if os(iOS)
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var coordinator = AppCoordinator.shared
     @AppStorage("onboardingComplete") private var onboardingComplete = false
     #endif

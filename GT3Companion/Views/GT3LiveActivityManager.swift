@@ -41,7 +41,7 @@ class GT3LiveActivityManager {
             currentActivity = try Activity.request(
                 attributes: attributes,
                 content: content,
-                pushType: .token
+                pushType: nil
             )
             logger.info("Started ride Live Activity")
         } catch {
