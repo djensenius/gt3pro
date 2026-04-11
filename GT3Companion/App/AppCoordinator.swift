@@ -86,6 +86,9 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
 
     func connectionStateChanged(_ state: ConnectionState) {
         self.connectionState = state
+        if state == .authenticating {
+            Task { await liveActivityManager.startRideActivity() }
+        }
     }
 
     func didAuthenticate(serialNumber: String) {
@@ -121,7 +124,6 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         roughnessTracker.startTracking()
 
         await registerReader.startPolling()
-        await liveActivityManager.startRideActivity()
         watchSession.updateContext(battery: 0, isConnected: true)
 
         sendPowerOn()
