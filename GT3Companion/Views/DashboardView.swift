@@ -105,17 +105,6 @@ struct DashboardView: View {
                     .foregroundStyle(Theme.Colors.textSecondary)
             }
 
-            #if os(iOS)
-            Button {
-                coordinator.sendPowerOn()
-            } label: {
-                Label("Power On Scooter", systemImage: "power")
-                    .font(Theme.Fonts.bodyMedium)
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(Theme.Colors.accent)
-            #endif
-
             HStack(spacing: Theme.Spacing.medium) {
                 StatCard(
                     title: "Battery",
@@ -160,9 +149,31 @@ struct DashboardView: View {
                     color: tempColor(bms2Temp)
                 )
             }
+
+            #if os(iOS)
+            Toggle(isOn: powerOnBinding) {
+                Label("Power", systemImage: "power")
+                    .font(Theme.Fonts.bodyMedium)
+            }
+            .tint(Theme.Colors.accent)
+            .padding(.horizontal)
+            #endif
         }
         .padding()
     }
+
+    #if os(iOS)
+    private var powerOnBinding: Binding<Bool> {
+        Binding(
+            get: { battery > 0 },
+            set: { newValue in
+                if newValue {
+                    coordinator.sendPowerOn()
+                }
+            }
+        )
+    }
+    #endif
 
     private var batteryColor: Color {
         if battery > 60 { return Theme.Colors.success }
