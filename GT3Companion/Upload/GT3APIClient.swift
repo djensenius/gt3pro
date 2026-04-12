@@ -1,5 +1,6 @@
 #if os(iOS)
 import Foundation
+import UIKit
 import os
 
 private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", category: "API")
@@ -54,6 +55,25 @@ actor GT3APIClient {
     /// Retry a previously failed POST with raw payload.
     func retryPost(path: String, body: Data) async throws -> Data {
         try await post(path: path, body: body)
+    }
+
+    /// Request the server to send a push-to-start APNs notification
+    /// to create a Live Activity (used on background BLE reconnect).
+    func requestActivityStart() async throws {
+        try await post(path: "/gt3/activity/start", body: Data("{}".utf8))
+        logger.info("Requested push-to-start from server")
+    }
+
+    /// Register a push-to-start token with the server.
+    func registerPushToStartToken(_ tokenHex: String) async throws {
+        let payload: [String: String] = [
+            "pushToStartToken": tokenHex,
+            "deviceName": UIDevice.current.name,
+            "bundleId": "org.davidjensenius.GT3Companion"
+        ]
+        let body = try JSONSerialization.data(withJSONObject: payload)
+        try await post(path: "/push-tokens/device", body: body)
+        logger.info("Registered push-to-start token")
     }
 
     // MARK: - Private

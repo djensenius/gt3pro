@@ -50,6 +50,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     private let registerReader = RegisterReader()
     private let rideTracker = RideTracker()
     private let uploadQueue = UploadQueue()
+    private let apiClient = GT3APIClient()
     private let gpsTracker = GPSTracker()
     private let roughnessTracker = SurfaceRoughnessTracker()
     private let liveActivityManager = GT3LiveActivityManager.shared
@@ -86,6 +87,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
 
         self.storedPassword = storedPassword
         connectionManager.start(storedPassword: storedPassword)
+        liveActivityManager.observePushToStartToken(apiClient: apiClient)
         Task {
             await liveActivityManager.endRideActivity()
             await retryPendingUploads()
@@ -96,6 +98,25 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     /// Restart BLE scanning — used when the user taps "Retry Connection".
     func retryScan() {
         connectionManager.scan()
+    }
+
+    /// Called when the app returns to foreground — restarts Live Activity if needed.
+    func resumeFromBackground() {
+        let isConnected = connectionState == .connected || connectionState == .authenticating
+        guard isConnected, !liveActivityManager.isActive else { return }
+        logger.info("App foregrounded while connected — restarting Live Activity")
+        Task { await liveActivityManager.startRideActivity() }
+    }
+
+    /// Ask server to send APNs push-to-start (background BLE reconnect fallback).
+    private func requestServerPushToStart() {
+        Task {
+            do {
+                try await apiClient.requestActivityStart()
+            } catch {
+                logger.error("Server push-to-start failed: \(error)")
+            }
+        }
     }
 
     // MARK: - ScooterConnectionDelegate
@@ -136,10 +157,11 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         gpsTracker.startTracking()
         roughnessTracker.startTracking()
 
-        // Ensure a Live Activity is running (guards against missed
-        // .authenticating state change on background reconnect).
+        // Ensure Live Activity is running; fall back to server push-to-start
+        // if foreground creation fails (e.g. app is in background).
         if !liveActivityManager.isActive {
             await liveActivityManager.startRideActivity()
+            if !liveActivityManager.isActive { requestServerPushToStart() }
         }
 
         await registerReader.startPolling()
@@ -161,8 +183,10 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         await rideTracker.forceEndRide(endBattery: lastBattery)
         await uploadQueue.flushSamples()
         await uploadQueue.persistRemainingsamples()
+
+        // End Live Activity — APNs push-to-start will recreate on reconnect.
         await liveActivityManager.endRideActivity()
-        logger.info("Disconnected — trackers stopped, ride finalized")
+        logger.info("Disconnected — ride finalized, Live Activity ended")
     }
 
     // MARK: - Power Control
@@ -187,20 +211,16 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         logger.info("Sent power-on command to VCU")
     }
 
-    /// Send the power-off command to the scooter.
-    /// Verified from pklg: Segway app sends ACC_CMD (0x79) with data [0x02, 0x00].
+    /// Send the power-off command to the scooter (ACC_CMD 0x79 with [0x02, 0x00]).
     func sendPowerOff() {
         let frame = NinebotFrameBuilder.buildPowerOffFrame()
         connectionManager.sendFrame(frame)
-        logger.info("Sent power-off CMD 0x79 data=[0x02,0x00] to VCU")
+        logger.info("Sent power-off command to VCU")
     }
 
     // MARK: - Telemetry Watchdog
 
-    /// Start a watchdog that fires if no telemetry arrives within `telemetryTimeout`.
-    /// Handles the case where the scooter VCU powers off but the BLE module
-    /// stays connected briefly — reads get no response, so battery never
-    /// reaches 0 and `handleBatteryUpdate` never triggers the sleep path.
+    /// Fires if no telemetry arrives within `telemetryTimeout` — assumes VCU standby.
     private func startTelemetryWatchdog() {
         telemetryWatchdog?.cancel()
         lastTelemetryTime = Date()
@@ -243,9 +263,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     }
 
     /// Detect power state from VCU register 0x1C (rBool).
-    /// Bit 5 (0x20) = standby (BLE alive, motor off).
-    /// Bit 0 (0x01) = powered on (motor active).
-    /// Verified from pklg capture: 2098 (0x832) = standby, 2065 (0x811) = powered.
+    /// Bit 5 (0x20) = standby, Bit 0 (0x01) = powered.
     private func handleRBoolUpdate(_ rawValue: Int) {
         let isStandby = (rawValue & 0x20) != 0
         let isPowered = (rawValue & 0x01) != 0
@@ -280,22 +298,8 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         isRiding = false
         gpsTracker.stopTracking()
         roughnessTracker.stopTracking()
-
-        // Immediately push standby state to Live Activity
-        await liveActivityManager.updateActivity(state: .init(
-            speed: 0,
-            battery: 0,
-            tripDistance: 0,
-            estimatedRange: 0,
-            gearMode: 0,
-            bmsTemp: 0,
-            isCharging: false,
-            isAwake: false
-        ))
-
-        // Tell the Watch we're in standby
+        await liveActivityManager.updateActivity(state: .idle(isConnected: true))
         watchSession.sendTelemetry(speed: 0, battery: 0, tripDistance: 0, range: 0, mode: 0)
-
         sendScooterSleepNotification()
     }
 
@@ -306,7 +310,6 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     private func emitSample() async {
         let gpsSample = gpsTracker.latestSample
         let roughness = roughnessTracker.latestSample
-
         let sample = TelemetrySample(
             timestamp: Date(),
             speed: currentSpeed,
@@ -380,7 +383,8 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
             gearMode: sample.gearMode,
             bmsTemp: sample.bmsTemp,
             isCharging: false,
-            isAwake: isScooterAwake
+            isAwake: isScooterAwake,
+            isConnected: true
         ))
     }
 
@@ -395,19 +399,16 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         content.title = title
         content.body = body
         content.sound = .default
-        let request = UNNotificationRequest(
+        UNUserNotificationCenter.current().add(UNNotificationRequest(
             identifier: "\(title)-\(UUID().uuidString)",
-            content: content,
-            trigger: nil
-        )
-        UNUserNotificationCenter.current().add(request)
+            content: content, trigger: nil
+        ))
     }
 
     // MARK: - Ride Completion
 
     private func handleRideComplete(_ rideLog: RideLog) async {
         logger.info("Ride complete: \(rideLog.totalDistance) km")
-
         let context = PersistenceController.shared.context
         let persisted = PersistedRide(
             rideId: rideLog.rideId,
@@ -436,7 +437,6 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
 
         context.insert(persisted)
         try? context.save()
-
         await uploadQueue.flushSamples()
         if let serverId = await uploadQueue.uploadRide(rideLog) {
             persisted.rideId = serverId
