@@ -36,6 +36,8 @@ targets:
       properties:
         CFBundleDisplayName: GT3 Companion
         CFBundleName: GT3Companion
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
@@ -106,6 +108,8 @@ targets:
       path: GT3CompanionWidgets/Info.plist
       properties:
         CFBundleDisplayName: GT3 Widgets
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
         NSSupportsLiveActivities: true
@@ -132,6 +136,8 @@ targets:
       properties:
         CFBundleDisplayName: GT3 Companion
         CFBundleName: GT3CompanionWatch
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         WKApplication: true
         WKCompanionAppBundleIdentifier: org.davidjensenius.GT3Companion
         NSHealthShareUsageDescription: GT3 Companion reads your heart rate during scooter rides.
@@ -243,6 +249,8 @@ targets:
       properties:
         CFBundleDisplayName: GT3 Companion
         CFBundleName: GT3CompanionMac
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         ITSAppUsesNonExemptEncryption: false
         LSApplicationCategoryType: public.app-category.travel
     settings:
@@ -278,6 +286,8 @@ targets:
       properties:
         CFBundleDisplayName: GT3 Companion
         CFBundleName: GT3CompanionVision
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         ITSAppUsesNonExemptEncryption: false
     settings:
       base:
