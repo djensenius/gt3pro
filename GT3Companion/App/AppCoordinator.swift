@@ -9,6 +9,7 @@
 import CoreLocation
 import Foundation
 import os
+import SwiftData
 import UserNotifications
 
 private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", category: "Coordinator")
@@ -56,8 +57,12 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
 
     private var storedPassword: Data?
     private var hasStarted = false
-    private var pendingEndTask: Task<Void, Never>?
-    private var powerOnTask: Task<Void, Never>?
+    private var telemetryWatchdog: Task<Void, Never>?
+    private var lastTelemetryTime: Date?
+
+    /// How long to wait without a telemetry response before assuming
+    /// the scooter VCU has powered off (BLE module may still be alive).
+    private let telemetryTimeout: TimeInterval = 10
 
     private init() {
         connectionManager.delegate = self
@@ -81,35 +86,11 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
 
         self.storedPassword = storedPassword
         connectionManager.start(storedPassword: storedPassword)
+        Task {
+            await liveActivityManager.endRideActivity()
+            await retryPendingUploads()
+        }
         logger.info("AppCoordinator started — watching for GT3 Pro")
-    }
-
-    /// Populate mock data for App Store screenshots.
-    private func loadScreenshotData() {
-        connectionState = .connected
-        isScooterAwake = true
-        isRiding = true
-        currentSpeed = 47
-        currentBattery = 82
-        tripDistance = 6.3
-        estimatedRange = 38
-        gearMode = 3
-        bmsTemp = 32.5
-        bodyTemp = 28.0
-        serialNumber = "03GGG2539C0023"
-        odometer = 109.4
-        totalRideTime = 7200
-        controllerFirmware = "2.1.8"
-        mcuFirmware = "1.3.4"
-        bms1Firmware = "1.0.9"
-        bleFirmware = "1.2.1"
-        chargeStatus = 0
-        partNumber = "AA.50.0026.10"
-        bmsVoltage = 58.2
-        bmsCurrent = 12.4
-        chargeCycles = 15
-        bmsRemainingCapacity = 1890
-        logger.info("Screenshot mode — loaded mock data")
     }
 
     /// Restart BLE scanning — used when the user taps "Retry Connection".
@@ -143,9 +124,6 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     // MARK: - Connection Lifecycle
 
     private func onConnected() async {
-        pendingEndTask?.cancel()
-        pendingEndTask = nil
-
         await registerReader.configure { [weak self] frame in
             self?.connectionManager.sendFrame(frame)
         }
@@ -158,36 +136,49 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         gpsTracker.startTracking()
         roughnessTracker.startTracking()
 
+        // Ensure a Live Activity is running (guards against missed
+        // .authenticating state change on background reconnect).
+        if !liveActivityManager.isActive {
+            await liveActivityManager.startRideActivity()
+        }
+
         await registerReader.startPolling()
         watchSession.updateContext(battery: 0, isConnected: true)
-
-        sendPowerOn()
-        startPowerOnPolling()
+        await retryPendingUploads()
 
         logger.info("Fully connected — polling, GPS, roughness, Live Activity active")
     }
 
     private func onDisconnected() async {
         await registerReader.stopPolling()
+        stopTelemetryWatchdog()
+        let lastBattery = currentBattery
+        resetDashboardValues()
+        isScooterAwake = false
         gpsTracker.stopTracking()
         roughnessTracker.stopTracking()
-        stopPowerOnPolling()
-        isScooterAwake = false
         watchSession.updateContext(battery: 0, isConnected: false)
-
-        let lastBattery = currentBattery
         await rideTracker.forceEndRide(endBattery: lastBattery)
-
-        pendingEndTask = Task {
-            try? await Task.sleep(for: .seconds(30))
-            guard !Task.isCancelled else { return }
-            await liveActivityManager.endRideActivity()
-        }
-
+        await uploadQueue.flushSamples()
+        await uploadQueue.persistRemainingsamples()
+        await liveActivityManager.endRideActivity()
         logger.info("Disconnected — trackers stopped, ride finalized")
     }
 
     // MARK: - Power Control
+
+    /// Reset all dashboard telemetry values to zero.
+    private func resetDashboardValues() {
+        currentSpeed = 0
+        currentBattery = 0
+        tripDistance = 0
+        estimatedRange = 0
+        gearMode = 0
+        bmsTemp = 0
+        bodyTemp = 0
+        bmsVoltage = 0
+        bmsCurrent = 0
+    }
 
     /// Send the power-on command to the VCU.
     func sendPowerOn() {
@@ -196,124 +187,97 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         logger.info("Sent power-on command to VCU")
     }
 
-    /// Send the power-off command to the VCU.
+    /// Send the power-off command to the scooter.
+    /// Verified from pklg: Segway app sends ACC_CMD (0x79) with data [0x02, 0x00].
     func sendPowerOff() {
         let frame = NinebotFrameBuilder.buildPowerOffFrame()
         connectionManager.sendFrame(frame)
-        logger.info("Sent power-off command to VCU")
+        logger.info("Sent power-off CMD 0x79 data=[0x02,0x00] to VCU")
     }
 
-    private func startPowerOnPolling() {
-        powerOnTask?.cancel()
-        powerOnTask = Task { [weak self] in
+    // MARK: - Telemetry Watchdog
+
+    /// Start a watchdog that fires if no telemetry arrives within `telemetryTimeout`.
+    /// Handles the case where the scooter VCU powers off but the BLE module
+    /// stays connected briefly — reads get no response, so battery never
+    /// reaches 0 and `handleBatteryUpdate` never triggers the sleep path.
+    private func startTelemetryWatchdog() {
+        telemetryWatchdog?.cancel()
+        lastTelemetryTime = Date()
+        telemetryWatchdog = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(5))
                 guard !Task.isCancelled, let self else { break }
-                if self.currentBattery == 0 {
-                    self.sendPowerOn()
-                } else {
+                guard self.isScooterAwake else { break }
+                guard let lastTime = self.lastTelemetryTime else { continue }
+                if Date().timeIntervalSince(lastTime) > self.telemetryTimeout {
+                    logger.info("Telemetry watchdog: no response for \(self.telemetryTimeout)s — assuming standby")
+                    let lastBattery = self.currentBattery
+                    await self.handleScooterSleep(lastBattery: lastBattery)
                     break
                 }
             }
         }
     }
 
-    private func stopPowerOnPolling() {
-        powerOnTask?.cancel()
-        powerOnTask = nil
+    private func stopTelemetryWatchdog() {
+        telemetryWatchdog?.cancel()
+        telemetryWatchdog = nil
+        lastTelemetryTime = nil
     }
 
     // MARK: - Telemetry Processing
 
     private func handleTelemetryFrame(_ frame: NinebotFrameBuilder.ParsedFrame) async {
         guard let result = await registerReader.processResponse(frame) else { return }
-        updatePublishedValue(for: result)
+        lastTelemetryTime = Date()
+
+        if result.name == "rBool", let rawValue = result.intValue {
+            handleRBoolUpdate(rawValue)
+        } else if let batteryValue = updatePublishedValue(for: result) {
+            handleBatteryUpdate(batteryValue)
+        }
+
         guard result.name == "rSpeed" else { return }
         await emitSample()
     }
 
-    private func updatePublishedValue(for result: RegisterReadResult) {
-        updateDashboardValues(for: result)
-        updateInfoValues(for: result)
-    }
+    /// Detect power state from VCU register 0x1C (rBool).
+    /// Bit 5 (0x20) = standby (BLE alive, motor off).
+    /// Bit 0 (0x01) = powered on (motor active).
+    /// Verified from pklg capture: 2098 (0x832) = standby, 2065 (0x811) = powered.
+    private func handleRBoolUpdate(_ rawValue: Int) {
+        let isStandby = (rawValue & 0x20) != 0
+        let isPowered = (rawValue & 0x01) != 0
 
-    private func updateDashboardValues(for result: RegisterReadResult) {
-        switch result.name {
-        case "rSpeed":            currentSpeed = result.doubleValue ?? 0
-        case "rBattery":          handleBatteryUpdate(result.intValue ?? 0)
-        case "rSingleMileage":    tripDistance = result.doubleValue ?? 0
-        case "rLeftMileage":      estimatedRange = result.doubleValue ?? 0
-        case "rGearMode":         gearMode = result.intValue ?? 0
-        case "rBmsTmp2":          bmsTemp = result.doubleValue ?? 0
-        case "rBodyTemp":         bodyTemp = result.doubleValue ?? 0
-        case "rBMSVolt2":        bmsVoltage = result.doubleValue ?? 0
-        case "rBMSCur2":         bmsCurrent = result.doubleValue ?? 0
-        default:                  break
-        }
-    }
-
-    private func updateInfoValues(for result: RegisterReadResult) {
-        switch result.name {
-        case "rPreciseMileage":    odometer = result.doubleValue ?? 0
-        case "rMileage":
-            if odometer == 0 { odometer = result.doubleValue ?? 0 }
-        case "rRideTime":         totalRideTime = result.intValue ?? 0
-        case "rRuntime":          totalRuntime = result.intValue ?? 0
-        case "rChargeStatus":     chargeStatus = result.intValue ?? 0
-        case "rTimeFull":         timeToFull = result.intValue ?? 0
-        case "rPN":               partNumber = result.stringValue ?? "—"
-        default:                  updateBatteryInfoValues(for: result)
-        }
-    }
-
-    private func updateBatteryInfoValues(for result: RegisterReadResult) {
-        switch result.name {
-        case "rBms2CycleCountLT":       chargeCycles = result.intValue ?? 0
-        case "rBms2RemainCapacityLT":   bmsRemainingCapacity = result.intValue ?? 0
-        case "rBms2ManufactureDateLT":  bmsManufactureDate = result.intValue ?? 0
-        default:                        updateFirmwareValues(for: result)
-        }
-    }
-
-    private func updateFirmwareValues(for result: RegisterReadResult) {
-        switch result.name {
-        case "rCtrlV":  controllerFirmware = result.stringValue ?? "—"
-        case "rMCUV":   mcuFirmware = result.stringValue ?? "—"
-        case "rBmsV":   bms1Firmware = result.stringValue ?? "—"
-        case "rBleV":   bleFirmware = result.stringValue ?? "—"
-        default:        break
+        if isPowered && !isStandby && !isScooterAwake {
+            logger.info("rBool=0x\(String(rawValue, radix: 16)): scooter powered ON")
+            isScooterAwake = true
+            gpsTracker.startTracking()
+            roughnessTracker.startTracking()
+            startTelemetryWatchdog()
+        } else if isStandby && !isPowered && isScooterAwake {
+            logger.info("rBool=0x\(String(rawValue, radix: 16)): scooter entered STANDBY")
+            let lastBattery = currentBattery
+            Task { await handleScooterSleep(lastBattery: lastBattery) }
         }
     }
 
     private func handleBatteryUpdate(_ value: Int) {
-        let wasAwake = isScooterAwake
-        let previousBattery = currentBattery
         currentBattery = value
-
-        if value > 0 {
-            isScooterAwake = true
-            stopPowerOnPolling()
-
-            if !wasAwake {
-                logger.info("Scooter woke up — battery \(value)%")
-                gpsTracker.startTracking()
-                roughnessTracker.startTracking()
-            }
-        } else if wasAwake {
-            Task { await handleScooterSleep(lastBattery: previousBattery) }
-        }
     }
 
     /// Handle the scooter powering off while still BLE-connected.
     private func handleScooterSleep(lastBattery: Int) async {
         logger.info("Scooter entered standby — cleaning up ride state")
         isScooterAwake = false
-
-        // End any active ride with the last valid battery reading
+        stopTelemetryWatchdog()
+        resetDashboardValues()
+        await registerReader.clearTelemetry()
         await rideTracker.forceEndRide(endBattery: lastBattery)
+        await uploadQueue.flushSamples()
+        await uploadQueue.persistRemainingsamples()
         isRiding = false
-
-        // Stop location/motion tracking while asleep
         gpsTracker.stopTracking()
         roughnessTracker.stopTracking()
 
@@ -332,24 +296,11 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         // Tell the Watch we're in standby
         watchSession.sendTelemetry(speed: 0, battery: 0, tripDistance: 0, range: 0, mode: 0)
 
-        // Resume power-on polling so we detect wake-up
-        startPowerOnPolling()
-
         sendScooterSleepNotification()
     }
 
     private func sendScooterSleepNotification() {
-        let content = UNMutableNotificationContent()
-        content.title = "Scooter Standby 💤"
-        content.body = "GT3 Pro powered off. Still connected via Bluetooth."
-        content.sound = .default
-
-        let request = UNNotificationRequest(
-            identifier: "scooter-sleep-\(UUID().uuidString)",
-            content: content,
-            trigger: nil
-        )
-        UNUserNotificationCenter.current().add(request)
+        sendNotification(title: "Scooter Standby 💤", body: "GT3 Pro powered off. Still connected via Bluetooth.")
     }
 
     private func emitSample() async {
@@ -436,13 +387,16 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     // MARK: - Notifications
 
     private func sendRideStartNotification() {
-        let content = UNMutableNotificationContent()
-        content.title = "Ride Started 🛴"
-        content.body = "GT3 Pro ride logging is active. Battery: \(currentBattery)%"
-        content.sound = .default
+        sendNotification(title: "Ride Started 🛴", body: "GT3 Pro ride logging is active. Battery: \(currentBattery)%")
+    }
 
+    private func sendNotification(title: String, body: String) {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
         let request = UNNotificationRequest(
-            identifier: "ride-start-\(UUID().uuidString)",
+            identifier: "\(title)-\(UUID().uuidString)",
             content: content,
             trigger: nil
         )
@@ -488,6 +442,52 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
             persisted.rideId = serverId
             persisted.uploaded = true
             try? context.save()
+        } else {
+            // Persist for retry — encode the full RideLog as JSON
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .iso8601
+            if let payload = try? encoder.encode(rideLog) {
+                let queueItem = UploadQueueItem(payload: payload, endpoint: "/gt3/ride")
+                context.insert(queueItem)
+                try? context.save()
+                logger.info("Queued ride \(rideLog.rideId) for retry")
+            }
+        }
+    }
+
+    /// Retry uploading any rides/telemetry that failed previously.
+    private func retryPendingUploads() async {
+        let context = PersistenceController.shared.context
+        guard let items = try? context.fetch(FetchDescriptor<UploadQueueItem>()),
+              !items.isEmpty else { return }
+        logger.info("Found \(items.count) pending upload(s) to retry")
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        for item in items {
+            do {
+                let data = try await uploadQueue.retryUpload(
+                    payload: item.payload, endpoint: item.endpoint
+                )
+                // For ride uploads, mark the PersistedRide as uploaded
+                if item.endpoint == "/gt3/ride",
+                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let serverId = json["id"] as? String,
+                   let ride = try? decoder.decode(RideLog.self, from: item.payload) {
+                    let pred = #Predicate<PersistedRide> { $0.rideId == ride.rideId }
+                    if let match = try? context.fetch(FetchDescriptor(predicate: pred)).first {
+                        match.rideId = serverId
+                        match.uploaded = true
+                    }
+                }
+                context.delete(item)
+                try? context.save()
+                logger.info("Retry succeeded: \(item.endpoint)")
+            } catch {
+                item.retryCount += 1
+                item.lastAttempt = Date()
+                try? context.save()
+                logger.warning("Retry \(item.endpoint) failed (#\(item.retryCount)): \(error)")
+            }
         }
     }
 }

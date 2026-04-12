@@ -51,6 +51,11 @@ actor GT3APIClient {
         try await get(path: "/gt3/rides/\(rideId)")
     }
 
+    /// Retry a previously failed POST with raw payload.
+    func retryPost(path: String, body: Data) async throws -> Data {
+        try await post(path: path, body: body)
+    }
+
     // MARK: - Private
 
     @discardableResult

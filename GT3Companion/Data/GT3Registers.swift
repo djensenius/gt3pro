@@ -48,6 +48,9 @@ enum GT3Registers {
     static let warnCode = RegisterDefinition(
         name: "rWarnCode", board: .vcu, index: 0x59, size: 2,
         description: "Active warning code")
+    static let rBool = RegisterDefinition(
+        name: "rBool", board: .vcu, index: 0x1C, size: 2,
+        description: "Power/state flags — bit 5 (0x20) = standby, bit 0 (0x01) = powered on")
 
     // BMS live (only BMS2 responds on GT3 Pro — board 0x07)
     static let bmsVoltage = RegisterDefinition(
@@ -177,6 +180,7 @@ enum GT3Registers {
     static let liveTelemetry: [RegisterDefinition] = [
         speed, battery, singleMileage, singleRideTime, runningTime,
         leftMileage, bodyTemp, gearMode, errorCode, warnCode,
+        rBool,
         bmsVoltage, bmsCurrent, bmsSOC, bmsTemp,
         gearED, gearSR,
         odometer, chargeStatus

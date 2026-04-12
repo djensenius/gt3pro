@@ -21,8 +21,8 @@ class GT3LiveActivityManager {
             return
         }
 
-        // End any existing activity first
-        await endRideActivity()
+        // End ALL existing activities (including orphans from prior launches)
+        await endAllActivities()
 
         let attributes = GT3RideAttributes(scooterName: scooterName, startTime: Date())
         let initialState = GT3RideAttributes.ContentState(
@@ -62,11 +62,17 @@ class GT3LiveActivityManager {
 
     /// End the current Live Activity.
     func endRideActivity() async {
-        guard let activity = currentActivity else { return }
-        nonisolated(unsafe) let sendableActivity = activity
-        await sendableActivity.end(nil, dismissalPolicy: .default)
+        await endAllActivities()
+    }
+
+    /// End ALL Live Activities for this app, including orphans from prior launches.
+    private func endAllActivities() async {
+        for activity in Activity<GT3RideAttributes>.activities {
+            nonisolated(unsafe) let sendableActivity = activity
+            await sendableActivity.end(nil, dismissalPolicy: .immediate)
+        }
         currentActivity = nil
-        logger.info("Ended ride Live Activity")
+        logger.info("Ended all ride Live Activities")
     }
 
     /// Check if a Live Activity is currently active.

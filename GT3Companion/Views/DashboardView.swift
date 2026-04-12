@@ -111,8 +111,6 @@ struct DashboardView: View {
                 .font(Theme.Fonts.bodyMedium)
                 .foregroundStyle(Theme.Colors.textSecondary)
                 .multilineTextAlignment(.center)
-            ProgressView()
-                .tint(Theme.Colors.accent)
             #if os(iOS)
             Button {
                 coordinator.sendPowerOn()

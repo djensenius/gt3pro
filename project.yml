@@ -57,7 +57,7 @@ targets:
           - CFBundleURLSchemes:
               - gt3companion
         ITSAppUsesNonExemptEncryption: false
-        LSApplicationCategoryType: public.app-category.lifestyle
+        LSApplicationCategoryType: public.app-category.travel
         OIDCIssuerBase: https://auth.fluxhaus.io/application/o/gt3-companion
         OIDCClientID: gcQHXtphJwbyF6az9rMLavWOqR1vrQqq12t6cjvH
     settings:
@@ -67,6 +67,7 @@ targets:
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_IDENTITY: "iPhone Developer"
         GENERATE_INFOPLIST_FILE: false
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.travel
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     entitlements:
       path: GT3Companion/GT3Companion.entitlements
@@ -243,14 +244,19 @@ targets:
         CFBundleDisplayName: GT3 Companion
         CFBundleName: GT3CompanionMac
         ITSAppUsesNonExemptEncryption: false
-        LSApplicationCategoryType: public.app-category.lifestyle
+        LSApplicationCategoryType: public.app-category.travel
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.travel
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ENABLE_HARDENED_RUNTIME: true
+        ENABLE_APP_SANDBOX: true
+        ENABLE_INCOMING_NETWORK_CONNECTIONS: false
+        ENABLE_OUTGOING_NETWORK_CONNECTIONS: true
+        COMBINE_HIDPI_IMAGES: true
     entitlements:
       path: GT3CompanionMac/GT3CompanionMac.entitlements
 

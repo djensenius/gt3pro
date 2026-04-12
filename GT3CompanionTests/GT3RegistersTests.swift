@@ -10,7 +10,7 @@ import XCTest
 
 final class GT3RegistersTests: XCTestCase {
     func testLiveTelemetryCount() {
-        XCTAssertEqual(GT3Registers.liveTelemetry.count, 18)
+        XCTAssertEqual(GT3Registers.liveTelemetry.count, 19)
     }
 
     func testCumulativeCount() {
