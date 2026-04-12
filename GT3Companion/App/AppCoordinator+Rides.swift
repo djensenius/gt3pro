@@ -47,6 +47,18 @@ extension AppCoordinator {
         context.insert(persisted)
         try? context.save()
         await uploadQueue.flushSamples()
+
+        // Upload enriched snapshot with ride-end inferred values
+        let rideDuration = rideLog.endTime.timeIntervalSince(rideLog.startTime)
+        let snapshot = await registerReader.getEnrichedSnapshot(
+            tripDistance: rideLog.totalDistance,
+            rideDuration: rideDuration
+        )
+        if !snapshot.isEmpty {
+            rideLogger.info("Uploading ride-end snapshot (\(snapshot.count) fields)")
+            await uploadQueue.uploadSnapshot(snapshot)
+        }
+
         if let serverId = await uploadQueue.uploadRide(rideLog) {
             persisted.rideId = serverId
             persisted.uploaded = true

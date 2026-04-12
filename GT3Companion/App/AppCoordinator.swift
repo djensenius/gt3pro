@@ -14,7 +14,6 @@ import SwiftData
 import UserNotifications
 
 private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", category: "Coordinator")
-private let debugLog = DebugLogStore.shared
 
 /// Central orchestrator wiring BLE → Register Reader → Ride Tracker → Upload → Live Activity.
 @MainActor
@@ -49,7 +48,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     @Published var isScooterAwake: Bool = false
 
     private let connectionManager = ScooterConnectionManager()
-    private let registerReader = RegisterReader()
+    let registerReader = RegisterReader()
     let rideTracker = RideTracker()
     let uploadQueue = UploadQueue()
     private let apiClient = GT3APIClient()
@@ -57,6 +56,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     private let roughnessTracker = SurfaceRoughnessTracker()
     private let liveActivityManager = GT3LiveActivityManager.shared
     private let watchSession = PhoneWatchSessionManager.shared
+    private let debugLog = DebugLogStore.shared
 
     private var storedPassword: Data?
     private var hasStarted = false
@@ -158,9 +158,6 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         }
         await registerReader.readCumulativeRegisters()
 
-        let snapshot = await registerReader.getDiagnosticSnapshot()
-        await uploadQueue.uploadSnapshot(snapshot)
-
         gpsTracker.requestPermissions()
         gpsTracker.startTracking()
         roughnessTracker.startTracking()
@@ -188,6 +185,19 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         await registerReader.startPolling()
         watchSession.updateContext(battery: 0, isConnected: true)
         await retryPendingUploads()
+
+        // Upload snapshot after cumulative data has arrived (not immediately)
+        Task { [weak self] in
+            guard let self else { return }
+            await self.registerReader.awaitCumulativeData()
+            let snapshot = await self.registerReader.getDiagnosticSnapshot()
+            guard !snapshot.isEmpty else {
+                debugLog.log("Snapshot empty after await — skipping upload", category: "BLE")
+                return
+            }
+            debugLog.log("Uploading initial snapshot (\(snapshot.count) fields)", category: "BLE")
+            await self.uploadQueue.uploadSnapshot(snapshot)
+        }
 
         logger.info("Fully connected — polling, GPS, roughness, Live Activity active")
     }
