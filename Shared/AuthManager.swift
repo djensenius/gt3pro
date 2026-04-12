@@ -125,7 +125,7 @@ class AuthManager: ObservableObject, @unchecked Sendable {
     // OIDC configuration — override via Info.plist keys OIDCIssuerBase / OIDCClientID
     private static let issuerBase: String = {
         Bundle.main.object(forInfoDictionaryKey: "OIDCIssuerBase") as? String
-            ?? "https://auth.fluxhaus.io/application/o/fluxhaus-server"
+            ?? "https://auth.fluxhaus.io/application/o/gt3-companion"
     }()
     static var authorizeURL: String {
         guard let base = URL(string: issuerBase) else { return issuerBase }
