@@ -27,11 +27,23 @@ class GT3LiveActivityManager {
                 let alreadyRegistered = await MainActor.run { self.lastRegisteredToken == tokenHex }
                 if alreadyRegistered { continue }
 
-                do {
-                    try await apiClient.registerPushToStartToken(tokenHex)
-                    await MainActor.run { self.lastRegisteredToken = tokenHex }
-                } catch {
-                    logger.error("Failed to register push-to-start token: \(error)")
+                // Retry with back-off — token may arrive before auth is ready
+                var registered = false
+                for attempt in 0..<3 {
+                    if attempt > 0 {
+                        try? await Task.sleep(for: .seconds(Double(attempt) * 3))
+                    }
+                    do {
+                        try await apiClient.registerPushToStartToken(tokenHex)
+                        await MainActor.run { self.lastRegisteredToken = tokenHex }
+                        registered = true
+                        break
+                    } catch {
+                        logger.warning("Push-to-start token registration attempt \(attempt + 1) failed: \(error)")
+                    }
+                }
+                if !registered {
+                    logger.error("Failed to register push-to-start token after 3 attempts")
                 }
             }
         }
@@ -44,7 +56,14 @@ class GT3LiveActivityManager {
             return
         }
 
-        // End ALL existing activities (including orphans from prior launches)
+        // Adopt any push-started activity instead of creating a new one
+        adoptPushStartedActivityIfNeeded()
+        if currentActivity?.activityState == .active {
+            logger.info("Adopted existing Live Activity — skipping creation")
+            return
+        }
+
+        // End stale/ended activities before creating a new one
         await endAllActivities()
 
         let attributes = GT3RideAttributes(scooterName: scooterName, startTime: Date())
