@@ -66,9 +66,10 @@ actor GT3APIClient {
 
     /// Register a push-to-start token with the server.
     func registerPushToStartToken(_ tokenHex: String) async throws {
+        let deviceName = await UIDevice.current.name
         let payload: [String: String] = [
             "pushToStartToken": tokenHex,
-            "deviceName": UIDevice.current.name,
+            "deviceName": deviceName,
             "bundleId": Bundle.main.bundleIdentifier ?? "org.davidjensenius.GT3Companion"
         ]
         let body = try JSONSerialization.data(withJSONObject: payload)

@@ -13,7 +13,9 @@ GT3 Companion is a native Swift/SwiftUI iOS app that connects to a Segway SuperS
 - The app uploads data to api.fluxhaus.io (OIDC authentication)
 
 ### Building the Application
-The application uses Xcode with multiple targets:
+The application uses Xcode with multiple targets.
+
+**⚠️ NEVER run `xcodegen generate` or any project generation tool.** The checked-in `.xcodeproj` is the source of truth. Running xcodegen resets code signing, capabilities, entitlements, and other Xcode-managed settings. CI workflows use xcodegen, but local development must not. If `project.yml` needs changes, edit it manually — do NOT regenerate the project.
 
 #### Core Build Commands (NEVER CANCEL - Set 90+ minute timeouts)
 ```bash

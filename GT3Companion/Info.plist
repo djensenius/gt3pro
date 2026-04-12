@@ -49,6 +49,8 @@
 	<string>GT3 Companion uses motion sensors to detect road surface quality.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>NSSupportsLiveActivitiesFrequentUpdates</key>
+	<true/>
 	<key>OIDCClientID</key>
 	<string>gcQHXtphJwbyF6az9rMLavWOqR1vrQqq12t6cjvH</string>
 	<key>OIDCIssuerBase</key>
