@@ -129,7 +129,8 @@ class GT3LiveActivityManager {
     var isActive: Bool {
         if currentActivity?.activityState == .active { return true }
         let anyActive = Activity<GT3RideAttributes>.activities.contains { $0.activityState == .active }
-        logger.info("[LA] isActive check: currentActivity=\(currentActivity?.activityState.debugDescription ?? "nil") anyActive=\(anyActive)")
+        let currentState = self.currentActivity?.activityState.debugDescription ?? "nil"
+        logger.info("[LA] isActive check: currentActivity=\(currentState) anyActive=\(anyActive)")
         return anyActive
     }
 
