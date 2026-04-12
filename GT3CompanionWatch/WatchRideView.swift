@@ -62,7 +62,12 @@ struct WatchRideView: View {
             workout.endWorkout()
         }
         .onChange(of: connectivity.isRiding) { _, riding in
-            if !riding { workout.endWorkout() }
+            if riding {
+                workout.requestAuthorization()
+                workout.startWorkout()
+            } else {
+                workout.endWorkout()
+            }
         }
         .onChange(of: workout.heartRate) { _, hr in
             connectivity.sendHeartRate(Int(hr))
