@@ -192,8 +192,12 @@ actor RegisterReader {
     func clearTelemetry() { telemetryValues.removeAll() }
 
     /// Return snapshot values mapped to server field names.
-    func getDiagnosticSnapshot() -> [String: String] {
+    func getDiagnosticSnapshot(currentBattery: Int? = nil) -> [String: String] {
         var mapped = [String: String]()
+
+        if let battery = currentBattery {
+            mapped["battery"] = "\(battery)"
+        }
 
         // Separate firmware versions and settings into nested JSON objects
         var firmwareVersions = [String: String]()
@@ -247,9 +251,10 @@ actor RegisterReader {
     /// Return a snapshot enriched with end-of-ride inferred values.
     func getEnrichedSnapshot(
         tripDistance: Double,
-        rideDuration: TimeInterval
+        rideDuration: TimeInterval,
+        currentBattery: Int? = nil
     ) -> [String: String] {
-        var snapshot = getDiagnosticSnapshot()
+        var snapshot = getDiagnosticSnapshot(currentBattery: currentBattery)
         let rideDurationSeconds = Int(rideDuration.rounded())
 
         // Update odometer: add trip distance
