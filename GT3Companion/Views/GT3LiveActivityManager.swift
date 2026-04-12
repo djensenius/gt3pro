@@ -22,7 +22,7 @@ class GT3LiveActivityManager {
         pushToStartTokenTask = Task.detached {
             for await tokenData in Activity<GT3RideAttributes>.pushToStartTokenUpdates {
                 let tokenHex = tokenData.map { String(format: "%02x", $0) }.joined()
-                logger.info("Push-to-start token: \(tokenHex.prefix(8))...")
+                logger.info("Received push-to-start token")
 
                 let alreadyRegistered = await MainActor.run { self.lastRegisteredToken == tokenHex }
                 if alreadyRegistered { continue }
@@ -65,6 +65,7 @@ class GT3LiveActivityManager {
 
     /// Update the Live Activity with new telemetry.
     func updateActivity(state: GT3RideAttributes.ContentState) async {
+        adoptPushStartedActivityIfNeeded()
         guard let activity = currentActivity,
               activity.activityState == .active else { return }
 
@@ -92,8 +93,13 @@ class GT3LiveActivityManager {
     /// Check if a Live Activity is currently active.
     var isActive: Bool {
         if currentActivity?.activityState == .active { return true }
-        // Also check for push-started activities we didn't create locally
         return Activity<GT3RideAttributes>.activities.contains { $0.activityState == .active }
+    }
+
+    /// Adopt a push-started activity so we can update it with telemetry.
+    private func adoptPushStartedActivityIfNeeded() {
+        guard currentActivity == nil || currentActivity?.activityState != .active else { return }
+        currentActivity = Activity<GT3RideAttributes>.activities.first { $0.activityState == .active }
     }
 }
 #endif

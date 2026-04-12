@@ -69,7 +69,7 @@ actor GT3APIClient {
         let payload: [String: String] = [
             "pushToStartToken": tokenHex,
             "deviceName": UIDevice.current.name,
-            "bundleId": "org.davidjensenius.GT3Companion"
+            "bundleId": Bundle.main.bundleIdentifier ?? "org.davidjensenius.GT3Companion"
         ]
         let body = try JSONSerialization.data(withJSONObject: payload)
         try await post(path: "/push-tokens/device", body: body)
