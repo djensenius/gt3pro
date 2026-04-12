@@ -11,8 +11,31 @@ class GT3LiveActivityManager {
     static let shared = GT3LiveActivityManager()
 
     private var currentActivity: Activity<GT3RideAttributes>?
+    private var pushToStartTokenTask: Task<Void, Never>?
+    private var lastRegisteredToken: String?
 
     private init() {}
+
+    /// Start observing push-to-start token updates and register with server.
+    func observePushToStartToken(apiClient: GT3APIClient) {
+        guard pushToStartTokenTask == nil else { return }
+        pushToStartTokenTask = Task.detached {
+            for await tokenData in Activity<GT3RideAttributes>.pushToStartTokenUpdates {
+                let tokenHex = tokenData.map { String(format: "%02x", $0) }.joined()
+                logger.info("Received push-to-start token")
+
+                let alreadyRegistered = await MainActor.run { self.lastRegisteredToken == tokenHex }
+                if alreadyRegistered { continue }
+
+                do {
+                    try await apiClient.registerPushToStartToken(tokenHex)
+                    await MainActor.run { self.lastRegisteredToken = tokenHex }
+                } catch {
+                    logger.error("Failed to register push-to-start token: \(error)")
+                }
+            }
+        }
+    }
 
     /// Start a new Live Activity for a ride.
     func startRideActivity(scooterName: String = "GT3 Pro") async {
@@ -25,24 +48,14 @@ class GT3LiveActivityManager {
         await endAllActivities()
 
         let attributes = GT3RideAttributes(scooterName: scooterName, startTime: Date())
-        let initialState = GT3RideAttributes.ContentState(
-            speed: 0,
-            battery: 0,
-            tripDistance: 0,
-            estimatedRange: 0,
-            gearMode: 0,
-            bmsTemp: 0,
-            isCharging: false,
-            isAwake: false
-        )
-
+        let initialState = GT3RideAttributes.ContentState.idle(isConnected: true)
         let content = ActivityContent(state: initialState, staleDate: Date().addingTimeInterval(300))
 
         do {
             currentActivity = try Activity.request(
                 attributes: attributes,
                 content: content,
-                pushType: nil
+                pushType: .token
             )
             logger.info("Started ride Live Activity")
         } catch {
@@ -52,10 +65,12 @@ class GT3LiveActivityManager {
 
     /// Update the Live Activity with new telemetry.
     func updateActivity(state: GT3RideAttributes.ContentState) async {
+        adoptPushStartedActivityIfNeeded()
         guard let activity = currentActivity,
               activity.activityState == .active else { return }
 
-        let content = ActivityContent(state: state, staleDate: Date().addingTimeInterval(300))
+        let staleInterval: TimeInterval = state.isConnected ? 300 : 3600
+        let content = ActivityContent(state: state, staleDate: Date().addingTimeInterval(staleInterval))
         nonisolated(unsafe) let sendableActivity = activity
         await sendableActivity.update(content)
     }
@@ -77,7 +92,14 @@ class GT3LiveActivityManager {
 
     /// Check if a Live Activity is currently active.
     var isActive: Bool {
-        currentActivity?.activityState == .active
+        if currentActivity?.activityState == .active { return true }
+        return Activity<GT3RideAttributes>.activities.contains { $0.activityState == .active }
+    }
+
+    /// Adopt a push-started activity so we can update it with telemetry.
+    private func adoptPushStartedActivityIfNeeded() {
+        guard currentActivity == nil || currentActivity?.activityState != .active else { return }
+        currentActivity = Activity<GT3RideAttributes>.activities.first { $0.activityState == .active }
     }
 }
 #endif

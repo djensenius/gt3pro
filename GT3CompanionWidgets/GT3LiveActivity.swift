@@ -13,7 +13,9 @@ struct GT3LiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: GT3RideAttributes.self) { context in
             // Lock Screen banner
-            if context.state.isAwake {
+            if !context.state.isConnected {
+                disconnectedLockScreen(context)
+            } else if context.state.isAwake {
                 awakeLockScreen(context)
             } else {
                 standbyLockScreen(context)
@@ -21,7 +23,15 @@ struct GT3LiveActivity: Widget {
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    if context.state.isAwake {
+                    if !context.state.isConnected {
+                        VStack(alignment: .leading) {
+                            Image(systemName: "antenna.radiowaves.left.and.right.slash")
+                                .font(.title2)
+                            Text("Searching")
+                                .font(.caption)
+                        }
+                        .foregroundStyle(.secondary)
+                    } else if context.state.isAwake {
                         VStack(alignment: .leading) {
                             Text("\(Int(context.state.speed))")
                                 .font(.title.bold())
@@ -39,7 +49,14 @@ struct GT3LiveActivity: Widget {
                     }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    if context.state.isAwake {
+                    if !context.state.isConnected {
+                        VStack(alignment: .trailing) {
+                            ProgressView()
+                            Text("Reconnecting")
+                                .font(.caption)
+                        }
+                        .foregroundStyle(.secondary)
+                    } else if context.state.isAwake {
                         VStack(alignment: .trailing) {
                             Text("\(context.state.battery)%")
                                 .font(.title2.bold())
@@ -57,7 +74,11 @@ struct GT3LiveActivity: Widget {
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    if context.state.isAwake {
+                    if !context.state.isConnected {
+                        Text("Scooter out of range — will reconnect automatically")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    } else if context.state.isAwake {
                         HStack {
                             Label(
                                 String(format: "%.1f km", context.state.tripDistance),
@@ -77,7 +98,11 @@ struct GT3LiveActivity: Widget {
                     }
                 }
             } compactLeading: {
-                if context.state.isAwake {
+                if !context.state.isConnected {
+                    Image(systemName: "antenna.radiowaves.left.and.right.slash")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else if context.state.isAwake {
                     Label("\(Int(context.state.speed))", systemImage: "bolt.fill")
                         .font(.caption.bold())
                 } else {
@@ -86,7 +111,11 @@ struct GT3LiveActivity: Widget {
                         .foregroundStyle(.secondary)
                 }
             } compactTrailing: {
-                if context.state.isAwake {
+                if !context.state.isConnected {
+                    Text("…")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else if context.state.isAwake {
                     Text("\(context.state.battery)%")
                         .font(.caption.bold())
                 } else {
@@ -95,7 +124,10 @@ struct GT3LiveActivity: Widget {
                         .foregroundStyle(.secondary)
                 }
             } minimal: {
-                if context.state.isAwake {
+                if !context.state.isConnected {
+                    Image(systemName: "antenna.radiowaves.left.and.right.slash")
+                        .foregroundStyle(.secondary)
+                } else if context.state.isAwake {
                     Image(systemName: "scooter")
                         .environment(\.layoutDirection, .rightToLeft)
                 } else {
@@ -141,6 +173,24 @@ struct GT3LiveActivity: Widget {
                     .foregroundStyle(.secondary)
             }
             Text("Connected — press scooter power button to start")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .padding()
+    }
+
+    @ViewBuilder
+    private func disconnectedLockScreen(_ context: ActivityViewContext<GT3RideAttributes>) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(context.attributes.scooterName)
+                    .font(.headline)
+                Spacer()
+                Label("Searching", systemImage: "antenna.radiowaves.left.and.right.slash")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            Text("Scooter out of range — will reconnect automatically")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }

@@ -63,6 +63,9 @@ struct GT3CompanionApp: App {
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }
             Task { _ = await AuthManager.shared.ensureValidToken() }
+            #if os(iOS)
+            coordinator.resumeFromBackground()
+            #endif
         }
     }
 
