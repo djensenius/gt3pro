@@ -12,8 +12,7 @@ extension ActivityState {
         case .ended: return "ended"
         case .dismissed: return "dismissed"
         case .stale: return "stale"
-        case .pending: return "pending"
-        @unknown default: return "unknown(\(self))"
+        @unknown default: return "unknown"
         }
     }
 }
