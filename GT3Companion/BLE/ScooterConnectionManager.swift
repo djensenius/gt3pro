@@ -585,8 +585,11 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
 
         // Only auto-reconnect if disconnect was unexpected
         if !intentionalDisconnect {
+            logger.info("[RECONNECT] Unexpected disconnect — issuing watchForReconnection")
+            bleLog("Auto-reconnect queued (unexpected disconnect)")
             watchForReconnection()
         } else {
+            logger.info("[RECONNECT] Intentional disconnect — no auto-reconnect")
             connectionState = .disconnected
         }
     }

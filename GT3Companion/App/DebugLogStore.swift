@@ -50,7 +50,7 @@ final class DebugLogStore: ObservableObject {
     var exportFilename: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
-        return "gt3-debug-\(formatter.string(from: Date())).log"
+        return "GT3Companion-debug-\(formatter.string(from: Date())).log"
     }
 
     func makeFileDocument() -> LogFileDocument {
@@ -67,14 +67,14 @@ struct LogFileDocument: FileDocument {
     var content: String
     var filename: String
 
-    init(content: String, filename: String = "gt3-debug.log") {
+    init(content: String, filename: String = "GT3Companion-debug.log") {
         self.content = content
         self.filename = filename
     }
 
     init(configuration: ReadConfiguration) throws {
         content = String(data: configuration.file.regularFileContents ?? Data(), encoding: .utf8) ?? ""
-        filename = "gt3-debug.log"
+        filename = "GT3Companion-debug.log"
     }
 
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
