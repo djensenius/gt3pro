@@ -106,4 +106,26 @@ final class RegisterReaderTests: XCTestCase {
         let after = await reader.getTelemetryCount()
         XCTAssertEqual(after, 0)
     }
+
+    func testDiagnosticSnapshotBatteryField() async {
+        let reader = RegisterReader()
+
+        // Without battery — key should be absent
+        let withoutBattery = await reader.getDiagnosticSnapshot()
+        XCTAssertNil(withoutBattery["battery"])
+
+        // With battery — key should be present
+        let withBattery = await reader.getDiagnosticSnapshot(batteryLevel: 85)
+        XCTAssertEqual(withBattery["battery"], "85")
+
+        // With estimated range
+        let withRange = await reader.getDiagnosticSnapshot(
+            batteryLevel: 72, estimatedRange: 42.5)
+        XCTAssertEqual(withRange["battery"], "72")
+        XCTAssertEqual(withRange["estimatedRange"], "42.5")
+
+        // Zero range should be omitted
+        let zeroRange = await reader.getDiagnosticSnapshot(estimatedRange: 0)
+        XCTAssertNil(zeroRange["estimatedRange"])
+    }
 }
