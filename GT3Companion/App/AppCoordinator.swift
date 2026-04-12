@@ -6,6 +6,7 @@
 //
 
 #if os(iOS)
+import ActivityKit
 import CoreLocation
 import Foundation
 import os
@@ -13,6 +14,7 @@ import SwiftData
 import UserNotifications
 
 private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", category: "Coordinator")
+private let debugLog = DebugLogStore.shared
 
 /// Central orchestrator wiring BLE → Register Reader → Ride Tracker → Upload → Live Activity.
 @MainActor
@@ -105,12 +107,13 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
 
     /// Ask server to send APNs push-to-start (background reconnect fallback).
     private func requestServerPushToStart() {
+        debugLog.log("Calling POST /gt3/activity/start", category: "Reconnect")
         Task {
             do {
                 try await apiClient.requestActivityStart()
-                logger.info("Server push-to-start requested successfully")
+                debugLog.log("Server push-to-start POST succeeded", category: "Reconnect")
             } catch {
-                logger.error("Server push-to-start failed: \(error)")
+                debugLog.log("Server push-to-start POST failed: \(error)", category: "Reconnect", level: .error)
             }
         }
     }
@@ -118,14 +121,21 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     // MARK: - ScooterConnectionDelegate
 
     func connectionStateChanged(_ state: ConnectionState) {
+        let prev = self.connectionState
         self.connectionState = state
+        let msg = "Connection state: \(String(describing: prev)) → \(String(describing: state))"
+        logger.info("[RECONNECT] \(msg)")
+        debugLog.log(msg, category: "Reconnect")
         if state == .authenticating {
+            debugLog.log("State is authenticating — starting Live Activity early", category: "Reconnect")
             Task { await liveActivityManager.startRideActivity() }
         }
     }
 
     func didAuthenticate(serialNumber: String) {
-        logger.info("Authenticated: \(serialNumber)")
+        let msg = "didAuthenticate fired — SN: \(serialNumber)"
+        logger.info("[RECONNECT] \(msg)")
+        debugLog.log(msg, category: "Reconnect")
         self.serialNumber = serialNumber
         Task { await self.onConnected() }
     }
@@ -135,12 +145,16 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     }
 
     func didDisconnect(error: Error?) {
+        let msg = "didDisconnect — error: \(error?.localizedDescription ?? "none")"
+        logger.info("[RECONNECT] \(msg)")
+        debugLog.log(msg, category: "Reconnect")
         Task { await self.onDisconnected() }
     }
 
     // MARK: - Connection Lifecycle
 
     private func onConnected() async {
+        debugLog.log("onConnected() — starting connection setup", category: "Reconnect")
         await registerReader.configure { [weak self] frame in
             self?.connectionManager.sendFrame(frame)
         }
@@ -153,15 +167,22 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         gpsTracker.startTracking()
         roughnessTracker.startTracking()
 
+        let activitiesEnabled = ActivityAuthorizationInfo().areActivitiesEnabled
+        let existingCount = Activity<GT3RideAttributes>.activities.count
+        let activeCount = Activity<GT3RideAttributes>.activities.filter { $0.activityState == .active }.count
+        let laStatus = "LA check: enabled=\(activitiesEnabled) existing=\(existingCount) active=\(activeCount) isActive=\(liveActivityManager.isActive)"
+        logger.info("[RECONNECT] \(laStatus)")
+        debugLog.log(laStatus, category: "Reconnect")
+
         if liveActivityManager.isActive {
-            logger.info("Live Activity already active on reconnect")
+            debugLog.log("Live Activity already active — keeping it", category: "Reconnect")
         } else {
-            logger.info("No Live Activity on reconnect — trying foreground start")
+            debugLog.log("No active Live Activity — trying foreground start", category: "Reconnect")
             await liveActivityManager.startRideActivity()
             if liveActivityManager.isActive {
-                logger.info("Foreground Live Activity started")
+                debugLog.log("Foreground Live Activity started successfully", category: "Reconnect")
             } else {
-                logger.info("Foreground start failed — requesting server push-to-start")
+                debugLog.log("Foreground start failed — requesting server push-to-start", category: "Reconnect")
                 requestServerPushToStart()
             }
         }
@@ -174,6 +195,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     }
 
     private func onDisconnected() async {
+        debugLog.log("onDisconnected() — finalizing ride", category: "Reconnect")
         await registerReader.stopPolling()
         stopTelemetryWatchdog()
         let lastBattery = currentBattery
@@ -186,9 +208,10 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         await uploadQueue.flushSamples()
         await uploadQueue.persistRemainingsamples()
 
-        // End Live Activity — APNs push-to-start will recreate on reconnect.
+        let preEndCount = Activity<GT3RideAttributes>.activities.count
         await liveActivityManager.endRideActivity()
-        logger.info("Disconnected — ride finalized, Live Activity ended")
+        let postEndCount = Activity<GT3RideAttributes>.activities.count
+        debugLog.log("Ended Live Activities (before=\(preEndCount) after=\(postEndCount))", category: "Reconnect")
     }
 
     // MARK: - Power Control

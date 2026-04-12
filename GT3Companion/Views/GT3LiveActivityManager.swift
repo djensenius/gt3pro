@@ -5,6 +5,18 @@ import os
 
 private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", category: "LiveActivity")
 
+extension ActivityState {
+    var debugDescription: String {
+        switch self {
+        case .active: return "active"
+        case .ended: return "ended"
+        case .dismissed: return "dismissed"
+        case .stale: return "stale"
+        @unknown default: return "unknown(\(self))"
+        }
+    }
+}
+
 /// Manages the GT3 ride Live Activity lifecycle.
 @MainActor
 class GT3LiveActivityManager {
@@ -52,18 +64,20 @@ class GT3LiveActivityManager {
     /// Start a new Live Activity for a ride.
     func startRideActivity(scooterName: String = "GT3 Pro") async {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else {
-            logger.warning("Live Activities disabled")
+            logger.warning("[LA] Live Activities disabled by user")
             return
         }
 
-        // Adopt any push-started activity instead of creating a new one
+        logger.info("[LA] startRideActivity called — checking for existing activities")
+        let allActivities = Activity<GT3RideAttributes>.activities
+        logger.info("[LA] Found \(allActivities.count) activity instance(s): \(allActivities.map { "\($0.id)=\($0.activityState.debugDescription)" }.joined(separator: ", "))")
+
         adoptPushStartedActivityIfNeeded()
         if currentActivity?.activityState == .active {
-            logger.info("Adopted existing Live Activity — skipping creation")
+            logger.info("[LA] Adopted existing active Live Activity \(self.currentActivity?.id ?? "?")")
             return
         }
 
-        // End stale/ended activities before creating a new one
         await endAllActivities()
 
         let attributes = GT3RideAttributes(scooterName: scooterName, startTime: Date())
@@ -76,9 +90,9 @@ class GT3LiveActivityManager {
                 content: content,
                 pushType: .token
             )
-            logger.info("Started ride Live Activity")
+            logger.info("[LA] Created new Live Activity: \(self.currentActivity?.id ?? "?")")
         } catch {
-            logger.error("Failed to start Live Activity: \(error)")
+            logger.error("[LA] Failed to create Live Activity: \(error)")
         }
     }
 
@@ -101,24 +115,31 @@ class GT3LiveActivityManager {
 
     /// End ALL Live Activities for this app, including orphans from prior launches.
     private func endAllActivities() async {
-        for activity in Activity<GT3RideAttributes>.activities {
+        let activities = Activity<GT3RideAttributes>.activities
+        logger.info("[LA] endAllActivities — ending \(activities.count) activity instance(s)")
+        for activity in activities {
+            logger.info("[LA] Ending activity \(activity.id) state=\(activity.activityState.debugDescription)")
             nonisolated(unsafe) let sendableActivity = activity
             await sendableActivity.end(nil, dismissalPolicy: .immediate)
         }
         currentActivity = nil
-        logger.info("Ended all ride Live Activities")
     }
 
     /// Check if a Live Activity is currently active.
     var isActive: Bool {
         if currentActivity?.activityState == .active { return true }
-        return Activity<GT3RideAttributes>.activities.contains { $0.activityState == .active }
+        let anyActive = Activity<GT3RideAttributes>.activities.contains { $0.activityState == .active }
+        logger.info("[LA] isActive check: currentActivity=\(currentActivity?.activityState.debugDescription ?? "nil") anyActive=\(anyActive)")
+        return anyActive
     }
 
-    /// Adopt a push-started activity so we can update it with telemetry.
     private func adoptPushStartedActivityIfNeeded() {
         guard currentActivity == nil || currentActivity?.activityState != .active else { return }
-        currentActivity = Activity<GT3RideAttributes>.activities.first { $0.activityState == .active }
+        let candidate = Activity<GT3RideAttributes>.activities.first { $0.activityState == .active }
+        if let candidate {
+            logger.info("[LA] Adopting push-started activity: \(candidate.id)")
+        }
+        currentActivity = candidate
     }
 }
 #endif

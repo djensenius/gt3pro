@@ -167,7 +167,7 @@ struct SettingsView: View {
                 .listRowBackground(Theme.Colors.elevatedBackground)
                 ShareLink(
                     item: logStore.export(),
-                    preview: SharePreview("gt3-debug.log")
+                    preview: SharePreview("GT3Companion-debug.log")
                 ) {
                     Label("Share Logs", systemImage: "square.and.arrow.up")
                 }
