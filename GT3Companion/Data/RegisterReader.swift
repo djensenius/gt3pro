@@ -31,15 +31,71 @@ actor RegisterReader {
     private var isPolling = false
     private var pollTask: Task<Void, Never>?
 
+    /// Tracks which cumulative registers have been received.
+    private var receivedCumulativeRegisters: Set<String> = []
+
+    private static let snapshotKeyMap: [String: String] = [
+        "rSN": "serialNumber",
+        "rPreciseMileage": "odometer",
+        "rMileage": "odometerRaw",
+        "rRuntime": "totalRuntime",
+        "rRideTime": "totalRideTime",
+        "rCtrlV": "controllerFirmware",
+        "rMCUV": "mcuFirmware",
+        "rBmsV": "bms1Firmware",
+        "rBms2V": "bms2Firmware",
+        "rBleV": "bleFirmware",
+        "rBms2CycleCountLT": "bms2CycleCount",
+        "rBms2EnergyThroughputLT": "bms2EnergyThroughput",
+        "rBms2CapacityThroughputLT": "bms2CapacityThroughput",
+        "rBms2DeepDischargeCountLT": "bms2DeepDischargeCount",
+        "rBms2RemainCapacityLT": "bms2RemainingCapacity",
+        "rBms2ManufactureDateLT": "bms2ManufactureDate",
+        "rBatterySN2": "batterySN",
+        "rPN": "partNumber",
+        "rTimeFull": "timeToFull",
+        "rChargeStatus": "chargeStatus",
+        "rMaxPower": "maxPower",
+        "rBmsCapacity": "bmsDesignCapacity",
+        "rBmsCellVolFrequence": "bmsCellVoltages",
+        "rBmsTempFrequence": "bmsTempSensors",
+        "rLedMode": "ledMode",
+        "rProjectionLightMode": "projectionLightMode",
+        "rTailLightMode": "tailLightMode",
+        "rAlarmLevel": "alarmLevel",
+        "rBumpyRoad": "bumpyRoad",
+        "rVoiceVolume": "voiceVolume",
+        "rGearED": "energyRecovery",
+        "rGearSR": "speedResponse",
+        "rFindMyStatus": "findMyStatus",
+        "rFindMyEnable": "findMyEnable"
+    ]
+
     func configure(sendFrame: @escaping FrameSender) {
         self.sendFrame = sendFrame
     }
 
     /// Read all cumulative registers once (on connect).
     func readCumulativeRegisters() async {
+        receivedCumulativeRegisters.removeAll()
         for register in GT3Registers.cumulative {
             await readRegister(register)
             try? await Task.sleep(for: .milliseconds(50))
+        }
+    }
+
+    /// Wait until all cumulative registers have been received, or timeout.
+    func awaitCumulativeData(timeoutSeconds: UInt64 = 10) async {
+        if receivedCumulativeRegisters.count >= GT3Registers.cumulative.count {
+            return
+        }
+        // Poll with short sleeps until all registers arrive or timeout expires
+        let deadline = ContinuousClock.now + .seconds(timeoutSeconds)
+        while ContinuousClock.now < deadline {
+            if receivedCumulativeRegisters.count >= GT3Registers.cumulative.count {
+                return
+            }
+            try? await Task.sleep(for: .milliseconds(200))
         }
     }
 
@@ -106,6 +162,9 @@ actor RegisterReader {
             telemetryValues[register.name] = value
         } else {
             snapshotValues[register.name] = value
+            if GT3Registers.cumulative.contains(where: { $0.name == register.name }) {
+                receivedCumulativeRegisters.insert(register.name)
+            }
         }
 
         return RegisterReadResult(
@@ -132,10 +191,80 @@ actor RegisterReader {
 
     func clearTelemetry() { telemetryValues.removeAll() }
 
-    /// Return snapshot values as a string dictionary for upload.
+    /// Return snapshot values mapped to server field names.
     func getDiagnosticSnapshot() -> [String: String] {
-        snapshotValues.reduce(into: [String: String]()) { result, pair in
-            result[pair.key] = "\(pair.value)"
+        var mapped = [String: String]()
+
+        // Separate firmware versions and settings into nested JSON objects
+        var firmwareVersions = [String: String]()
+        var settings = [String: String]()
+        let fwKeys: Set<String> = [
+            "controllerFirmware", "mcuFirmware", "bms1Firmware",
+            "bms2Firmware", "bleFirmware"
+        ]
+        let settingsKeys: Set<String> = [
+            "ledMode", "projectionLightMode", "tailLightMode",
+            "alarmLevel", "bumpyRoad", "voiceVolume",
+            "energyRecovery", "speedResponse", "maxPower",
+            "findMyStatus", "findMyEnable"
+        ]
+
+        for (registerName, value) in snapshotValues {
+            let serverKey = Self.snapshotKeyMap[registerName] ?? registerName
+            let stringValue = "\(value)"
+            if fwKeys.contains(serverKey) {
+                firmwareVersions[serverKey] = stringValue
+            } else if settingsKeys.contains(serverKey) {
+                settings[serverKey] = stringValue
+            } else {
+                mapped[serverKey] = stringValue
+            }
         }
+
+        // Encode firmware versions and settings as JSON strings
+        if !firmwareVersions.isEmpty,
+           let data = try? JSONSerialization.data(withJSONObject: firmwareVersions),
+           let json = String(data: data, encoding: .utf8) {
+            mapped["firmwareVersions"] = json
+        }
+        if !settings.isEmpty,
+           let data = try? JSONSerialization.data(withJSONObject: settings),
+           let json = String(data: data, encoding: .utf8) {
+            mapped["settings"] = json
+        }
+
+        // Use bms2 values for bms1 columns too (GT3 Pro single-pack)
+        if mapped["bms1CycleCount"] == nil, let bms2 = mapped["bms2CycleCount"] {
+            mapped["bms1CycleCount"] = bms2
+        }
+        if mapped["bms1EnergyThroughput"] == nil, let bms2 = mapped["bms2EnergyThroughput"] {
+            mapped["bms1EnergyThroughput"] = bms2
+        }
+
+        return mapped
+    }
+
+    /// Return a snapshot enriched with end-of-ride inferred values.
+    func getEnrichedSnapshot(
+        tripDistance: Double,
+        rideDuration: TimeInterval
+    ) -> [String: String] {
+        var snapshot = getDiagnosticSnapshot()
+        let rideDurationSeconds = Int(rideDuration.rounded())
+
+        // Update odometer: add trip distance
+        if let current = snapshot["odometer"], let currentVal = Double(current) {
+            snapshot["odometer"] = "\(currentVal + tripDistance)"
+        }
+        // Update totalRideTime: add this ride's duration in whole seconds
+        if let current = snapshot["totalRideTime"], let currentVal = Int(current) {
+            snapshot["totalRideTime"] = "\(currentVal + rideDurationSeconds)"
+        }
+        // Update totalRuntime: add this ride's duration in whole seconds
+        if let current = snapshot["totalRuntime"], let currentVal = Int(current) {
+            snapshot["totalRuntime"] = "\(currentVal + rideDurationSeconds)"
+        }
+
+        return snapshot
     }
 }

@@ -12,7 +12,7 @@ extension ActivityState {
         case .ended: return "ended"
         case .dismissed: return "dismissed"
         case .stale: return "stale"
-        @unknown default: return "unknown(\(self))"
+        @unknown default: return "unknown"
         }
     }
 }
@@ -45,6 +45,7 @@ class GT3LiveActivityManager {
     func observePushToStartToken(apiClient: GT3APIClient) {
         guard pushToStartTokenTask == nil else { return }
         pushToStartTokenTask = Task.detached { [weak self] in
+            let weakManager = self
             for await tokenData in Activity<GT3RideAttributes>.pushToStartTokenUpdates {
                 let tokenHex = tokenData.map { String(format: "%02x", $0) }.joined()
                 await MainActor.run {
@@ -52,7 +53,7 @@ class GT3LiveActivityManager {
                 }
 
                 let alreadyRegistered = await MainActor.run {
-                    self?.lastRegisteredToken == tokenHex
+                    weakManager?.lastRegisteredToken == tokenHex
                 }
                 if alreadyRegistered { continue }
 
@@ -69,7 +70,9 @@ class GT3LiveActivityManager {
                     }
                     do {
                         try await apiClient.registerPushToStartToken(tokenHex)
-                        await MainActor.run { self?.lastRegisteredToken = tokenHex }
+                        await MainActor.run {
+                            weakManager?.lastRegisteredToken = tokenHex
+                        }
                         await MainActor.run {
                             DebugLogStore.shared.log(
                                 "Registered push-to-start token", category: "LiveActivity"
