@@ -55,6 +55,7 @@ targets:
         NSHealthShareUsageDescription: GT3 Companion reads heart rate data from your Apple Watch during rides.
         NSHealthUpdateUsageDescription: GT3 Companion saves ride workouts to Apple Health.
         NSSupportsLiveActivities: true
+        NSSupportsLiveActivitiesFrequentUpdates: true
         CFBundleURLTypes:
           - CFBundleURLSchemes:
               - gt3companion
@@ -74,6 +75,7 @@ targets:
     entitlements:
       path: GT3Companion/GT3Companion.entitlements
       properties:
+        aps-environment: development
         com.apple.developer.healthkit: true
         com.apple.developer.healthkit.access: []
         com.apple.developer.weatherkit: true
