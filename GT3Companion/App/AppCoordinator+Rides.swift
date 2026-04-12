@@ -13,6 +13,7 @@ import SwiftData
 private let rideLogger = Logger(subsystem: "org.davidjensenius.GT3Companion", category: "Rides")
 
 // MARK: - Ride Completion & Upload Retry
+// Internal access required — Swift disallows private in extensions across files.
 
 extension AppCoordinator {
     func handleRideComplete(_ rideLog: RideLog) async {

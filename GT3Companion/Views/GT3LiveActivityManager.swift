@@ -47,9 +47,8 @@ class GT3LiveActivityManager {
         pushToStartTokenTask = Task.detached { [weak self] in
             for await tokenData in Activity<GT3RideAttributes>.pushToStartTokenUpdates {
                 let tokenHex = tokenData.map { String(format: "%02x", $0) }.joined()
-                let debugLog = await MainActor.run { DebugLogStore.shared }
                 await MainActor.run {
-                    debugLog.log("Received push-to-start token", category: "LiveActivity")
+                    DebugLogStore.shared.log("Received push-to-start token", category: "LiveActivity")
                 }
 
                 let alreadyRegistered = await MainActor.run {
@@ -72,13 +71,15 @@ class GT3LiveActivityManager {
                         try await apiClient.registerPushToStartToken(tokenHex)
                         await MainActor.run { self?.lastRegisteredToken = tokenHex }
                         await MainActor.run {
-                            debugLog.log("Registered push-to-start token", category: "LiveActivity")
+                            DebugLogStore.shared.log(
+                                "Registered push-to-start token", category: "LiveActivity"
+                            )
                         }
                         registered = true
                         break
                     } catch {
                         await MainActor.run {
-                            debugLog.log(
+                            DebugLogStore.shared.log(
                                 "Token registration attempt \(attempt + 1) failed: \(error)",
                                 category: "LiveActivity", level: .warning
                             )
@@ -87,7 +88,7 @@ class GT3LiveActivityManager {
                 }
                 if !registered {
                     await MainActor.run {
-                        debugLog.log(
+                        DebugLogStore.shared.log(
                             "Failed to register push-to-start token after 3 attempts",
                             category: "LiveActivity", level: .error
                         )
