@@ -84,7 +84,10 @@ actor GT3APIClient {
         guard let url = URL(string: baseURL + path) else {
             throw APIError.invalidURL
         }
-        _ = await AuthManager.shared.ensureValidToken()
+        let valid = await AuthManager.shared.ensureValidToken()
+        if !valid {
+            logger.warning("POST \(path): ensureValidToken returned false — token may be expired")
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -95,9 +98,30 @@ actor GT3APIClient {
         request.httpBody = body
 
         let (data, response) = try await session.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+        let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+
+        // Retry once on 401 — token may have expired mid-flight
+        if statusCode == 401 {
+            logger.info("POST \(path): got 401, forcing token refresh and retrying")
+            let refreshed = await AuthManager.shared.refreshTokenIfNeeded()
+            if refreshed {
+                var retryRequest = request
+                if let auth = AuthManager.shared.authorizationHeader() {
+                    retryRequest.setValue(auth, forHTTPHeaderField: "Authorization")
+                }
+                let (retryData, retryResponse) = try await session.data(for: retryRequest)
+                let retryStatus = (retryResponse as? HTTPURLResponse)?.statusCode ?? 0
+                if (200...299).contains(retryStatus) {
+                    return retryData
+                }
+                logger.error("POST \(path) retry failed: \(retryStatus)")
+                throw APIError.httpError(statusCode: retryStatus)
+            }
+            logger.error("POST \(path) failed: 401 (token refresh also failed)")
+            throw APIError.httpError(statusCode: 401)
+        }
+
+        guard (200...299).contains(statusCode) else {
             logger.error("POST \(path) failed: \(statusCode)")
             throw APIError.httpError(statusCode: statusCode)
         }
