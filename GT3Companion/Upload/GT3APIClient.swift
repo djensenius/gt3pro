@@ -86,7 +86,9 @@ actor GT3APIClient {
         }
         let valid = await AuthManager.shared.ensureValidToken()
         if !valid {
-            logger.warning("POST \(path): ensureValidToken returned false — token may be expired")
+            let hasToken = AuthManager.shared.authorizationHeader() != nil
+            let detail = hasToken ? "proactive refresh failed" : "no access token"
+            logger.warning("POST \(path): ensureValidToken=false (\(detail))")
         }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -100,25 +102,8 @@ actor GT3APIClient {
         let (data, response) = try await session.data(for: request)
         let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
 
-        // Retry once on 401 — token may have expired mid-flight
         if statusCode == 401 {
-            logger.info("POST \(path): got 401, forcing token refresh and retrying")
-            let refreshed = await AuthManager.shared.refreshTokenIfNeeded()
-            if refreshed {
-                var retryRequest = request
-                if let auth = AuthManager.shared.authorizationHeader() {
-                    retryRequest.setValue(auth, forHTTPHeaderField: "Authorization")
-                }
-                let (retryData, retryResponse) = try await session.data(for: retryRequest)
-                let retryStatus = (retryResponse as? HTTPURLResponse)?.statusCode ?? 0
-                if (200...299).contains(retryStatus) {
-                    return retryData
-                }
-                logger.error("POST \(path) retry failed: \(retryStatus)")
-                throw APIError.httpError(statusCode: retryStatus)
-            }
-            logger.error("POST \(path) failed: 401 (token refresh also failed)")
-            throw APIError.httpError(statusCode: 401)
+            return try await retryAfterRefresh(request: request, path: path, method: "POST")
         }
 
         guard (200...299).contains(statusCode) else {
@@ -140,13 +125,38 @@ actor GT3APIClient {
         }
 
         let (data, response) = try await session.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+        let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+
+        if statusCode == 401 {
+            return try await retryAfterRefresh(request: request, path: path, method: "GET")
+        }
+
+        guard (200...299).contains(statusCode) else {
             logger.error("GET \(path) failed: \(statusCode)")
             throw APIError.httpError(statusCode: statusCode)
         }
         return data
+    }
+
+    /// Retry a request after forcing a token refresh (used on 401).
+    private func retryAfterRefresh(request: URLRequest, path: String, method: String) async throws -> Data {
+        logger.info("\(method) \(path): got 401, forcing token refresh")
+        let refreshed = await AuthManager.shared.refreshTokenIfNeeded()
+        guard refreshed else {
+            logger.error("\(method) \(path) failed: 401 (token refresh also failed)")
+            throw APIError.httpError(statusCode: 401)
+        }
+        var retryRequest = request
+        if let auth = AuthManager.shared.authorizationHeader() {
+            retryRequest.setValue(auth, forHTTPHeaderField: "Authorization")
+        }
+        let (retryData, retryResponse) = try await session.data(for: retryRequest)
+        let retryStatus = (retryResponse as? HTTPURLResponse)?.statusCode ?? 0
+        guard (200...299).contains(retryStatus) else {
+            logger.error("\(method) \(path) retry failed: \(retryStatus)")
+            throw APIError.httpError(statusCode: retryStatus)
+        }
+        return retryData
     }
 }
 

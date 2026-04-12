@@ -50,8 +50,8 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
 
     private let connectionManager = ScooterConnectionManager()
     private let registerReader = RegisterReader()
-    private let rideTracker = RideTracker()
-    private let uploadQueue = UploadQueue()
+    let rideTracker = RideTracker()
+    let uploadQueue = UploadQueue()
     private let apiClient = GT3APIClient()
     private let gpsTracker = GPSTracker()
     private let roughnessTracker = SurfaceRoughnessTracker()
@@ -105,15 +105,13 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         Task { await liveActivityManager.startRideActivity() }
     }
 
-    /// Ask server to send APNs push-to-start (background reconnect fallback).
     private func requestServerPushToStart() {
-        debugLog.log("Calling POST /gt3/activity/start", category: "Reconnect")
+        debugLog.log("Calling POST /gt3/activity/start", category: "BLE")
         Task {
             do {
                 try await apiClient.requestActivityStart()
-                debugLog.log("Server push-to-start POST succeeded", category: "Reconnect")
             } catch {
-                debugLog.log("Server push-to-start POST failed: \(error)", category: "Reconnect", level: .error)
+                debugLog.log("Push-to-start failed: \(error)", category: "BLE", level: .error)
             }
         }
     }
@@ -123,19 +121,19 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     func connectionStateChanged(_ state: ConnectionState) {
         let prev = self.connectionState
         self.connectionState = state
-        let msg = "Connection state: \(String(describing: prev)) → \(String(describing: state))"
-        logger.info("[RECONNECT] \(msg)")
-        debugLog.log(msg, category: "Reconnect")
+        let msg = "BLE state: \(String(describing: prev)) → \(String(describing: state))"
+        logger.info("\(msg)")
+        debugLog.log(msg, category: "BLE")
         if state == .authenticating {
-            debugLog.log("State is authenticating — starting Live Activity early", category: "Reconnect")
+            debugLog.log("Authenticating — starting Live Activity early", category: "BLE")
             Task { await liveActivityManager.startRideActivity() }
         }
     }
 
     func didAuthenticate(serialNumber: String) {
-        let msg = "didAuthenticate fired — SN: \(serialNumber)"
-        logger.info("[RECONNECT] \(msg)")
-        debugLog.log(msg, category: "Reconnect")
+        let msg = "Authenticated — SN: \(serialNumber)"
+        logger.info("\(msg)")
+        debugLog.log(msg, category: "BLE")
         self.serialNumber = serialNumber
         Task { await self.onConnected() }
     }
@@ -145,16 +143,16 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     }
 
     func didDisconnect(error: Error?) {
-        let msg = "didDisconnect — error: \(error?.localizedDescription ?? "none")"
-        logger.info("[RECONNECT] \(msg)")
-        debugLog.log(msg, category: "Reconnect")
+        let msg = "Disconnected — error: \(error?.localizedDescription ?? "none")"
+        logger.info("\(msg)")
+        debugLog.log(msg, category: "BLE")
         Task { await self.onDisconnected() }
     }
 
     // MARK: - Connection Lifecycle
 
     private func onConnected() async {
-        debugLog.log("onConnected() — starting connection setup", category: "Reconnect")
+        debugLog.log("onConnected() — starting setup", category: "BLE")
         await registerReader.configure { [weak self] frame in
             self?.connectionManager.sendFrame(frame)
         }
@@ -167,22 +165,22 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         gpsTracker.startTracking()
         roughnessTracker.startTracking()
 
-        let activitiesEnabled = ActivityAuthorizationInfo().areActivitiesEnabled
-        let existingCount = Activity<GT3RideAttributes>.activities.count
-        let activeCount = Activity<GT3RideAttributes>.activities.filter { $0.activityState == .active }.count
-        let laStatus = "LA check: enabled=\(activitiesEnabled) existing=\(existingCount) active=\(activeCount) isActive=\(liveActivityManager.isActive)"
-        logger.info("[RECONNECT] \(laStatus)")
-        debugLog.log(laStatus, category: "Reconnect")
+        let enabled = ActivityAuthorizationInfo().areActivitiesEnabled
+        let existing = Activity<GT3RideAttributes>.activities.count
+        let active = Activity<GT3RideAttributes>.activities
+            .filter { $0.activityState == .active }.count
+        let laStatus = "LA: enabled=\(enabled) existing=\(existing) active=\(active)"
+        debugLog.log(laStatus, category: "BLE")
 
         if liveActivityManager.isActive {
-            debugLog.log("Live Activity already active — keeping it", category: "Reconnect")
+            debugLog.log("Live Activity already active", category: "BLE")
         } else {
-            debugLog.log("No active Live Activity — trying foreground start", category: "Reconnect")
+            debugLog.log("No Live Activity — trying foreground start", category: "BLE")
             await liveActivityManager.startRideActivity()
             if liveActivityManager.isActive {
-                debugLog.log("Foreground Live Activity started successfully", category: "Reconnect")
+                debugLog.log("Live Activity started", category: "BLE")
             } else {
-                debugLog.log("Foreground start failed — requesting server push-to-start", category: "Reconnect")
+                debugLog.log("Foreground start failed — requesting push-to-start", category: "BLE")
                 requestServerPushToStart()
             }
         }
@@ -195,7 +193,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     }
 
     private func onDisconnected() async {
-        debugLog.log("onDisconnected() — finalizing ride", category: "Reconnect")
+        debugLog.log("onDisconnected() — finalizing ride", category: "BLE")
         await registerReader.stopPolling()
         stopTelemetryWatchdog()
         let lastBattery = currentBattery
@@ -211,7 +209,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         let preEndCount = Activity<GT3RideAttributes>.activities.count
         await liveActivityManager.endRideActivity()
         let postEndCount = Activity<GT3RideAttributes>.activities.count
-        debugLog.log("Ended Live Activities (before=\(preEndCount) after=\(postEndCount))", category: "Reconnect")
+        debugLog.log("Ended Live Activities (before=\(preEndCount) after=\(postEndCount))", category: "BLE")
     }
 
     // MARK: - Power Control
@@ -286,10 +284,13 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         await emitSample()
     }
 
-    /// Detect power state from VCU register 0x1C (rBool).
+    // rBool bit 0 = powered, bit 5 = standby.
+    private let rBoolPoweredMask = 0x01
+    private let rBoolStandbyMask = 0x20
+
     private func handleRBoolUpdate(_ rawValue: Int) {
-        let isStandby = (rawValue & 0x20) != 0
-        let isPowered = (rawValue & 0x01) != 0
+        let isStandby = (rawValue & rBoolStandbyMask) != 0
+        let isPowered = (rawValue & rBoolPoweredMask) != 0
 
         if isPowered && !isStandby && !isScooterAwake {
             logger.info("rBool=0x\(String(rawValue, radix: 16)): scooter powered ON")
@@ -369,6 +370,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         if wasIdle && nowRiding {
             isRiding = true
             sendRideStartNotification()
+            launchWatchApp()
             logger.info("Ride auto-started — notifying user")
 
             // Fetch weather at ride start
@@ -428,90 +430,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         ))
     }
 
-    // MARK: - Ride Completion
-
-    private func handleRideComplete(_ rideLog: RideLog) async {
-        logger.info("Ride complete: \(rideLog.totalDistance) km")
-        let context = PersistenceController.shared.context
-        let persisted = PersistedRide(
-            rideId: rideLog.rideId,
-            startTime: rideLog.startTime,
-            startBattery: rideLog.startBattery
-        )
-        persisted.endTime = rideLog.endTime
-        persisted.totalDistance = rideLog.totalDistance
-        persisted.maxSpeed = rideLog.maxSpeed
-        persisted.avgSpeed = rideLog.avgSpeed
-        persisted.batteryUsed = rideLog.batteryUsed
-        persisted.endBattery = rideLog.endBattery
-        persisted.primaryGearMode = rideLog.primaryGearMode
-
-        if let weather = rideLog.weather {
-            persisted.weatherTemp = weather.temp
-            persisted.weatherFeelsLike = weather.feelsLike
-            persisted.weatherHumidity = weather.humidity
-            persisted.weatherWindSpeed = weather.windSpeed
-            persisted.weatherWindDirection = weather.windDirection
-            persisted.weatherCondition = weather.condition
-            persisted.weatherConditionSymbol = weather.conditionSymbol
-            persisted.weatherUVIndex = weather.uvIndex
-            persisted.weatherPressure = weather.pressure
-        }
-
-        context.insert(persisted)
-        try? context.save()
-        await uploadQueue.flushSamples()
-        if let serverId = await uploadQueue.uploadRide(rideLog) {
-            persisted.rideId = serverId
-            persisted.uploaded = true
-            try? context.save()
-        } else {
-            // Persist for retry — encode the full RideLog as JSON
-            let encoder = JSONEncoder()
-            encoder.dateEncodingStrategy = .iso8601
-            if let payload = try? encoder.encode(rideLog) {
-                let queueItem = UploadQueueItem(payload: payload, endpoint: "/gt3/ride")
-                context.insert(queueItem)
-                try? context.save()
-                logger.info("Queued ride \(rideLog.rideId) for retry")
-            }
-        }
-    }
-
-    /// Retry uploading any rides/telemetry that failed previously.
-    private func retryPendingUploads() async {
-        let context = PersistenceController.shared.context
-        guard let items = try? context.fetch(FetchDescriptor<UploadQueueItem>()),
-              !items.isEmpty else { return }
-        logger.info("Found \(items.count) pending upload(s) to retry")
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        for item in items {
-            do {
-                let data = try await uploadQueue.retryUpload(
-                    payload: item.payload, endpoint: item.endpoint
-                )
-                if item.endpoint == "/gt3/ride",
-                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                   let serverId = json["id"] as? String,
-                   let ride = try? decoder.decode(RideLog.self, from: item.payload) {
-                    let pred = #Predicate<PersistedRide> { $0.rideId == ride.rideId }
-                    if let match = try? context.fetch(FetchDescriptor(predicate: pred)).first {
-                        match.rideId = serverId
-                        match.uploaded = true
-                    }
-                }
-                context.delete(item)
-                try? context.save()
-                logger.info("Retry succeeded: \(item.endpoint)")
-            } catch {
-                item.retryCount += 1
-                item.lastAttempt = Date()
-                try? context.save()
-                logger.warning("Retry \(item.endpoint) failed (#\(item.retryCount)): \(error)")
-            }
-        }
-    }
+    // MARK: - Ride Completion (see AppCoordinator+Rides.swift)
 }
 
 extension RideTracker {

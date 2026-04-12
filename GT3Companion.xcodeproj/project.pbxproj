@@ -55,6 +55,7 @@
 		4BC625C2D3BB5FCC4438003E /* BLEConstantsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8F629FF9561B10531DA56F /* BLEConstantsTests.swift */; };
 		4E2EF56AE92EC2B26C5946C3 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E9E161CA55B49466B7C67D5 /* LoginView.swift */; };
 		50DCEBBA4B34D69387DC0185 /* AppCoordinator+Telemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CC4405231C979E994BA6E9B /* AppCoordinator+Telemetry.swift */; };
+		0AFA469BD2324170B4FC8D6D /* AppCoordinator+Rides.swift in Sources */ = {isa = PBXBuildFile; fileRef = 322964BC9F4B4071A3DC239B /* AppCoordinator+Rides.swift */; };
 		516E7EE6D37E51B5133E143D /* RideTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB74E70511E2177DEC4F0210 /* RideTracker.swift */; };
 		51D4F4A1B0D7A3352C62BB9B /* WeatherSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76748A8FCEA32D8A9B372A34 /* WeatherSnapshot.swift */; };
 		5372937567C315DE75B9CE9F /* ThemeMacTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BC2AE18004CE71170D46785 /* ThemeMacTests.swift */; };
@@ -233,6 +234,7 @@
 		189ACD3403BEBC384D6A42CE /* SwiftDataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataModels.swift; sourceTree = "<group>"; };
 		19905BAB58FB3DB581F8B592 /* GPXExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPXExporter.swift; sourceTree = "<group>"; };
 		1CC4405231C979E994BA6E9B /* AppCoordinator+Telemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppCoordinator+Telemetry.swift"; sourceTree = "<group>"; };
+		322964BC9F4B4071A3DC239B /* AppCoordinator+Rides.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppCoordinator+Rides.swift"; sourceTree = "<group>"; };
 		1DCD3F4E090513234E3E93D4 /* VisionContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionContentView.swift; sourceTree = "<group>"; };
 		1E34BA6710E1650D5275870E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		21D1E227816962A170A4BB65 /* GT3CompanionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3CompanionUITests.swift; sourceTree = "<group>"; };
@@ -567,6 +569,7 @@
 			children = (
 				C578ACBA36D95C48E179455A /* AppCoordinator.swift */,
 				1CC4405231C979E994BA6E9B /* AppCoordinator+Telemetry.swift */,
+				322964BC9F4B4071A3DC239B /* AppCoordinator+Rides.swift */,
 				0B7F0F62CF736A1FF5E9A25D /* AppDelegate.swift */,
 				B37C34C9C57F04F3812AA098 /* DataExtensions.swift */,
 				117232BCF6C3AE194334376A /* DebugLogStore.swift */,
@@ -1078,6 +1081,7 @@
 				C40F2CFE5E4ED5602CA09F32 /* AESHelper.swift in Sources */,
 				7BCA1A87C3E4288C37743552 /* AggregateAnalyticsView.swift in Sources */,
 				50DCEBBA4B34D69387DC0185 /* AppCoordinator+Telemetry.swift in Sources */,
+				0AFA469BD2324170B4FC8D6D /* AppCoordinator+Rides.swift in Sources */,
 				6D5E2588CE829224EC18BB68 /* AppCoordinator.swift in Sources */,
 				D10EA4C12CF515E173B4F943 /* AppDelegate.swift in Sources */,
 				CC50E05252F13993B116F455 /* AuthManager.swift in Sources */,

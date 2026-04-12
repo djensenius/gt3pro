@@ -30,37 +30,55 @@ class GT3LiveActivityManager {
     private init() {}
 
     private func laLog(_ message: String, level: LogEntry.Level = .info) {
-        logger.log(level: level == .error ? .error : .info, "[LA] \(message)")
+        let osLevel: OSLogType
+        switch level {
+        case .debug: osLevel = .debug
+        case .info: osLevel = .info
+        case .warning: osLevel = .default
+        case .error: osLevel = .error
+        }
+        logger.log(level: osLevel, "[LA] \(message)")
         debugLog.log(message, category: "LiveActivity", level: level)
     }
 
     /// Start observing push-to-start token updates and register with server.
     func observePushToStartToken(apiClient: GT3APIClient) {
         guard pushToStartTokenTask == nil else { return }
-        pushToStartTokenTask = Task.detached {
+        pushToStartTokenTask = Task.detached { [weak self] in
             for await tokenData in Activity<GT3RideAttributes>.pushToStartTokenUpdates {
                 let tokenHex = tokenData.map { String(format: "%02x", $0) }.joined()
-                await MainActor.run { self.debugLog.log("Received push-to-start token", category: "LiveActivity") }
+                let debugLog = await MainActor.run { DebugLogStore.shared }
+                await MainActor.run {
+                    debugLog.log("Received push-to-start token", category: "LiveActivity")
+                }
 
-                let alreadyRegistered = await MainActor.run { self.lastRegisteredToken == tokenHex }
+                let alreadyRegistered = await MainActor.run {
+                    self?.lastRegisteredToken == tokenHex
+                }
                 if alreadyRegistered { continue }
 
                 var registered = false
                 for attempt in 0..<3 {
                     if attempt > 0 {
-                        try? await Task.sleep(for: .seconds(Double(attempt) * 3))
+                        do {
+                            try await Task.sleep(for: .seconds(Double(attempt) * 3))
+                        } catch is CancellationError {
+                            return
+                        } catch {
+                            continue
+                        }
                     }
                     do {
                         try await apiClient.registerPushToStartToken(tokenHex)
-                        await MainActor.run { self.lastRegisteredToken = tokenHex }
+                        await MainActor.run { self?.lastRegisteredToken = tokenHex }
                         await MainActor.run {
-                            self.debugLog.log("Registered push-to-start token", category: "LiveActivity")
+                            debugLog.log("Registered push-to-start token", category: "LiveActivity")
                         }
                         registered = true
                         break
                     } catch {
                         await MainActor.run {
-                            self.debugLog.log(
+                            debugLog.log(
                                 "Token registration attempt \(attempt + 1) failed: \(error)",
                                 category: "LiveActivity", level: .warning
                             )
@@ -69,7 +87,7 @@ class GT3LiveActivityManager {
                 }
                 if !registered {
                     await MainActor.run {
-                        self.debugLog.log(
+                        debugLog.log(
                             "Failed to register push-to-start token after 3 attempts",
                             category: "LiveActivity", level: .error
                         )
@@ -88,7 +106,9 @@ class GT3LiveActivityManager {
 
         laLog("startRideActivity called — checking for existing activities")
         let allActivities = Activity<GT3RideAttributes>.activities
-        let summary = allActivities.map { "\($0.id)=\($0.activityState.debugDescription)" }.joined(separator: ", ")
+        let summary = allActivities.map {
+            "\($0.id)=\($0.activityState.debugDescription)"
+        }.joined(separator: ", ")
         laLog("Found \(allActivities.count) activity instance(s): \(summary)")
 
         adoptPushStartedActivityIfNeeded()
@@ -147,18 +167,22 @@ class GT3LiveActivityManager {
     var isActive: Bool {
         if currentActivity?.activityState == .active { return true }
         let anyActive = Activity<GT3RideAttributes>.activities.contains { $0.activityState == .active }
-        let currentState = self.currentActivity?.activityState.debugDescription ?? "nil"
-        laLog("isActive check: currentActivity=\(currentState) anyActive=\(anyActive)")
         return anyActive
     }
 
     private func adoptPushStartedActivityIfNeeded() {
         guard currentActivity == nil || currentActivity?.activityState != .active else { return }
-        let candidate = Activity<GT3RideAttributes>.activities.first { $0.activityState == .active }
-        if let candidate {
-            laLog("Adopting push-started activity: \(candidate.id)")
+        let allActive = Activity<GT3RideAttributes>.activities.filter { $0.activityState == .active }
+        if let candidate = allActive.first {
+            laLog("Adopting activity: \(candidate.id)")
+            currentActivity = candidate
+            // End any extra active activities to avoid duplicates
+            for extra in allActive.dropFirst() {
+                laLog("Ending duplicate activity: \(extra.id)")
+                nonisolated(unsafe) let sendable = extra
+                Task { await sendable.end(nil, dismissalPolicy: .immediate) }
+            }
         }
-        currentActivity = candidate
     }
 }
 #endif
