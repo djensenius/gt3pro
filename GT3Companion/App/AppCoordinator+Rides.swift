@@ -52,7 +52,9 @@ extension AppCoordinator {
         let rideDuration = rideLog.endTime.timeIntervalSince(rideLog.startTime)
         let snapshot = await registerReader.getEnrichedSnapshot(
             tripDistance: rideLog.totalDistance,
-            rideDuration: rideDuration
+            rideDuration: rideDuration,
+            batteryLevel: rideLog.endBattery > 0 ? rideLog.endBattery : nil,
+            estimatedRange: estimatedRange > 0 ? estimatedRange : nil
         )
         if let serial = snapshot["serialNumber"], !serial.isEmpty {
             rideLogger.info("Uploading ride-end snapshot (\(snapshot.count) fields)")

@@ -190,7 +190,10 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         Task { [weak self] in
             guard let self else { return }
             await self.registerReader.awaitCumulativeData()
-            let snapshot = await self.registerReader.getDiagnosticSnapshot()
+            let battery = self.currentBattery > 0 ? self.currentBattery : nil
+            let range = self.estimatedRange > 0 ? self.estimatedRange : nil
+            let snapshot = await self.registerReader.getDiagnosticSnapshot(
+                batteryLevel: battery, estimatedRange: range)
             guard let serial = snapshot["serialNumber"], !serial.isEmpty else {
                 debugLog.log("Snapshot missing serialNumber — skipping upload", category: "BLE")
                 return
