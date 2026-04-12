@@ -54,9 +54,11 @@ extension AppCoordinator {
             tripDistance: rideLog.totalDistance,
             rideDuration: rideDuration
         )
-        if !snapshot.isEmpty {
+        if let serial = snapshot["serialNumber"], !serial.isEmpty {
             rideLogger.info("Uploading ride-end snapshot (\(snapshot.count) fields)")
             await uploadQueue.uploadSnapshot(snapshot)
+        } else {
+            rideLogger.warning("Skipping ride-end snapshot: missing serialNumber")
         }
 
         if let serverId = await uploadQueue.uploadRide(rideLog) {

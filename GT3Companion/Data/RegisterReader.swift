@@ -250,18 +250,19 @@ actor RegisterReader {
         rideDuration: TimeInterval
     ) -> [String: String] {
         var snapshot = getDiagnosticSnapshot()
+        let rideDurationSeconds = Int(rideDuration.rounded())
 
-        // Update odometer: add trip distance (both in km * 1000 for precision)
+        // Update odometer: add trip distance
         if let current = snapshot["odometer"], let currentVal = Double(current) {
             snapshot["odometer"] = "\(currentVal + tripDistance)"
         }
-        // Update totalRideTime: add this ride's duration in seconds
-        if let current = snapshot["totalRideTime"], let currentVal = Double(current) {
-            snapshot["totalRideTime"] = "\(currentVal + rideDuration)"
+        // Update totalRideTime: add this ride's duration in whole seconds
+        if let current = snapshot["totalRideTime"], let currentVal = Int(current) {
+            snapshot["totalRideTime"] = "\(currentVal + rideDurationSeconds)"
         }
-        // Update totalRuntime: add this ride's duration in seconds
-        if let current = snapshot["totalRuntime"], let currentVal = Double(current) {
-            snapshot["totalRuntime"] = "\(currentVal + rideDuration)"
+        // Update totalRuntime: add this ride's duration in whole seconds
+        if let current = snapshot["totalRuntime"], let currentVal = Int(current) {
+            snapshot["totalRuntime"] = "\(currentVal + rideDurationSeconds)"
         }
 
         return snapshot

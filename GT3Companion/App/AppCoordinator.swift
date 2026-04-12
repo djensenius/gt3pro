@@ -191,8 +191,8 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
             guard let self else { return }
             await self.registerReader.awaitCumulativeData()
             let snapshot = await self.registerReader.getDiagnosticSnapshot()
-            guard !snapshot.isEmpty else {
-                debugLog.log("Snapshot empty after await — skipping upload", category: "BLE")
+            guard let serial = snapshot["serialNumber"], !serial.isEmpty else {
+                debugLog.log("Snapshot missing serialNumber — skipping upload", category: "BLE")
                 return
             }
             debugLog.log("Uploading initial snapshot (\(snapshot.count) fields)", category: "BLE")
