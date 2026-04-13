@@ -12,6 +12,9 @@ import os
 
 private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", category: "GPS")
 
+/// Maximum horizontal accuracy (meters) to accept a GPS reading.
+private let maxAccuracyMeters: Double = 50
+
 /// GPS location sample paired with telemetry.
 struct GPSSample: Sendable {
     let timestamp: Date
@@ -24,11 +27,16 @@ struct GPSSample: Sendable {
 }
 
 /// CoreLocation GPS tracker for ride route recording.
+///
+/// Uses continuous location updates when the app is active and falls back to
+/// significant-location-change monitoring to wake the app when iOS suspends it
+/// (e.g. Live Activity failed to start from the background).
 @MainActor
 final class GPSTracker: NSObject {
     private let locationManager = CLLocationManager()
     private(set) var latestSample: GPSSample?
     private(set) var isTracking = false
+    private var usingSignificantLocation = false
 
     /// Callback for new GPS samples.
     var onSample: ((GPSSample) -> Void)?
@@ -38,6 +46,7 @@ final class GPSTracker: NSObject {
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
         locationManager.activityType = .otherNavigation
+        locationManager.distanceFilter = 5 // metres — reduces noise while stationary
         locationManager.allowsBackgroundLocationUpdates = true
         locationManager.pausesLocationUpdatesAutomatically = false
         locationManager.showsBackgroundLocationIndicator = true
@@ -51,12 +60,21 @@ final class GPSTracker: NSObject {
         guard !isTracking else { return }
         isTracking = true
         locationManager.startUpdatingLocation()
-        logger.info("GPS tracking started")
+        // Also start significant-location monitoring as a background safety net.
+        // If iOS suspends the app, these events will wake it so continuous updates
+        // can be restarted in the delegate callback.
+        locationManager.startMonitoringSignificantLocationChanges()
+        usingSignificantLocation = true
+        logger.info("GPS tracking started (continuous + significant-change fallback)")
     }
 
     func stopTracking() {
         isTracking = false
         locationManager.stopUpdatingLocation()
+        if usingSignificantLocation {
+            locationManager.stopMonitoringSignificantLocationChanges()
+            usingSignificantLocation = false
+        }
         logger.info("GPS tracking stopped")
     }
 }
@@ -64,6 +82,13 @@ final class GPSTracker: NSObject {
 extension GPSTracker: @preconcurrency CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
+
+        // Filter out inaccurate readings (cold start, tunnels, indoors)
+        guard location.horizontalAccuracy >= 0,
+              location.horizontalAccuracy <= maxAccuracyMeters else {
+            logger.debug("GPS skipped — accuracy \(location.horizontalAccuracy)m exceeds \(maxAccuracyMeters)m")
+            return
+        }
 
         let sample = GPSSample(
             timestamp: location.timestamp,
@@ -84,7 +109,12 @@ extension GPSTracker: @preconcurrency CLLocationManagerDelegate {
     }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        logger.info("Location auth status: \(manager.authorizationStatus.rawValue)")
+        let status = manager.authorizationStatus
+        logger.info("Location auth status: \(status.rawValue)")
+        // If tracking was requested but paused due to auth, restart
+        if isTracking && (status == .authorizedAlways || status == .authorizedWhenInUse) {
+            manager.startUpdatingLocation()
+        }
     }
 }
 #endif

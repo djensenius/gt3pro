@@ -11,6 +11,7 @@ import CoreLocation
 import Foundation
 import os
 import SwiftData
+import UIKit
 import UserNotifications
 
 private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", category: "Coordinator")
@@ -62,6 +63,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     private var hasStarted = false
     private var telemetryWatchdog: Task<Void, Never>?
     private var lastTelemetryTime: Date?
+    private var backgroundTaskID: UIBackgroundTaskIdentifier = .invalid
 
     /// How long to wait without telemetry before assuming VCU standby.
     private let telemetryTimeout: TimeInterval = 10
@@ -153,6 +155,11 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
 
     private func onConnected() async {
         debugLog.log("onConnected() — starting setup", category: "BLE")
+
+        // Request background execution time so GPS and telemetry can start
+        // even if the Live Activity fails to launch from background.
+        beginBackgroundTask()
+
         await registerReader.configure { [weak self] frame in
             self?.connectionManager.sendFrame(frame)
         }
@@ -223,6 +230,28 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         await liveActivityManager.endRideActivity()
         let postEndCount = Activity<GT3RideAttributes>.activities.count
         debugLog.log("Ended Live Activities (before=\(preEndCount) after=\(postEndCount))", category: "BLE")
+
+        endBackgroundTask()
+    }
+
+    // MARK: - Background Task
+
+    /// Request background execution time to keep GPS and telemetry alive
+    /// when the Live Activity fails to start from background.
+    private func beginBackgroundTask() {
+        guard backgroundTaskID == .invalid else { return }
+        backgroundTaskID = UIApplication.shared.beginBackgroundTask(withName: "GT3-BLE-Setup") { [weak self] in
+            self?.debugLog.log("Background task expiring", category: "BLE", level: .warning)
+            self?.endBackgroundTask()
+        }
+        debugLog.log("Background task started (id=\(backgroundTaskID.rawValue))", category: "BLE")
+    }
+
+    private func endBackgroundTask() {
+        guard backgroundTaskID != .invalid else { return }
+        UIApplication.shared.endBackgroundTask(backgroundTaskID)
+        debugLog.log("Background task ended", category: "BLE")
+        backgroundTaskID = .invalid
     }
 
     // MARK: - Power Control
