@@ -44,6 +44,44 @@ extension AppCoordinator {
             persisted.weatherPressure = weather.pressure
         }
 
+        // Persist GPS track as GeoJSON for local map rendering
+        if let gpsTrack = rideLog.gpsTrack {
+            persisted.gpsTrackJSON = try? JSONEncoder().encode(gpsTrack)
+        }
+
+        // Persist telemetry samples for local charts (speed, battery, temp)
+        let persistedSamples = rideLog.samples.map { sample -> PersistedSample in
+            let persisted = PersistedSample(
+                timestamp: sample.timestamp,
+                speed: sample.speed,
+                battery: sample.battery
+            )
+            persisted.bmsVoltage = sample.bmsVoltage
+            persisted.bmsCurrent = sample.bmsCurrent
+            persisted.bmsSOC = sample.bmsSOC
+            persisted.bmsTemp = sample.bmsTemp
+            persisted.tripDistance = sample.tripDistance
+            persisted.bodyTemp = sample.bodyTemp
+            persisted.gearMode = sample.gearMode
+            persisted.estimatedRange = sample.estimatedRange
+            persisted.tripTime = sample.tripTime
+            persisted.errorCode = sample.errorCode
+            persisted.warnCode = sample.warnCode
+            persisted.regenLevel = sample.regenLevel
+            persisted.speedResponse = sample.speedResponse
+            persisted.latitude = sample.latitude
+            persisted.longitude = sample.longitude
+            persisted.altitude = sample.altitude
+            persisted.gpsSpeed = sample.gpsSpeed
+            persisted.gpsCourse = sample.gpsCourse
+            persisted.horizontalAccuracy = sample.horizontalAccuracy
+            persisted.roughnessScore = sample.roughnessScore
+            persisted.maxAcceleration = sample.maxAcceleration
+            persisted.heartRate = sample.heartRate
+            return persisted
+        }
+        persisted.samples = persistedSamples
+
         context.insert(persisted)
         try? context.save()
         await uploadQueue.flushSamples()

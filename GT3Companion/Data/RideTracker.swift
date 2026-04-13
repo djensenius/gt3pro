@@ -58,6 +58,8 @@ struct RideLog: Codable, Sendable {
     /// Most-used gear mode during the ride (1=Walk, 2=Eco, 3=Sport, 4=Race).
     let primaryGearMode: Int
     let weather: WeatherSnapshot?
+    /// GeoJSON-style coordinates: [[longitude, latitude, altitude]].
+    let gpsTrack: [[Double]]?
 }
 
 /// Tracks ride lifecycle: start detection, sample collection, stop detection.
@@ -79,6 +81,7 @@ actor RideTracker {
     private var stoppedSince: Date?
     private var gearModeHistogram: [Int: Int] = [:]
     private var currentWeather: WeatherSnapshot?
+    private var fetchingWeather = false
     // 5 minutes of no movement → end ride
     private let stopTimeout: TimeInterval = 300
 
@@ -89,26 +92,30 @@ actor RideTracker {
     func addSample(_ sample: TelemetrySample) {
         switch state {
         case .idle:
-            if sample.speed > 0 {
+            // Don't start tracking until actually riding (not walking/pushing)
+            let isWalkMode = sample.gearMode == 1
+            if sample.speed > 5 && !isWalkMode {
                 startRide(firstSample: sample)
             }
 
         case .riding:
-            samples.append(sample)
-            updateStats(sample)
-
-            if sample.speed == 0 {
+            // Treat walk mode under 10 km/h as stopped (not real riding)
+            let isWalking = sample.gearMode == 1 && sample.speed < 10
+            if sample.speed == 0 || isWalking {
                 state = .stopped
-                stoppedSince = Date()
+                stoppedSince = stoppedSince ?? Date()
+            } else {
+                samples.append(sample)
+                updateStats(sample)
             }
 
         case .stopped:
-            samples.append(sample)
-            updateStats(sample)
-
-            if sample.speed > 0 {
+            let isWalking = sample.gearMode == 1 && sample.speed < 10
+            if sample.speed > 0 && !isWalking {
                 state = .riding
                 stoppedSince = nil
+                samples.append(sample)
+                updateStats(sample)
             } else if let stopped = stoppedSince,
                       Date().timeIntervalSince(stopped) > stopTimeout {
                 endRide(endBattery: sample.battery, weather: currentWeather)
@@ -155,6 +162,17 @@ actor RideTracker {
         guard let rideId = currentRideId, let startTime = rideStartTime else { return }
 
         let primaryMode = gearModeHistogram.max(by: { $0.value < $1.value })?.key ?? 0
+
+        // Build GeoJSON-style coordinate array from GPS samples
+        let gpsTrack: [[Double]]? = {
+            let coords = samples.compactMap { sample -> [Double]? in
+                guard let lat = sample.latitude, let lon = sample.longitude,
+                      lat != 0, lon != 0 else { return nil }
+                return [lon, lat, sample.altitude ?? 0]
+            }
+            return coords.count >= 2 ? coords : nil
+        }()
+
         let rideLog = RideLog(
             rideId: rideId,
             startTime: startTime,
@@ -167,7 +185,8 @@ actor RideTracker {
             startBattery: startBattery,
             endBattery: endBattery,
             primaryGearMode: primaryMode,
-            weather: weather
+            weather: weather,
+            gpsTrack: gpsTrack
         )
 
         logger.info("Ride ended: \(rideId) distance=\(rideLog.totalDistance)km mode=\(primaryMode)")
@@ -180,9 +199,13 @@ actor RideTracker {
         stoppedSince = nil
         gearModeHistogram = [:]
         currentWeather = nil
+        fetchingWeather = false
     }
 
     func getCurrentRideId() -> String? { currentRideId }
     func getSampleCount() -> Int { samples.count }
+    func hasWeather() -> Bool { currentWeather != nil }
+    func isFetchingWeather() -> Bool { fetchingWeather }
+    func setFetchingWeather(_ value: Bool) { fetchingWeather = value }
 }
 #endif
