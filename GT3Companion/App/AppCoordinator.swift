@@ -392,14 +392,17 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         let isActiveRide = rideState == .riding || rideState == .stopped
         if isActiveRide {
             let hasWeather = await rideTracker.hasWeather()
-            if !hasWeather, let gpsSample {
+            let isFetching = await rideTracker.isFetchingWeather()
+            if !hasWeather, !isFetching, let gpsSample {
                 let location = CLLocation(
                     latitude: gpsSample.latitude,
                     longitude: gpsSample.longitude
                 )
                 let rideId = await self.rideTracker.getCurrentRideId()
+                await rideTracker.setFetchingWeather(true)
                 Task {
                     let weather = await WeatherService.shared.fetchWeather(at: location)
+                    await self.rideTracker.setFetchingWeather(false)
                     guard await self.rideTracker.getCurrentRideId() == rideId else { return }
                     await self.rideTracker.setWeather(weather)
                 }

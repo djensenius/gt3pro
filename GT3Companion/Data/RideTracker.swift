@@ -81,6 +81,7 @@ actor RideTracker {
     private var stoppedSince: Date?
     private var gearModeHistogram: [Int: Int] = [:]
     private var currentWeather: WeatherSnapshot?
+    private var fetchingWeather = false
     // 5 minutes of no movement → end ride
     private let stopTimeout: TimeInterval = 300
 
@@ -198,10 +199,13 @@ actor RideTracker {
         stoppedSince = nil
         gearModeHistogram = [:]
         currentWeather = nil
+        fetchingWeather = false
     }
 
     func getCurrentRideId() -> String? { currentRideId }
     func getSampleCount() -> Int { samples.count }
     func hasWeather() -> Bool { currentWeather != nil }
+    func isFetchingWeather() -> Bool { fetchingWeather }
+    func setFetchingWeather(_ value: Bool) { fetchingWeather = value }
 }
 #endif

@@ -13,7 +13,8 @@ final class RideTrackerTests: XCTestCase {
     private func makeSample(
         speed: Double = 0,
         battery: Int = 90,
-        tripDistance: Double = 0
+        tripDistance: Double = 0,
+        gearMode: Int = 2
     ) -> TelemetrySample {
         TelemetrySample(
             timestamp: Date(),
@@ -26,7 +27,7 @@ final class RideTrackerTests: XCTestCase {
             tripDistance: tripDistance,
             tripTime: 600,
             bodyTemp: 30.0,
-            gearMode: 2,
+            gearMode: gearMode,
             estimatedRange: 40.0,
             errorCode: 0,
             warnCode: 0,
@@ -196,6 +197,102 @@ final class RideTrackerTests: XCTestCase {
         await tracker.forceEndRide(endBattery: 85)
 
         await fulfillment(of: [expectation], timeout: 2.0)
+    }
+
+    // MARK: - Smart Start/Stop Tests
+
+    func testRideDoesNotStartAtLowSpeed() async {
+        let tracker = RideTracker()
+        await tracker.addSample(makeSample(speed: 3.0))
+        var currentState = await tracker.state
+        XCTAssertEqual(currentState, .idle)
+        await tracker.addSample(makeSample(speed: 5.0))
+        currentState = await tracker.state
+        XCTAssertEqual(currentState, .idle)
+    }
+
+    func testRideStartsAboveSpeedThreshold() async {
+        let tracker = RideTracker()
+        await tracker.addSample(makeSample(speed: 5.1))
+        let currentState = await tracker.state
+        XCTAssertEqual(currentState, .riding)
+    }
+
+    func testRideDoesNotStartInWalkMode() async {
+        let tracker = RideTracker()
+        await tracker.addSample(makeSample(speed: 10.0, gearMode: 1))
+        let currentState = await tracker.state
+        XCTAssertEqual(currentState, .idle)
+    }
+
+    func testRideDoesNotStartInWalkModeEvenHighSpeed() async {
+        let tracker = RideTracker()
+        await tracker.addSample(makeSample(speed: 20.0, gearMode: 1))
+        let currentState = await tracker.state
+        XCTAssertEqual(currentState, .idle)
+    }
+
+    func testWalkModeMidRideTransitionsToStopped() async {
+        let tracker = RideTracker()
+        await tracker.addSample(makeSample(speed: 15.0))
+        var currentState = await tracker.state
+        XCTAssertEqual(currentState, .riding)
+        await tracker.addSample(makeSample(speed: 8.0, gearMode: 1))
+        currentState = await tracker.state
+        XCTAssertEqual(currentState, .stopped)
+    }
+
+    func testWalkModeMidRideDoesNotRecordSamples() async {
+        let tracker = RideTracker()
+        await tracker.addSample(makeSample(speed: 15.0))
+        let countBefore = await tracker.getSampleCount()
+        await tracker.addSample(makeSample(speed: 5.0, gearMode: 1))
+        await tracker.addSample(makeSample(speed: 4.0, gearMode: 1))
+        let countAfter = await tracker.getSampleCount()
+        XCTAssertEqual(countBefore, countAfter)
+    }
+
+    func testResumeFromWalkModeOnGearChange() async {
+        let tracker = RideTracker()
+        await tracker.addSample(makeSample(speed: 15.0))
+        await tracker.addSample(makeSample(speed: 5.0, gearMode: 1))
+        var currentState = await tracker.state
+        XCTAssertEqual(currentState, .stopped)
+        await tracker.addSample(makeSample(speed: 8.0, gearMode: 2))
+        currentState = await tracker.state
+        XCTAssertEqual(currentState, .riding)
+    }
+
+    func testResumeFromWalkModeOnHighSpeed() async {
+        let tracker = RideTracker()
+        await tracker.addSample(makeSample(speed: 15.0))
+        await tracker.addSample(makeSample(speed: 5.0, gearMode: 1))
+        var currentState = await tracker.state
+        XCTAssertEqual(currentState, .stopped)
+        await tracker.addSample(makeSample(speed: 12.0, gearMode: 1))
+        currentState = await tracker.state
+        XCTAssertEqual(currentState, .riding)
+    }
+
+    func testHasWeatherReturnsFalseInitially() async {
+        let tracker = RideTracker()
+        await tracker.addSample(makeSample(speed: 15.0))
+        let hasWeather = await tracker.hasWeather()
+        XCTAssertFalse(hasWeather)
+    }
+
+    func testHasWeatherReturnsTrueAfterSet() async {
+        let tracker = RideTracker()
+        await tracker.addSample(makeSample(speed: 15.0))
+        let weather = WeatherSnapshot(
+            temp: 22, feelsLike: 20, humidity: 55,
+            windSpeed: 12, windDirection: 225,
+            condition: "Clear", conditionSymbol: "sun.max.fill",
+            uvIndex: 4, pressure: 1013
+        )
+        await tracker.setWeather(weather)
+        let hasWeather = await tracker.hasWeather()
+        XCTAssertTrue(hasWeather)
     }
 }
 

@@ -493,14 +493,17 @@ All multi-byte register values are **little-endian**.
 
 ```swift
 // UInt16 (unsigned)
-value = data[0] | (data[1] << 8)
+let value = UInt16(data[0]) | (UInt16(data[1]) << 8)
 
 // Int16 (signed, for current)
-raw = data[0] | (data[1] << 8)
-value = (raw > 32767) ? raw - 65536 : raw
+let raw = UInt16(data[0]) | (UInt16(data[1]) << 8)
+let signedValue = Int16(bitPattern: raw)
 
 // UInt32
-value = data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24)
+let value32 = UInt32(data[0]) |
+    (UInt32(data[1]) << 8) |
+    (UInt32(data[2]) << 16) |
+    (UInt32(data[3]) << 24)
 ```
 
 ### Conversion Table
