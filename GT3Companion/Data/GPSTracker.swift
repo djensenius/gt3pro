@@ -60,12 +60,17 @@ final class GPSTracker: NSObject {
         guard !isTracking else { return }
         isTracking = true
         locationManager.startUpdatingLocation()
-        // Also start significant-location monitoring as a background safety net.
-        // If iOS suspends the app, these events will wake it so continuous updates
-        // can be restarted in the delegate callback.
-        locationManager.startMonitoringSignificantLocationChanges()
-        usingSignificantLocation = true
-        logger.info("GPS tracking started (continuous + significant-change fallback)")
+        // Start significant-location monitoring as a background safety net.
+        // If iOS suspends the app, these events wake it and didUpdateLocations
+        // restarts continuous updates.
+        if CLLocationManager.significantLocationChangeMonitoringAvailable() {
+            locationManager.startMonitoringSignificantLocationChanges()
+            usingSignificantLocation = true
+            logger.info("GPS tracking started (continuous + significant-change fallback)")
+        } else {
+            logger.warning("Significant location monitoring unavailable — no background fallback")
+            logger.info("GPS tracking started (continuous only)")
+        }
     }
 
     func stopTracking() {
@@ -82,6 +87,11 @@ final class GPSTracker: NSObject {
 extension GPSTracker: @preconcurrency CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
+
+        // If woken by a significant-location event, restart continuous updates
+        if isTracking {
+            manager.startUpdatingLocation()
+        }
 
         // Filter out inaccurate readings (cold start, tunnels, indoors)
         guard location.horizontalAccuracy >= 0,

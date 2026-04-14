@@ -210,6 +210,10 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         }
 
         logger.info("Fully connected — polling, GPS, roughness, Live Activity active")
+
+        // Setup complete — end the background task. If the Live Activity is running
+        // it keeps the app alive; otherwise significant-location will wake us.
+        endBackgroundTask()
     }
 
     private func onDisconnected() async {
@@ -230,8 +234,6 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         await liveActivityManager.endRideActivity()
         let postEndCount = Activity<GT3RideAttributes>.activities.count
         debugLog.log("Ended Live Activities (before=\(preEndCount) after=\(postEndCount))", category: "BLE")
-
-        endBackgroundTask()
     }
 
     // MARK: - Background Task
