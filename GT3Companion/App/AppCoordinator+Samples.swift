@@ -107,10 +107,24 @@ extension AppCoordinator {
         let hasWeather = await rideTracker.hasWeather()
         let isFetching = await rideTracker.isFetchingWeather()
         guard !hasWeather, !isFetching else { return }
-        guard let gpsSample else {
+
+        // Use GPS sample if available, otherwise fall back to cached location
+        let location: CLLocation
+        if let gpsSample {
+            location = CLLocation(latitude: gpsSample.latitude, longitude: gpsSample.longitude)
+        } else if let cached = gpsTracker.lastKnownLocation {
+            location = cached
             Task { @MainActor in
                 DebugLogStore.shared.log(
-                    "Weather: skipped — no GPS sample yet",
+                    "Weather: no GPS fix yet, using cached location",
+                    category: "Weather",
+                    level: .debug
+                )
+            }
+        } else {
+            Task { @MainActor in
+                DebugLogStore.shared.log(
+                    "Weather: skipped — no GPS sample or cached location",
                     category: "Weather",
                     level: .debug
                 )
@@ -118,9 +132,15 @@ extension AppCoordinator {
             return
         }
 
-        let location = CLLocation(latitude: gpsSample.latitude, longitude: gpsSample.longitude)
         let rideId = await self.rideTracker.getCurrentRideId()
         await rideTracker.setFetchingWeather(true)
+        Task { @MainActor in
+            DebugLogStore.shared.log(
+                "Weather: fetching for (\(String(format: "%.4f", location.coordinate.latitude)), "
+                + "\(String(format: "%.4f", location.coordinate.longitude)))",
+                category: "Weather"
+            )
+        }
         Task {
             let weather = await WeatherService.shared.fetchWeather(at: location)
             await self.rideTracker.setFetchingWeather(false)
