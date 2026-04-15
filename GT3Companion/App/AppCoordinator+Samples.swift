@@ -106,7 +106,17 @@ extension AppCoordinator {
         guard rideState == .riding || rideState == .stopped else { return }
         let hasWeather = await rideTracker.hasWeather()
         let isFetching = await rideTracker.isFetchingWeather()
-        guard !hasWeather, !isFetching, let gpsSample else { return }
+        guard !hasWeather, !isFetching else { return }
+        guard let gpsSample else {
+            Task { @MainActor in
+                DebugLogStore.shared.log(
+                    "Weather: skipped — no GPS sample yet",
+                    category: "Weather",
+                    level: .debug
+                )
+            }
+            return
+        }
 
         let location = CLLocation(latitude: gpsSample.latitude, longitude: gpsSample.longitude)
         let rideId = await self.rideTracker.getCurrentRideId()
