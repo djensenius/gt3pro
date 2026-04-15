@@ -82,7 +82,7 @@ actor UploadQueue {
 
     /// Retry a previously failed upload from persisted payload.
     func retryUpload(payload: Data, endpoint: String) async throws -> Data {
-        debugLog("Retrying upload: \(endpoint)", level: .info)
+        debugLog("Retrying upload: \(endpoint) (\(payload.count) bytes)", level: .info)
         do {
             let data = try await apiClient.retryPost(path: endpoint, body: payload)
             debugLog("Retry succeeded: \(endpoint)", level: .info)
