@@ -36,8 +36,9 @@ struct RideDetailView: View {
         let bms: Double
     }
 
+    private var cache: CachedSamples { CachedSamples(ride: ride) }
+
     var body: some View {
-        let cache = CachedSamples(ride: ride)
         ZStack {
             Theme.Colors.background.ignoresSafeArea()
             ScrollView {
