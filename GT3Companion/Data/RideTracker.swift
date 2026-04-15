@@ -173,12 +173,16 @@ actor RideTracker {
             return coords.count >= 2 ? coords : nil
         }()
 
+        let gpsDistance = computeGPSDistance()
+        let scooterDistance = samples.last?.tripDistance ?? 0
+        let distance = gpsDistance > 0 ? gpsDistance : scooterDistance
+
         let rideLog = RideLog(
             rideId: rideId,
             startTime: startTime,
             endTime: Date(),
             samples: samples,
-            totalDistance: samples.last?.tripDistance ?? 0,
+            totalDistance: distance,
             maxSpeed: maxSpeed,
             avgSpeed: speedCount > 0 ? speedSum / Double(speedCount) : 0,
             batteryUsed: max(0, startBattery - endBattery),
@@ -189,7 +193,10 @@ actor RideTracker {
             gpsTrack: gpsTrack
         )
 
-        logger.info("Ride ended: \(rideId) distance=\(rideLog.totalDistance)km mode=\(primaryMode)")
+        let distStr = String(format: "%.2f", distance)
+        let gpsStr = String(format: "%.2f", gpsDistance)
+        let scoStr = String(format: "%.2f", scooterDistance)
+        logger.info("Ride ended: \(rideId) distance=\(distStr)km (gps=\(gpsStr) scooter=\(scoStr)) mode=\(primaryMode)")
         onRideComplete?(rideLog)
 
         state = .idle
@@ -207,5 +214,43 @@ actor RideTracker {
     func hasWeather() -> Bool { currentWeather != nil }
     func isFetchingWeather() -> Bool { fetchingWeather }
     func setFetchingWeather(_ value: Bool) { fetchingWeather = value }
+
+    // MARK: - GPS Distance
+
+    /// Sum haversine distances between consecutive GPS samples (km).
+    private func computeGPSDistance() -> Double {
+        Self.gpsDistance(from: samples)
+    }
+
+    /// Compute total GPS distance from an array of telemetry samples.
+    static func gpsDistance(from samples: [TelemetrySample]) -> Double {
+        let coords = samples.compactMap { sample -> (lat: Double, lon: Double)? in
+            guard let lat = sample.latitude, let lon = sample.longitude,
+                  lat != 0, lon != 0,
+                  let acc = sample.horizontalAccuracy, acc > 0, acc < 50 else { return nil }
+            return (lat, lon)
+        }
+        guard coords.count >= 2 else { return 0 }
+
+        var total = 0.0
+        for idx in 1..<coords.count {
+            total += haversine(
+                lat1: coords[idx - 1].lat, lon1: coords[idx - 1].lon,
+                lat2: coords[idx].lat, lon2: coords[idx].lon
+            )
+        }
+        return total
+    }
+
+    /// Haversine distance between two coordinates in km.
+    private static func haversine(lat1: Double, lon1: Double, lat2: Double, lon2: Double) -> Double {
+        let earthRadius = 6371.0
+        let dLat = (lat2 - lat1) * .pi / 180
+        let dLon = (lon2 - lon1) * .pi / 180
+        let aVal = sin(dLat / 2) * sin(dLat / 2)
+            + cos(lat1 * .pi / 180) * cos(lat2 * .pi / 180)
+            * sin(dLon / 2) * sin(dLon / 2)
+        return earthRadius * 2 * atan2(sqrt(aVal), sqrt(1 - aVal))
+    }
 }
 #endif

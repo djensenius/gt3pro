@@ -21,6 +21,30 @@ extension PersistedRide {
         let seconds = Int(duration) % 60
         return String(format: "%d:%02d", minutes, seconds)
     }
+
+    /// Recompute totalDistance from GPS samples (haversine sum, km).
+    /// Call this to fix rides that have stale scooter-reported distances.
+    func recomputeGPSDistance() {
+        let sorted = (samples ?? []).sorted { $0.timestamp < $1.timestamp }
+        let coords = sorted.compactMap { sample -> (lat: Double, lon: Double)? in
+            guard let lat = sample.latitude, let lon = sample.longitude,
+                  lat != 0, lon != 0,
+                  let acc = sample.horizontalAccuracy, acc > 0, acc < 50 else { return nil }
+            return (lat, lon)
+        }
+        guard coords.count >= 2 else { return }
+
+        var total = 0.0
+        for idx in 1..<coords.count {
+            let dLat = (coords[idx].lat - coords[idx - 1].lat) * .pi / 180
+            let dLon = (coords[idx].lon - coords[idx - 1].lon) * .pi / 180
+            let aVal = sin(dLat / 2) * sin(dLat / 2)
+                + cos(coords[idx - 1].lat * .pi / 180) * cos(coords[idx].lat * .pi / 180)
+                * sin(dLon / 2) * sin(dLon / 2)
+            total += 6371.0 * 2 * atan2(sqrt(aVal), sqrt(1 - aVal))
+        }
+        totalDistance = total
+    }
 }
 
 @Model
