@@ -31,14 +31,13 @@ struct RideDetailView: View {
         }
     }
 
-    private var cache: CachedSamples { CachedSamples(ride: ride) }
-
     private struct TempSample {
         let timestamp: Date
         let bms: Double
     }
 
     var body: some View {
+        let cache = CachedSamples(ride: ride)
         ZStack {
             Theme.Colors.background.ignoresSafeArea()
             ScrollView {
@@ -100,8 +99,14 @@ struct RideDetailView: View {
         .navigationTitle(ride.startTime.formatted(date: .abbreviated, time: .omitted))
         .onAppear {
             // Recompute distance from GPS if the stored value looks wrong
-            let hasGPS = cache.routes.count >= 2
-            if hasGPS && ride.totalDistance < 0.5 {
+            let validGPSSamples = (ride.samples ?? []).filter { sample in
+                guard let lat = sample.latitude, let lon = sample.longitude,
+                      lat != 0, lon != 0,
+                      let acc = sample.horizontalAccuracy, acc > 0,
+                      acc < gpsAccuracyThresholdMetres else { return false }
+                return true
+            }
+            if validGPSSamples.count >= 2 && ride.totalDistance < 0.5 {
                 ride.recomputeGPSDistance()
             }
         }

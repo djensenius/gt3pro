@@ -227,30 +227,20 @@ actor RideTracker {
         let coords = samples.compactMap { sample -> (lat: Double, lon: Double)? in
             guard let lat = sample.latitude, let lon = sample.longitude,
                   lat != 0, lon != 0,
-                  let acc = sample.horizontalAccuracy, acc > 0, acc < 50 else { return nil }
+                  let acc = sample.horizontalAccuracy, acc > 0,
+                  acc < gpsAccuracyThresholdMetres else { return nil }
             return (lat, lon)
         }
         guard coords.count >= 2 else { return 0 }
 
         var total = 0.0
         for idx in 1..<coords.count {
-            total += haversine(
+            total += haversineDistanceKm(
                 lat1: coords[idx - 1].lat, lon1: coords[idx - 1].lon,
                 lat2: coords[idx].lat, lon2: coords[idx].lon
             )
         }
         return total
-    }
-
-    /// Haversine distance between two coordinates in km.
-    private static func haversine(lat1: Double, lon1: Double, lat2: Double, lon2: Double) -> Double {
-        let earthRadius = 6371.0
-        let dLat = (lat2 - lat1) * .pi / 180
-        let dLon = (lon2 - lon1) * .pi / 180
-        let aVal = sin(dLat / 2) * sin(dLat / 2)
-            + cos(lat1 * .pi / 180) * cos(lat2 * .pi / 180)
-            * sin(dLon / 2) * sin(dLon / 2)
-        return earthRadius * 2 * atan2(sqrt(aVal), sqrt(1 - aVal))
     }
 }
 #endif

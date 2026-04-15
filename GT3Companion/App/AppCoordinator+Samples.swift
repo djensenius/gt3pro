@@ -16,14 +16,17 @@ extension AppCoordinator {
         let roughness = roughnessTracker.latestSample
 
         // Accumulate GPS distance via haversine
-        if let gpsSample, let lat = Optional(gpsSample.latitude), let lon = Optional(gpsSample.longitude),
-           lat != 0, lon != 0, gpsSample.horizontalAccuracy > 0, gpsSample.horizontalAccuracy < 50 {
+        if let gpsSample,
+           gpsSample.latitude != 0, gpsSample.longitude != 0,
+           gpsSample.horizontalAccuracy > 0,
+           gpsSample.horizontalAccuracy < gpsAccuracyThresholdMetres {
             if let prev = lastGPSCoord {
-                gpsAccumulatedDistance += haversineDistance(
-                    lat1: prev.lat, lon1: prev.lon, lat2: lat, lon2: lon
+                gpsAccumulatedDistance += haversineDistanceKm(
+                    lat1: prev.lat, lon1: prev.lon,
+                    lat2: gpsSample.latitude, lon2: gpsSample.longitude
                 )
             }
-            lastGPSCoord = (lat, lon)
+            lastGPSCoord = (gpsSample.latitude, gpsSample.longitude)
         }
 
         // Prefer GPS distance; fall back to scooter register
@@ -148,16 +151,5 @@ extension AppCoordinator {
             await self.rideTracker.setWeather(weather)
         }
     }
-}
-
-/// Haversine distance between two coordinates in km.
-private func haversineDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double) -> Double {
-    let earthRadius = 6371.0
-    let dLat = (lat2 - lat1) * .pi / 180
-    let dLon = (lon2 - lon1) * .pi / 180
-    let aVal = sin(dLat / 2) * sin(dLat / 2)
-        + cos(lat1 * .pi / 180) * cos(lat2 * .pi / 180)
-        * sin(dLon / 2) * sin(dLon / 2)
-    return earthRadius * 2 * atan2(sqrt(aVal), sqrt(1 - aVal))
 }
 #endif
