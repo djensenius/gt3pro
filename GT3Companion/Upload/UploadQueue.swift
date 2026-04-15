@@ -25,6 +25,8 @@ actor UploadQueue {
     func flushSamples() async {
         guard !isFlushing, !pendingSamples.isEmpty else { return }
         isFlushing = true
+        let totalPending = pendingSamples.count
+        debugLog("Flushing \(totalPending) pending samples", level: .info)
 
         while !pendingSamples.isEmpty {
             let batch = Array(pendingSamples.prefix(batchSize))
@@ -32,9 +34,11 @@ actor UploadQueue {
             do {
                 try await apiClient.uploadTelemetry(batch)
                 logger.info("Flushed \(batch.count) samples")
+                debugLog("Flushed \(batch.count) telemetry samples", level: .info)
             } catch {
                 persistFailedBatch(batch)
                 logger.error("Flush failed, persisted \(batch.count) samples for retry")
+                debugLog("Flush failed (\(batch.count) samples): \(error.localizedDescription)", level: .error)
                 break
             }
         }
@@ -47,15 +51,20 @@ actor UploadQueue {
         let count = pendingSamples.count
         persistFailedBatch(pendingSamples)
         logger.info("Persisted \(count) remaining samples")
+        debugLog("Persisted \(count) remaining samples for retry", level: .warning)
         pendingSamples.removeAll()
     }
 
     /// Upload a completed ride. Returns the server-assigned ride ID if successful.
     func uploadRide(_ ride: RideLog) async -> String? {
+        debugLog("Uploading ride \(ride.rideId) (\(ride.samples.count) samples)", level: .info)
         do {
-            return try await apiClient.uploadRide(ride)
+            let serverId = try await apiClient.uploadRide(ride)
+            debugLog("Ride uploaded — server ID: \(serverId ?? "nil")", level: .info)
+            return serverId
         } catch {
             logger.error("Failed to upload ride: \(error)")
+            debugLog("Ride upload failed: \(error.localizedDescription)", level: .error)
             return nil
         }
     }
@@ -64,14 +73,24 @@ actor UploadQueue {
     func uploadSnapshot(_ snapshot: [String: String]) async {
         do {
             try await apiClient.uploadSnapshot(snapshot)
+            debugLog("Snapshot uploaded (\(snapshot.count) fields)", level: .info)
         } catch {
             logger.error("Failed to upload snapshot: \(error)")
+            debugLog("Snapshot upload failed: \(error.localizedDescription)", level: .error)
         }
     }
 
     /// Retry a previously failed upload from persisted payload.
     func retryUpload(payload: Data, endpoint: String) async throws -> Data {
-        try await apiClient.retryPost(path: endpoint, body: payload)
+        debugLog("Retrying upload: \(endpoint) (\(payload.count) bytes)", level: .info)
+        do {
+            let data = try await apiClient.retryPost(path: endpoint, body: payload)
+            debugLog("Retry succeeded: \(endpoint)", level: .info)
+            return data
+        } catch {
+            debugLog("Retry failed: \(endpoint) — \(error.localizedDescription)", level: .error)
+            throw error
+        }
     }
 
     func getPendingCount() -> Int { pendingSamples.count }
@@ -84,6 +103,12 @@ actor UploadQueue {
             let item = UploadQueueItem(payload: payload, endpoint: "/gt3/telemetry")
             PersistenceController.shared.context.insert(item)
             try? PersistenceController.shared.context.save()
+        }
+    }
+
+    private func debugLog(_ message: String, level: LogEntry.Level) {
+        Task { @MainActor in
+            DebugLogStore.shared.log(message, category: "Upload", level: level)
         }
     }
 }

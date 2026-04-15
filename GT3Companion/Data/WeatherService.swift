@@ -44,9 +44,22 @@ actor WeatherService {
                 pressure: weather.pressure.converted(to: .hectopascals).value
             )
             logger.info("Weather: \(snapshot.condition) \(snapshot.temp)°C")
+            Task { @MainActor in
+                DebugLogStore.shared.log(
+                    "Weather fetched: \(snapshot.condition) \(String(format: "%.0f", snapshot.temp))°C",
+                    category: "Weather"
+                )
+            }
             return snapshot
         } catch {
             logger.error("WeatherKit error: \(error.localizedDescription)")
+            Task { @MainActor in
+                DebugLogStore.shared.log(
+                    "WeatherKit error: \(error.localizedDescription)",
+                    category: "Weather",
+                    level: .error
+                )
+            }
             return nil
         }
     }

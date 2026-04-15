@@ -107,7 +107,14 @@ actor GT3APIClient {
         }
 
         guard (200...299).contains(statusCode) else {
-            logger.error("POST \(path) failed: \(statusCode)")
+            let bodyStr = String(data: data.prefix(500), encoding: .utf8) ?? "(non-UTF8)"
+            logger.error("POST \(path) failed: \(statusCode) — \(bodyStr)")
+            Task { @MainActor in
+                DebugLogStore.shared.log(
+                    "POST \(path) → \(statusCode): \(bodyStr)",
+                    category: "API", level: .error
+                )
+            }
             throw APIError.httpError(statusCode: statusCode)
         }
         return data
@@ -132,7 +139,8 @@ actor GT3APIClient {
         }
 
         guard (200...299).contains(statusCode) else {
-            logger.error("GET \(path) failed: \(statusCode)")
+            let bodyStr = String(data: data.prefix(500), encoding: .utf8) ?? "(non-UTF8)"
+            logger.error("GET \(path) failed: \(statusCode) — \(bodyStr)")
             throw APIError.httpError(statusCode: statusCode)
         }
         return data

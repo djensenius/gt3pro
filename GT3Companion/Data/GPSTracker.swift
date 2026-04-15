@@ -38,6 +38,9 @@ final class GPSTracker: NSObject {
     private(set) var isTracking = false
     private var usingSignificantLocation = false
 
+    /// The CLLocationManager's cached location (available even before GPS fix).
+    var lastKnownLocation: CLLocation? { locationManager.location }
+
     /// Callback for new GPS samples.
     var onSample: ((GPSSample) -> Void)?
 

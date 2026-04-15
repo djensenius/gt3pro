@@ -11,14 +11,24 @@ import SwiftUI
 struct RideDetailView: View {
     let ride: PersistedRide
 
-    private var routeCoordinates: [RouteCoordinate] {
-        (ride.samples ?? [])
-            .filter { $0.latitude != nil && $0.longitude != nil }
-            .map { RouteCoordinate(latitude: $0.latitude!, longitude: $0.longitude!, speed: $0.speed) }
-    }
+    /// Cache sorted samples so the sort only runs once per view evaluation.
+    private struct CachedSamples {
+        let sorted: [PersistedSample]
+        let routes: [RouteCoordinate]
+        let speeds: [(Date, Double)]
+        let batteries: [(Date, Int)]
+        let temps: [TempSample]
 
-    private var speedSamples: [(Date, Double)] {
-        (ride.samples ?? []).map { ($0.timestamp, $0.speed) }
+        init(ride: PersistedRide) {
+            let all = (ride.samples ?? []).sorted { $0.timestamp < $1.timestamp }
+            self.sorted = all
+            self.routes = all
+                .filter { $0.latitude != nil && $0.longitude != nil }
+                .map { RouteCoordinate(latitude: $0.latitude!, longitude: $0.longitude!, speed: $0.speed) }
+            self.speeds = all.map { ($0.timestamp, $0.speed) }
+            self.batteries = all.map { ($0.timestamp, $0.battery) }
+            self.temps = all.map { TempSample(timestamp: $0.timestamp, bms: $0.bmsTemp) }
+        }
     }
 
     private struct TempSample {
@@ -26,13 +36,7 @@ struct RideDetailView: View {
         let bms: Double
     }
 
-    private var batterySamples: [(Date, Int)] {
-        (ride.samples ?? []).map { ($0.timestamp, $0.battery) }
-    }
-
-    private var tempSamples: [TempSample] {
-        (ride.samples ?? []).map { TempSample(timestamp: $0.timestamp, bms: $0.bmsTemp) }
-    }
+    private var cache: CachedSamples { CachedSamples(ride: ride) }
 
     var body: some View {
         ZStack {
@@ -94,6 +98,19 @@ struct RideDetailView: View {
             }
         }
         .navigationTitle(ride.startTime.formatted(date: .abbreviated, time: .omitted))
+        .onAppear {
+            // Recompute distance from GPS if the stored value looks wrong
+            let validGPSSamples = (ride.samples ?? []).filter { sample in
+                guard let lat = sample.latitude, let lon = sample.longitude,
+                      lat != 0, lon != 0,
+                      let acc = sample.horizontalAccuracy, acc > 0,
+                      acc < gpsAccuracyThresholdMetres else { return false }
+                return true
+            }
+            if validGPSSamples.count >= 2 && ride.totalDistance < 0.5 {
+                ride.recomputeGPSDistance()
+            }
+        }
     }
 
     @ViewBuilder
@@ -172,7 +189,7 @@ struct RideDetailView: View {
                 .foregroundStyle(Theme.Colors.textPrimary)
                 .padding(.horizontal)
             #if os(iOS)
-            MapRouteView(coordinates: routeCoordinates)
+            MapRouteView(coordinates: cache.routes)
                 .padding(.horizontal)
             #endif
         }
@@ -185,7 +202,7 @@ struct RideDetailView: View {
                 .foregroundStyle(Theme.Colors.textPrimary)
                 .padding(.horizontal)
 
-            if speedSamples.isEmpty {
+            if cache.speeds.isEmpty {
                 RoundedRectangle(cornerRadius: Theme.cornerRadius)
                     .fill(Theme.Colors.secondaryBackground)
                     .frame(height: 150)
@@ -196,7 +213,7 @@ struct RideDetailView: View {
                     .padding(.horizontal)
             } else {
                 Chart {
-                    ForEach(speedSamples, id: \.0) { timestamp, speed in
+                    ForEach(cache.speeds, id: \.0) { timestamp, speed in
                         LineMark(
                             x: .value("Time", timestamp),
                             y: .value("Speed", speed)
@@ -220,11 +237,11 @@ struct RideDetailView: View {
                 .foregroundStyle(Theme.Colors.textPrimary)
                 .padding(.horizontal)
 
-            if batterySamples.isEmpty {
+            if cache.batteries.isEmpty {
                 noDataPlaceholder(label: "No battery data")
             } else {
                 Chart {
-                    ForEach(batterySamples, id: \.0) { timestamp, battery in
+                    ForEach(cache.batteries, id: \.0) { timestamp, battery in
                         LineMark(
                             x: .value("Time", timestamp),
                             y: .value("Battery", battery)
@@ -249,12 +266,12 @@ struct RideDetailView: View {
                 .foregroundStyle(Theme.Colors.textPrimary)
                 .padding(.horizontal)
 
-            let hasTempData = tempSamples.contains { $0.bms > 0 }
+            let hasTempData = cache.temps.contains { $0.bms > 0 }
             if !hasTempData {
                 noDataPlaceholder(label: "No temperature data")
             } else {
                 Chart {
-                    ForEach(tempSamples, id: \.timestamp) { sample in
+                    ForEach(cache.temps, id: \.timestamp) { sample in
                         LineMark(
                             x: .value("Time", sample.timestamp),
                             y: .value("BMS", sample.bms),

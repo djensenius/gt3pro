@@ -23,7 +23,7 @@ extension AppCoordinator {
         switch result.name {
         case "rSpeed":            currentSpeed = result.doubleValue ?? 0
         case "rBattery":          return result.intValue ?? 0
-        case "rSingleMileage":    tripDistance = result.doubleValue ?? 0
+        case "rSingleMileage":    scooterTripDistance = result.doubleValue ?? 0
         case "rLeftMileage":      estimatedRange = result.doubleValue ?? 0
         case "rGearMode":         gearMode = result.intValue ?? 0
         case "rBmsTmp2":          bmsTemp = result.doubleValue ?? 0

@@ -53,11 +53,17 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
     let rideTracker = RideTracker()
     let uploadQueue = UploadQueue()
     private let apiClient = GT3APIClient()
-    private let gpsTracker = GPSTracker()
-    private let roughnessTracker = SurfaceRoughnessTracker()
-    private let liveActivityManager = GT3LiveActivityManager.shared
-    private let watchSession = PhoneWatchSessionManager.shared
+    let gpsTracker = GPSTracker()
+    let roughnessTracker = SurfaceRoughnessTracker()
+    let liveActivityManager = GT3LiveActivityManager.shared
+    let watchSession = PhoneWatchSessionManager.shared
     private let debugLog = DebugLogStore.shared
+
+    /// GPS-accumulated trip distance (km), updated each sample via haversine.
+    var gpsAccumulatedDistance: Double = 0
+    var lastGPSCoord: (lat: Double, lon: Double)?
+    /// Raw scooter register distance, kept separate so GPS can override tripDistance.
+    var scooterTripDistance: Double = 0
 
     private var storedPassword: Data?
     private var hasStarted = false
@@ -269,6 +275,9 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         bodyTemp = 0
         bmsVoltage = 0
         bmsCurrent = 0
+        gpsAccumulatedDistance = 0
+        lastGPSCoord = nil
+        scooterTripDistance = 0
     }
     /// Send the power-on command to the VCU.
     func sendPowerOn() {
@@ -371,107 +380,11 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         sendScooterSleepNotification()
     }
 
-    private func sendScooterSleepNotification() {
+    func sendScooterSleepNotification() {
         sendNotification(title: "Scooter Standby 💤", body: "GT3 Pro powered off. Still connected via Bluetooth.")
     }
 
-    private func emitSample() async {
-        let gpsSample = gpsTracker.latestSample
-        let roughness = roughnessTracker.latestSample
-        let sample = TelemetrySample(
-            timestamp: Date(),
-            speed: currentSpeed,
-            battery: currentBattery,
-            bmsVoltage: await registerReader.getTelemetryDouble("rBMSVolt2") ?? 0,
-            bmsCurrent: await registerReader.getTelemetryDouble("rBMSCur2") ?? 0,
-            bmsSOC: await registerReader.getTelemetryInt("rBmsSOC2") ?? 0,
-            bmsTemp: await registerReader.getTelemetryDouble("rBmsTmp2") ?? 0,
-            tripDistance: tripDistance,
-            tripTime: await registerReader.getTelemetryInt("rSingleRideTime") ?? 0,
-            bodyTemp: await registerReader.getTelemetryDouble("rBodyTemp") ?? 0,
-            gearMode: await registerReader.getTelemetryInt("rGearMode") ?? 0,
-            estimatedRange: estimatedRange,
-            errorCode: await registerReader.getTelemetryInt("rErrorCode") ?? 0,
-            warnCode: await registerReader.getTelemetryInt("rWarnCode") ?? 0,
-            regenLevel: await registerReader.getTelemetryInt("rGearED") ?? 0,
-            speedResponse: await registerReader.getTelemetryInt("rGearSR") ?? 0,
-            latitude: gpsSample?.latitude,
-            longitude: gpsSample?.longitude,
-            altitude: gpsSample?.altitude,
-            gpsSpeed: gpsSample?.speed,
-            gpsCourse: gpsSample?.course,
-            horizontalAccuracy: gpsSample?.horizontalAccuracy,
-            roughnessScore: roughness?.roughnessScore,
-            maxAcceleration: roughness?.maxAcceleration,
-            heartRate: watchSession.latestHeartRate > 0 ? watchSession.latestHeartRate : nil
-        )
-
-        let wasIdle = await rideTracker.state == .idle
-        await rideTracker.addSample(sample)
-        let nowRiding = await rideTracker.state == .riding
-
-        // Detect ride start transition and notify user
-        if wasIdle && nowRiding {
-            isRiding = true
-            sendRideStartNotification()
-            launchWatchApp()
-            logger.info("Ride auto-started — notifying user")
-        }
-
-        // Fetch weather once GPS is available (retries each sample until successful)
-        let rideState = await rideTracker.state
-        let isActiveRide = rideState == .riding || rideState == .stopped
-        if isActiveRide {
-            let hasWeather = await rideTracker.hasWeather()
-            let isFetching = await rideTracker.isFetchingWeather()
-            if !hasWeather, !isFetching, let gpsSample {
-                let location = CLLocation(
-                    latitude: gpsSample.latitude,
-                    longitude: gpsSample.longitude
-                )
-                let rideId = await self.rideTracker.getCurrentRideId()
-                await rideTracker.setFetchingWeather(true)
-                Task {
-                    let weather = await WeatherService.shared.fetchWeather(at: location)
-                    await self.rideTracker.setFetchingWeather(false)
-                    guard await self.rideTracker.getCurrentRideId() == rideId else { return }
-                    await self.rideTracker.setWeather(weather)
-                }
-            }
-        }
-        isRiding = await rideTracker.state != .idle
-
-        await uploadQueue.enqueueSamples([sample])
-
-        // Send telemetry to Watch
-        watchSession.sendTelemetry(
-            speed: currentSpeed,
-            battery: currentBattery,
-            tripDistance: tripDistance,
-            range: estimatedRange,
-            mode: sample.gearMode
-        )
-
-        await liveActivityManager.updateActivity(state: .init(
-            speed: currentSpeed,
-            battery: currentBattery,
-            tripDistance: tripDistance,
-            estimatedRange: estimatedRange,
-            gearMode: sample.gearMode,
-            bmsTemp: sample.bmsTemp,
-            isCharging: false,
-            isAwake: isScooterAwake,
-            isConnected: true
-        ))
-    }
-
-    // MARK: - Notifications
-
-    private func sendRideStartNotification() {
-        sendNotification(title: "Ride Started 🛴", body: "GT3 Pro ride logging is active. Battery: \(currentBattery)%")
-    }
-
-    private func sendNotification(title: String, body: String) {
+    func sendNotification(title: String, body: String) {
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
