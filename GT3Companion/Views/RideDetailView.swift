@@ -11,14 +11,18 @@ import SwiftUI
 struct RideDetailView: View {
     let ride: PersistedRide
 
+    private var sortedSamples: [PersistedSample] {
+        (ride.samples ?? []).sorted { $0.timestamp < $1.timestamp }
+    }
+
     private var routeCoordinates: [RouteCoordinate] {
-        (ride.samples ?? [])
+        sortedSamples
             .filter { $0.latitude != nil && $0.longitude != nil }
             .map { RouteCoordinate(latitude: $0.latitude!, longitude: $0.longitude!, speed: $0.speed) }
     }
 
     private var speedSamples: [(Date, Double)] {
-        (ride.samples ?? []).map { ($0.timestamp, $0.speed) }
+        sortedSamples.map { ($0.timestamp, $0.speed) }
     }
 
     private struct TempSample {
@@ -27,11 +31,11 @@ struct RideDetailView: View {
     }
 
     private var batterySamples: [(Date, Int)] {
-        (ride.samples ?? []).map { ($0.timestamp, $0.battery) }
+        sortedSamples.map { ($0.timestamp, $0.battery) }
     }
 
     private var tempSamples: [TempSample] {
-        (ride.samples ?? []).map { TempSample(timestamp: $0.timestamp, bms: $0.bmsTemp) }
+        sortedSamples.map { TempSample(timestamp: $0.timestamp, bms: $0.bmsTemp) }
     }
 
     var body: some View {
