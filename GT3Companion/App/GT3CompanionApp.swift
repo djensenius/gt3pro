@@ -20,6 +20,7 @@ struct GT3CompanionApp: App {
 
     var body: some Scene {
         WindowGroup {
+            Group {
             #if os(iOS)
             if ProcessInfo.processInfo.arguments.contains("--screenshot-mode") {
                 ContentView()
@@ -58,6 +59,10 @@ struct GT3CompanionApp: App {
             #else
             ContentView()
             #endif
+            }
+            .task {
+                await auth.validateSessionOnLaunch()
+            }
         }
         .modelContainer(PersistenceController.shared.container)
         .onChange(of: scenePhase) { _, phase in
