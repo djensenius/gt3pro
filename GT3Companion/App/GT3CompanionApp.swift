@@ -61,7 +61,7 @@ struct GT3CompanionApp: App {
             #endif
             }
             .task {
-                await AuthManager.shared.validateSessionOnLaunch()
+                await auth.validateSessionOnLaunch()
             }
         }
         .modelContainer(PersistenceController.shared.container)

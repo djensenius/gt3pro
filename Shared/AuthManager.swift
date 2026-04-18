@@ -171,9 +171,11 @@ class AuthManager: ObservableObject, @unchecked Sendable {
 
     private init() {
         if getAccessToken() != nil {
-            if isTokenExpiringSoon(margin: 0) {
-                // Token exists but is expired — validate via network before granting access.
-                // This avoids briefly showing ContentView with a dead session.
+            // Only enter validation (.unknown) when we can confirm the token has expired.
+            // Missing/unparseable expiry → .signedIn; ensureValidToken handles refresh later.
+            if let expiryStr = getKeychainItem(account: "oidc_token_expiry"),
+               let interval = TimeInterval(expiryStr),
+               Date() >= Date(timeIntervalSince1970: interval) {
                 authState = .unknown
                 logger.info("Init: token found but expired, will validate")
             } else {
@@ -480,14 +482,11 @@ class AuthManager: ObservableObject, @unchecked Sendable {
     }
 
     private static func base64URLEncode(_ data: Data) -> String {
-        data.base64EncodedString()
-            .replacingOccurrences(of: "+", with: "-")
-            .replacingOccurrences(of: "/", with: "_")
-            .replacingOccurrences(of: "=", with: "")
+        data.base64EncodedString().replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
     }
 
     private func generateCodeVerifier() -> String { generateRandomString() }
-
     private func generateCodeChallenge(from verifier: String) -> String {
         Self.base64URLEncode(Data(SHA256.hash(data: Data(verifier.utf8))))
     }
