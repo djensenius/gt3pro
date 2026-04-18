@@ -155,10 +155,7 @@ class AuthManager: ObservableObject, @unchecked Sendable {
     private var anchorProvider: AuthAnchorProvider?
     private let refreshCoordinator = RefreshCoordinator()
 
-    var isSignedIn: Bool {
-        if case .signedIn = authState { return true }
-        return false
-    }
+    var isSignedIn: Bool { authState == .signedIn }
 
     // MARK: - Demo Mode
 
@@ -174,11 +171,43 @@ class AuthManager: ObservableObject, @unchecked Sendable {
 
     private init() {
         if getAccessToken() != nil {
-            authState = .signedIn
-            logger.info("Init: signed in (token in keychain)")
+            if isTokenExpiringSoon(margin: 0) {
+                // Token exists but is expired — validate via network before granting access.
+                // This avoids briefly showing ContentView with a dead session.
+                authState = .unknown
+                logger.info("Init: token found but expired, will validate")
+            } else {
+                authState = .signedIn
+                logger.info("Init: signed in (valid token in keychain)")
+            }
         } else {
             authState = .signedOut
             logger.info("Init: no token found, signedOut")
+        }
+    }
+
+    /// Validates the session at app launch when the stored token has expired.
+    /// Signs out on definitive 4xx rejection; lets user through on transient/offline failures.
+    @MainActor func validateSessionOnLaunch() async {
+        guard authState == .unknown else { return }
+        // No refresh token means the session is unrecoverable
+        guard getKeychainItem(account: "oidc_refresh_token") != nil else {
+            logger.info("validateSession: no refresh token — signing out")
+            signOut()
+            return
+        }
+
+        let refreshed = await refreshTokenIfNeeded()
+        // refreshTokenIfNeeded calls signOut() on definitive 4xx rejection,
+        // which sets authState = .signedOut. If we're still .unknown, either the
+        // refresh succeeded or we hit a transient failure — let the user through.
+        if authState == .unknown {
+            authState = .signedIn
+            if refreshed {
+                logger.info("validateSession: token refreshed successfully")
+            } else {
+                logger.info("validateSession: transient failure — using cached session")
+            }
         }
     }
 
@@ -281,10 +310,7 @@ class AuthManager: ObservableObject, @unchecked Sendable {
 
     /// Ensures the access token is valid, refreshing proactively if near expiry.
     /// Returns `true` if a valid token is available afterward.
-    ///
-    /// Signs the user out only if the server **definitively rejects** the refresh token
-    /// (4xx response — token has been revoked or has truly expired server-side).
-    /// Transient network failures are tolerated silently — the user stays signed in.
+    /// Signs out only on definitive 4xx rejection; tolerates transient failures.
     func ensureValidToken() async -> Bool {
         await restoreStateIfNeeded()
         guard getAccessToken() != nil else { return false }
@@ -294,7 +320,8 @@ class AuthManager: ObservableObject, @unchecked Sendable {
     }
 
     @MainActor func restoreStateIfNeeded() {
-        guard !isSignedIn else { return }
+        // Only restore from .signedOut — leave .unknown alone during launch validation
+        guard authState == .signedOut else { return }
         if getAccessToken() != nil { authState = .signedIn }
     }
 
@@ -365,8 +392,7 @@ class AuthManager: ObservableObject, @unchecked Sendable {
         do {
             (data, response) = try await URLSession.shared.data(for: request)
         } catch {
-            // Network-level failure (no connectivity, DNS, timeout). Session should survive.
-            throw AuthError.transientRefreshFailure(error)
+            throw AuthError.transientRefreshFailure(error) // network-level failure
         }
 
         guard let http = response as? HTTPURLResponse else {
@@ -378,9 +404,7 @@ class AuthManager: ObservableObject, @unchecked Sendable {
         }
 
         let body = String(data: data, encoding: .utf8) ?? "unknown"
-
-        // 4xx means the server explicitly rejected our refresh token — the session is dead.
-        // 5xx / other are transient server issues — keep the session alive and retry later.
+        // 4xx = server rejected refresh token (dead session); 5xx = transient
         if (400...499).contains(http.statusCode) {
             logger.error("Refresh token rejected by server (\(http.statusCode)): \(body)")
             throw AuthError.refreshTokenInvalid(body)
@@ -462,11 +486,7 @@ class AuthManager: ObservableObject, @unchecked Sendable {
             .replacingOccurrences(of: "=", with: "")
     }
 
-    private func generateCodeVerifier() -> String {
-        var buf = [UInt8](repeating: 0, count: 32)
-        _ = SecRandomCopyBytes(kSecRandomDefault, buf.count, &buf)
-        return Self.base64URLEncode(Data(buf))
-    }
+    private func generateCodeVerifier() -> String { generateRandomString() }
 
     private func generateCodeChallenge(from verifier: String) -> String {
         Self.base64URLEncode(Data(SHA256.hash(data: Data(verifier.utf8))))
