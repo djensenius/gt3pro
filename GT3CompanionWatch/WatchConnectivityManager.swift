@@ -18,6 +18,7 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
     @Published var gearMode: Int = 0
     @Published var isRiding: Bool = false
     @Published var isConnected: Bool = false
+    @Published var rideActive: Bool = false
 
     override init() {
         super.init()
@@ -62,6 +63,7 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         DispatchQueue.main.async {
             self.battery = applicationContext["battery"] as? Int ?? self.battery
             self.isConnected = applicationContext["isConnected"] as? Bool ?? self.isConnected
+            self.rideActive = applicationContext["rideActive"] as? Bool ?? self.rideActive
         }
     }
 }

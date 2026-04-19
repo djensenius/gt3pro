@@ -69,6 +69,11 @@ extension AppCoordinator {
             isRiding = true
             sendRideStartNotification()
             launchWatchApp()
+            watchSession.updateContext(
+                battery: currentBattery,
+                isConnected: true,
+                rideActive: true
+            )
         }
 
         await fetchWeatherIfNeeded(gpsSample: gpsSample)
