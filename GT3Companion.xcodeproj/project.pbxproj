@@ -28,6 +28,7 @@
 		B22737315AA1AFCF8EFFAB98 /* ShareRideSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5F78F4577A6BABA69A0917D /* ShareRideSheet.swift */; };
 		ACC2F8F448509E79AFB5E9A1 /* WeatherDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89BEA8CACB2AA9F9E55904FA /* WeatherDebugView.swift */; };
 		1D4D239F64B82E1540DD3E93 /* GT3CompanionWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BDE60F2A3E20E8CFCAE04D6A /* GT3CompanionWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		WATCHEMBEDFILE00000001 /* GT3CompanionWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 60A31234CEAAD986C4952B40 /* GT3CompanionWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		1D72CA507FFC44DE20181BDA /* UploadQueueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EE0032842C5447ED97334A9 /* UploadQueueTests.swift */; };
 		2267FF4882DF7605904F8B50 /* PhoneWatchSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B586782D3C9ABC0F26F149A /* PhoneWatchSessionManager.swift */; };
 		23C36A1198BB860EE25D09BF /* AggregateAnalyticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAEBB62130BDD68B0D3B2695 /* AggregateAnalyticsView.swift */; };
@@ -208,6 +209,13 @@
 			remoteGlobalIDString = 8DAAB8E08DF7CB2411D8C05B;
 			remoteInfo = GT3Companion;
 		};
+		AABB001122334455WATCH01 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F9DD18F549BB83F9A6477CFC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A83A7797F28590F653E2440A;
+			remoteInfo = GT3CompanionWatch;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -220,6 +228,17 @@
 				1D4D239F64B82E1540DD3E93 /* GT3CompanionWidgets.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DE2DEA6FB3ABCE9AFB2D18E3 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				WATCHEMBEDFILE00000001 /* GT3CompanionWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -764,12 +783,13 @@
 				C17BE4C51F76B1E68B910D09 /* Sources */,
 				935C4F7B3C77F195DED9A15F /* Resources */,
 				1D0A8F457FE77AD5C45A3969 /* Embed Foundation Extensions */,
-				DE2DEA6FB3ABCE9AFB2D18E3 /* Embed Watch App */,
+				DE2DEA6FB3ABCE9AFB2D18E3 /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				B64D10485DF18BA7004FB6F5 /* PBXTargetDependency */,
+				AABB001122334455WATCH02 /* PBXTargetDependency */,
 			);
 			name = GT3Companion;
 			productName = GT3Companion;
@@ -937,28 +957,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		DE2DEA6FB3ABCE9AFB2D18E3 /* Embed Watch App */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Embed Watch App";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "WATCH_APP=\"${BUILT_PRODUCTS_DIR}/GT3CompanionWatch.app\"\nDEST=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Watch\"\nif [ -d \"$WATCH_APP\" ]; then\n  mkdir -p \"$DEST\"\n  ditto \"$WATCH_APP\" \"$DEST/GT3CompanionWatch.app\"\n  echo \"Embedded Watch app from $WATCH_APP\"\nelse\n  echo \"Watch app not found at $WATCH_APP — skipping embed\"\nfi\n";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		1440D19DED8EF391543B8E87 /* Sources */ = {
@@ -1214,6 +1212,11 @@
 			isa = PBXTargetDependency;
 			target = 1F8F4FC8E50B9764CB67E92E /* GT3CompanionVision */;
 			targetProxy = 5344D712030F779EAB4B17AE /* PBXContainerItemProxy */;
+		};
+		AABB001122334455WATCH02 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A83A7797F28590F653E2440A /* GT3CompanionWatch */;
+			targetProxy = AABB001122334455WATCH01 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
