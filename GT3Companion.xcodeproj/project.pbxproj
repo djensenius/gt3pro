@@ -25,6 +25,8 @@
 		1BA065423E7014CBEF7E5789 /* PreviewHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEC6013FFE64589ED662804D /* PreviewHelpers.swift */; };
 		1BCC17969E11E97F3D009E00 /* GT3CompanionWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 891BD92EAAEA3BFE7C483FEA /* GT3CompanionWatchApp.swift */; };
 		1BEF8CF4A46AD2CD9A912CDD /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 997B5274C0201254D5A58FB9 /* SettingsView.swift */; };
+		B22737315AA1AFCF8EFFAB98 /* ShareRideSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5F78F4577A6BABA69A0917D /* ShareRideSheet.swift */; };
+		ACC2F8F448509E79AFB5E9A1 /* WeatherDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89BEA8CACB2AA9F9E55904FA /* WeatherDebugView.swift */; };
 		1D4D239F64B82E1540DD3E93 /* GT3CompanionWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BDE60F2A3E20E8CFCAE04D6A /* GT3CompanionWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		1D72CA507FFC44DE20181BDA /* UploadQueueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EE0032842C5447ED97334A9 /* UploadQueueTests.swift */; };
 		2267FF4882DF7605904F8B50 /* PhoneWatchSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B586782D3C9ABC0F26F149A /* PhoneWatchSessionManager.swift */; };
@@ -66,6 +68,7 @@
 		5380FA77C5A87906A5A84985 /* WatchConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 863AE1336A31A4B389EB86D6 /* WatchConnectivityManager.swift */; };
 		571D0940C9C51CBBDB35589D /* SurfaceRoughnessTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C76AE1C74BD9FB056599493D /* SurfaceRoughnessTracker.swift */; };
 		5895CDEDBED135E910777F7D /* StatCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFA059564462F3ED6EFEE13A /* StatCard.swift */; };
+		339E92E0FDE51F2AC2EE5703 /* WeatherAttributionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D85E4BE5C4ED517DFCED8C4 /* WeatherAttributionView.swift */; };
 		5B8B2DEF2BEAD0E2F187FC2A /* GT3CompanionVisionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58211C5A6E89A9919BDE331B /* GT3CompanionVisionApp.swift */; };
 		5C87DAD23B4EFD25C8768839 /* RideTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493E6A4BC6CC47F6D1F9762B /* RideTrackerTests.swift */; };
 		5D1C2C708109269FA6E8BCA2 /* GPSTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3529E2F04653B7962C5A5B /* GPSTrackerTests.swift */; };
@@ -296,6 +299,8 @@
 		8FDD78758A79865ACE4CE701 /* NinebotFrameBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NinebotFrameBuilder.swift; sourceTree = "<group>"; };
 		92CE9C01F56D431F573E856B /* BatteryIconWatchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryIconWatchTests.swift; sourceTree = "<group>"; };
 		997B5274C0201254D5A58FB9 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		D5F78F4577A6BABA69A0917D /* ShareRideSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareRideSheet.swift; sourceTree = "<group>"; };
+		89BEA8CACB2AA9F9E55904FA /* WeatherDebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherDebugView.swift; sourceTree = "<group>"; };
 		9A95375BDE24C29871153315 /* BatteryIconMacTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryIconMacTests.swift; sourceTree = "<group>"; };
 		9B157646BCE03851EC673779 /* AppCoordinator+Samples.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "AppCoordinator+Samples.swift"; sourceTree = "<group>"; };
 		A3EA3E613117DC3CB9BF72A9 /* TelemetryParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelemetryParser.swift; sourceTree = "<group>"; };
@@ -327,6 +332,7 @@
 		DD9268E6D3C0AEEECDA53ECD /* ThemeVisionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeVisionTests.swift; sourceTree = "<group>"; };
 		DEE7C3B06D5FF3708534DD86 /* JavaLCG.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JavaLCG.swift; sourceTree = "<group>"; };
 		DFA059564462F3ED6EFEE13A /* StatCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatCard.swift; sourceTree = "<group>"; };
+		4D85E4BE5C4ED517DFCED8C4 /* WeatherAttributionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherAttributionView.swift; sourceTree = "<group>"; };
 		E379C350721281EE18112EFE /* BatteryIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryIcon.swift; sourceTree = "<group>"; };
 		E4967528A480BD2A3DAAC694 /* GT3LiveActivityManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3LiveActivityManagerTests.swift; sourceTree = "<group>"; };
 		EA3529E2F04653B7962C5A5B /* GPSTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSTrackerTests.swift; sourceTree = "<group>"; };
@@ -389,6 +395,7 @@
 			children = (
 				0856E72AC9FBE6ED37B60387 /* InfoRow.swift */,
 				DFA059564462F3ED6EFEE13A /* StatCard.swift */,
+				4D85E4BE5C4ED517DFCED8C4 /* WeatherAttributionView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -440,6 +447,8 @@
 				71C4965BA8E974E0A6B214CF /* RouteNavigationView.swift */,
 				55D4452F70F7EF550BC5F879 /* ScooterInfoView.swift */,
 				997B5274C0201254D5A58FB9 /* SettingsView.swift */,
+				D5F78F4577A6BABA69A0917D /* ShareRideSheet.swift */,
+				89BEA8CACB2AA9F9E55904FA /* WeatherDebugView.swift */,
 				1E218CAFC8EDFAADB68FF41F /* Components */,
 			);
 			path = Views;
@@ -847,6 +856,11 @@
 					8DAAB8E08DF7CB2411D8C05B = {
 						DevelopmentTeam = 9JALHNGRBQ;
 						ProvisioningStyle = Automatic;
+						SystemCapabilities = {
+							com.apple.WeatherKit = {
+								enabled = 1;
+							};
+						};
 					};
 					A83A7797F28590F653E2440A = {
 						DevelopmentTeam = 9JALHNGRBQ;
@@ -1127,7 +1141,10 @@
 				4753C941A6D3702FDEFB76A8 /* ScooterPeripheralDelegate.swift in Sources */,
 				DA01F12CC8720B29F4525FBA /* ServerRide.swift in Sources */,
 				1BEF8CF4A46AD2CD9A912CDD /* SettingsView.swift in Sources */,
+				B22737315AA1AFCF8EFFAB98 /* ShareRideSheet.swift in Sources */,
+				ACC2F8F448509E79AFB5E9A1 /* WeatherDebugView.swift in Sources */,
 				5895CDEDBED135E910777F7D /* StatCard.swift in Sources */,
+				339E92E0FDE51F2AC2EE5703 /* WeatherAttributionView.swift in Sources */,
 				571D0940C9C51CBBDB35589D /* SurfaceRoughnessTracker.swift in Sources */,
 				E300BDFA14D4E387C71CB1A9 /* SwiftDataModels.swift in Sources */,
 				CA89B23819A601DD7DF53246 /* TelemetryParser.swift in Sources */,

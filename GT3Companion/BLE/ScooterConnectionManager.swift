@@ -491,11 +491,17 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
         rssi RSSI: NSNumber
     ) {
         let name = peripheral.name ?? advertisementData[CBAdvertisementDataLocalNameKey] as? String
-        logger.info("Discovered: \(name ?? "(no name)") RSSI: \(RSSI)")
-        bleLog("Discovered peripheral: \"\(name ?? "(no name)")\" RSSI: \(RSSI)")
+
+        let logDiscovery = UserDefaults.standard.bool(forKey: "bleDiscoveryLoggingEnabled")
+        if logDiscovery {
+            logger.info("Discovered: \(name ?? "(no name)") RSSI: \(RSSI)")
+            bleLog("Discovered peripheral: \"\(name ?? "(no name)")\" RSSI: \(RSSI)")
+        }
 
         guard let name, !name.isEmpty else {
-            bleLog("Skipped device — no name (key derivation requires a name)", level: .warning)
+            if logDiscovery {
+                bleLog("Skipped device — no name (key derivation requires a name)", level: .debug)
+            }
             return
         }
 
@@ -509,7 +515,9 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
         let hasKnownPrefix = BLEConstants.advertisingNamePrefixes.contains(where: { sanitized.hasPrefix($0) })
         let looksLikeSerial = ScooterConnectionManager.looksLikeNinebotSerial(sanitized)
         guard hasNinebotService || hasKnownPrefix || looksLikeSerial else {
-            bleLog("Skipped \"\(name)\" — not a GT3 Pro", level: .debug)
+            if logDiscovery {
+                bleLog("Skipped \"\(name)\" — not a GT3 Pro", level: .debug)
+            }
             return
         }
         bleLog("Matched GT3 Pro: \"\(name)\"" +

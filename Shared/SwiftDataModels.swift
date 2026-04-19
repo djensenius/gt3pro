@@ -72,6 +72,7 @@ class PersistedRide {
     var weatherConditionSymbol: String?
     var weatherUVIndex: Double?
     var weatherPressure: Double?
+    var samplesHydrated: Bool?
 
     init(rideId: String, startTime: Date, startBattery: Int) {
         self.rideId = rideId
@@ -85,6 +86,7 @@ class PersistedRide {
         self.uploaded = false
         self.primaryGearMode = 0
         self.samples = []
+        self.samplesHydrated = false
     }
 }
 

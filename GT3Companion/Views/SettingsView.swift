@@ -154,6 +154,8 @@ struct SettingsView: View {
         Section {
             Toggle("Verbose Logging", isOn: $logStore.verboseLoggingEnabled)
                 .listRowBackground(Theme.Colors.elevatedBackground)
+            Toggle("BLE Discovery Logging", isOn: $logStore.bleDiscoveryLoggingEnabled)
+                .listRowBackground(Theme.Colors.elevatedBackground)
             if !logStore.entries.isEmpty {
                 NavigationLink("View Logs (\(logStore.entries.count))") {
                     DebugLogView()
@@ -175,6 +177,14 @@ struct SettingsView: View {
                 Button("Clear Logs", role: .destructive) { logStore.clear() }
                     .listRowBackground(Theme.Colors.elevatedBackground)
             }
+            #if DEBUG
+            NavigationLink {
+                WeatherDebugView()
+            } label: {
+                Label("Weather Debug", systemImage: "cloud.sun.rain.fill")
+            }
+            .listRowBackground(Theme.Colors.elevatedBackground)
+            #endif
         } header: {
             Text("Diagnostics")
         } footer: {

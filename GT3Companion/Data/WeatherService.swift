@@ -9,7 +9,7 @@
 import CoreLocation
 import Foundation
 import os
-import WeatherKit
+@preconcurrency import WeatherKit
 
 private let logger = Logger(
     subsystem: "org.davidjensenius.GT3Companion",
@@ -19,29 +19,23 @@ private let logger = Logger(
 /// Fetches current weather conditions using Apple WeatherKit.
 actor WeatherService {
     static let shared = WeatherService()
-    private let service = WeatherService.makeService()
-
-    private static func makeService() -> WeatherKit.WeatherService {
-        WeatherKit.WeatherService.shared
-    }
+    private let service = WeatherKit.WeatherService()
 
     /// Fetch current weather for a location.
     func fetchWeather(at location: CLLocation) async -> WeatherSnapshot? {
         do {
-            let weather = try await service.weather(
-                for: location,
-                including: .current
-            )
+            let weather = try await service.weather(for: location)
+            let current = weather.currentWeather
             let snapshot = WeatherSnapshot(
-                temp: weather.temperature.converted(to: .celsius).value,
-                feelsLike: weather.apparentTemperature.converted(to: .celsius).value,
-                humidity: weather.humidity * 100,
-                windSpeed: weather.wind.speed.converted(to: .kilometersPerHour).value,
-                windDirection: weather.wind.direction.converted(to: .degrees).value,
-                condition: weather.condition.description,
-                conditionSymbol: weather.symbolName,
-                uvIndex: Double(weather.uvIndex.value),
-                pressure: weather.pressure.converted(to: .hectopascals).value
+                temp: current.temperature.converted(to: .celsius).value,
+                feelsLike: current.apparentTemperature.converted(to: .celsius).value,
+                humidity: current.humidity * 100,
+                windSpeed: current.wind.speed.converted(to: .kilometersPerHour).value,
+                windDirection: current.wind.direction.converted(to: .degrees).value,
+                condition: current.condition.description,
+                conditionSymbol: current.symbolName,
+                uvIndex: Double(current.uvIndex.value),
+                pressure: current.pressure.converted(to: .hectopascals).value
             )
             logger.info("Weather: \(snapshot.condition) \(snapshot.temp)°C")
             Task { @MainActor in

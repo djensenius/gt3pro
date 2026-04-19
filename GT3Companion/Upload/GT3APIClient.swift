@@ -77,6 +77,25 @@ actor GT3APIClient {
         logger.info("Registered push-to-start token")
     }
 
+    /// Create a shareable link for a ride.
+    func createShareLink(rideId: String, expiresIn: ShareExpiry) async throws -> ShareLinkResponse {
+        let payload: [String: String] = ["expiresIn": expiresIn.serverValue]
+        let body = try JSONSerialization.data(withJSONObject: payload)
+        let data = try await post(path: "/gt3/rides/\(rideId)/shares", body: body)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let response = try decoder.decode(ShareLinkResponse.self, from: data)
+        logger.info("Created share link for ride \(rideId), expires: \(expiresIn.serverValue)")
+        return response
+    }
+
+    /// Build the full shareable URL from a token.
+    nonisolated func shareURL(for token: String) -> URL? {
+        var components = URLComponents(string: "https://api.fluxhaus.io/gt3/ride.html")
+        components?.queryItems = [URLQueryItem(name: "share", value: token)]
+        return components?.url
+    }
+
     // MARK: - Private
 
     @discardableResult
@@ -172,5 +191,51 @@ enum APIError: Error {
     case httpError(statusCode: Int)
     case encodingError
     case invalidURL
+}
+
+/// Expiration presets for ride share links.
+enum ShareExpiry: String, CaseIterable, Identifiable {
+    case oneHour, oneDay, sevenDays, thirtyDays, never
+
+    var id: String { rawValue }
+
+    var serverValue: String {
+        switch self {
+        case .oneHour:    return "1h"
+        case .oneDay:     return "24h"
+        case .sevenDays:  return "7d"
+        case .thirtyDays: return "30d"
+        case .never:      return "never"
+        }
+    }
+
+    var label: String {
+        switch self {
+        case .oneHour:    return "1 Hour"
+        case .oneDay:     return "24 Hours"
+        case .sevenDays:  return "7 Days"
+        case .thirtyDays: return "30 Days"
+        case .never:      return "Never"
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .oneHour:    return "Link expires in 1 hour"
+        case .oneDay:     return "Link expires in 24 hours"
+        case .sevenDays:  return "Link expires in 7 days"
+        case .thirtyDays: return "Link expires in 30 days"
+        case .never:      return "Link never expires"
+        }
+    }
+}
+
+/// Server response when creating a share link.
+struct ShareLinkResponse: Codable {
+    let id: String
+    let token: String
+    let expiresAt: Date?
+    let createdAt: Date
+    let status: String
 }
 #endif

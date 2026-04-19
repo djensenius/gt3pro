@@ -11,6 +11,10 @@ import SwiftUI
 struct RideDetailView: View {
     let ride: PersistedRide
 
+    #if os(iOS)
+    @State private var showShareSheet = false
+    #endif
+
     /// Cache sorted samples so the sort only runs once per view evaluation.
     private struct CachedSamples {
         let sorted: [PersistedSample]
@@ -111,6 +115,22 @@ struct RideDetailView: View {
                 ride.recomputeGPSDistance()
             }
         }
+        #if os(iOS)
+        .toolbar {
+            if ride.uploaded {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showShareSheet = true
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showShareSheet) {
+            ShareRideSheet(rideId: ride.rideId)
+        }
+        #endif
     }
 
     @ViewBuilder
@@ -159,6 +179,8 @@ struct RideDetailView: View {
                             weatherDetail(icon: "sun.max.fill", label: "UV", value: String(format: "%.0f", uvIndex))
                         }
                     }
+
+                    WeatherAttributionView()
                 }
                 .padding()
                 .background(Theme.Colors.elevatedBackground)
