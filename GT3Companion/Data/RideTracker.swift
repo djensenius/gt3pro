@@ -82,6 +82,10 @@ actor RideTracker {
     private var gearModeHistogram: [Int: Int] = [:]
     private var currentWeather: WeatherSnapshot?
     private var fetchingWeather = false
+    private var weatherRetryCount = 0
+    private var lastWeatherAttempt: Date?
+    private let maxWeatherRetries = 3
+    private let weatherRetryBaseInterval: TimeInterval = 60
     // 5 minutes of no movement → end ride
     private let stopTimeout: TimeInterval = 300
 
@@ -143,6 +147,9 @@ actor RideTracker {
         speedCount = 0
         gearModeHistogram = [:]
         currentWeather = nil
+        fetchingWeather = false
+        weatherRetryCount = 0
+        lastWeatherAttempt = nil
         samples = [firstSample]
         state = .riding
         updateStats(firstSample)
@@ -207,6 +214,8 @@ actor RideTracker {
         gearModeHistogram = [:]
         currentWeather = nil
         fetchingWeather = false
+        weatherRetryCount = 0
+        lastWeatherAttempt = nil
     }
 
     func getCurrentRideId() -> String? { currentRideId }
@@ -214,6 +223,24 @@ actor RideTracker {
     func hasWeather() -> Bool { currentWeather != nil }
     func isFetchingWeather() -> Bool { fetchingWeather }
     func setFetchingWeather(_ value: Bool) { fetchingWeather = value }
+
+    /// Whether weather fetching has exhausted retries or is in a cooldown period.
+    func shouldSkipWeatherFetch() -> Bool {
+        if weatherRetryCount >= maxWeatherRetries { return true }
+        if let last = lastWeatherAttempt {
+            let cooldown = weatherRetryBaseInterval * pow(2.0, Double(weatherRetryCount))
+            return Date().timeIntervalSince(last) < cooldown
+        }
+        return false
+    }
+
+    func recordWeatherAttempt() {
+        lastWeatherAttempt = Date()
+    }
+
+    func recordWeatherFailure() {
+        weatherRetryCount += 1
+    }
 
     // MARK: - GPS Distance
 
