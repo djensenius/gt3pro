@@ -294,6 +294,43 @@ final class RideTrackerTests: XCTestCase {
         let hasWeather = await tracker.hasWeather()
         XCTAssertTrue(hasWeather)
     }
+
+    func testShouldSkipWeatherFetchAfterMaxRetries() async {
+        let tracker = RideTracker()
+        await tracker.addSample(makeSample(speed: 15.0))
+        // Exhaust retries
+        for _ in 0..<3 {
+            await tracker.recordWeatherAttempt()
+            await tracker.recordWeatherFailure()
+        }
+        let shouldSkip = await tracker.shouldSkipWeatherFetch()
+        XCTAssertTrue(shouldSkip)
+    }
+
+    func testShouldNotSkipWeatherFetchInitially() async {
+        let tracker = RideTracker()
+        await tracker.addSample(makeSample(speed: 15.0))
+        let shouldSkip = await tracker.shouldSkipWeatherFetch()
+        XCTAssertFalse(shouldSkip)
+    }
+
+    func testWeatherRetryResetsOnNewRide() async {
+        let tracker = RideTracker()
+        await tracker.addSample(makeSample(speed: 15.0))
+        // Exhaust retries
+        for _ in 0..<3 {
+            await tracker.recordWeatherAttempt()
+            await tracker.recordWeatherFailure()
+        }
+        let shouldSkipAfterRetries = await tracker.shouldSkipWeatherFetch()
+        XCTAssertTrue(shouldSkipAfterRetries)
+        // End ride via timeout (force end)
+        await tracker.forceEndRide(endBattery: 90)
+        // Start new ride
+        await tracker.addSample(makeSample(speed: 15.0))
+        let shouldSkipAfterNewRide = await tracker.shouldSkipWeatherFetch()
+        XCTAssertFalse(shouldSkipAfterNewRide)
+    }
 }
 
 private extension RideTracker {

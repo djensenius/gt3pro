@@ -109,7 +109,8 @@ extension AppCoordinator {
         guard rideState == .riding || rideState == .stopped else { return }
         let hasWeather = await rideTracker.hasWeather()
         let isFetching = await rideTracker.isFetchingWeather()
-        guard !hasWeather, !isFetching else { return }
+        let shouldSkip = await rideTracker.shouldSkipWeatherFetch()
+        guard !hasWeather, !isFetching, !shouldSkip else { return }
 
         // Use GPS sample if available, otherwise fall back to cached location
         let location: CLLocation
@@ -137,6 +138,7 @@ extension AppCoordinator {
 
         let rideId = await self.rideTracker.getCurrentRideId()
         await rideTracker.setFetchingWeather(true)
+        await rideTracker.recordWeatherAttempt()
         Task { @MainActor in
             DebugLogStore.shared.log(
                 "Weather: fetching for (\(String(format: "%.4f", location.coordinate.latitude)), "
@@ -148,7 +150,11 @@ extension AppCoordinator {
             let weather = await WeatherService.shared.fetchWeather(at: location)
             await self.rideTracker.setFetchingWeather(false)
             guard await self.rideTracker.getCurrentRideId() == rideId else { return }
-            await self.rideTracker.setWeather(weather)
+            if let weather {
+                await self.rideTracker.setWeather(weather)
+            } else {
+                await self.rideTracker.recordWeatherFailure()
+            }
         }
     }
 }
