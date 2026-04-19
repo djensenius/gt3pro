@@ -7,6 +7,7 @@
 
 #if os(iOS)
 import SwiftUI
+import UIKit
 import os
 
 private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", category: "Share")

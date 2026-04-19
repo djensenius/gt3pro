@@ -70,32 +70,44 @@ final class RideSyncService {
     /// Prioritizes newest rides, caps at `maxHydrations` per sync.
     private func hydrateSamples(newRideIds: [String], context: ModelContext) async {
         do {
-            // Find rides that haven't been hydrated yet
-            let descriptor = FetchDescriptor<PersistedRide>(
-                sortBy: [SortDescriptor(\.startTime, order: .reverse)]
-            )
-            let allRides = try context.fetch(descriptor)
-            let needsHydration = allRides.filter { ride in
-                ride.uploaded && ride.samplesHydrated != true
+            var toHydrate: [PersistedRide] = []
+
+            // Prioritize newly synced rides that need hydration
+            if !newRideIds.isEmpty {
+                let allUnhydrated = try context.fetch(
+                    FetchDescriptor<PersistedRide>(
+                        predicate: #Predicate<PersistedRide> { ride in
+                            ride.uploaded && ride.samplesHydrated != true
+                        },
+                        sortBy: [SortDescriptor(\.startTime, order: .reverse)]
+                    )
+                )
+                let newSet = Set(newRideIds)
+                let newRides = allUnhydrated.filter { newSet.contains($0.rideId) }
+                let backfill = allUnhydrated.filter { !newSet.contains($0.rideId) }
+                toHydrate = Array((newRides + backfill).prefix(maxHydrations))
+            } else {
+                var descriptor = FetchDescriptor<PersistedRide>(
+                    predicate: #Predicate<PersistedRide> { ride in
+                        ride.uploaded && ride.samplesHydrated != true
+                    },
+                    sortBy: [SortDescriptor(\.startTime, order: .reverse)]
+                )
+                descriptor.fetchLimit = maxHydrations
+                toHydrate = try context.fetch(descriptor)
             }
 
-            guard !needsHydration.isEmpty else { return }
+            guard !toHydrate.isEmpty else { return }
 
-            // Prioritize new rides, then backfill older ones
-            let newSet = Set(newRideIds)
-            let sorted = needsHydration.sorted { lhs, rhs in
-                let lhsNew = newSet.contains(lhs.rideId)
-                let rhsNew = newSet.contains(rhs.rideId)
-                if lhsNew != rhsNew { return lhsNew }
-                return lhs.startTime > rhs.startTime
-            }
-
-            let toHydrate = Array(sorted.prefix(maxHydrations))
             var hydratedCount = 0
 
             for ride in toHydrate {
                 do {
-                    let samples = try await fetchSamples(rideId: ride.rideId)
+                    let (samples, isAuthFailure) = try await fetchSamples(rideId: ride.rideId)
+                    if isAuthFailure {
+                        logger.warning("Skipping hydration for ride \(ride.rideId) due to auth failure")
+                        continue
+                    }
                     if !samples.isEmpty {
                         insertSamples(samples, for: ride)
                         hydratedCount += 1
@@ -117,7 +129,9 @@ final class RideSyncService {
         }
     }
 
-    private func fetchSamples(rideId: String) async throws -> [ServerSample] {
+    /// Returns (samples, isAuthFailure). Auth failures return ([], true) so the caller can skip
+    /// without marking the ride as hydrated.
+    private func fetchSamples(rideId: String) async throws -> ([ServerSample], Bool) {
         guard let url = URL(string: "\(baseURL)/gt3/rides/\(rideId)/samples") else {
             throw URLError(.badURL)
         }
@@ -131,7 +145,6 @@ final class RideSyncService {
 
         if let http = response as? HTTPURLResponse {
             if http.statusCode == 401 {
-                // Try token refresh and retry once
                 let refreshed = await AuthManager.shared.refreshTokenIfNeeded()
                 if refreshed {
                     var retry = request
@@ -141,13 +154,13 @@ final class RideSyncService {
                     let (retryData, retryResp) = try await URLSession.shared.data(for: retry)
                     let retryStatus = (retryResp as? HTTPURLResponse)?.statusCode ?? 0
                     guard (200...299).contains(retryStatus) else {
-                        throw URLError(.badServerResponse)
+                        return ([], true)
                     }
                     let decoded = try JSONDecoder().decode(ServerSamplesResponse.self, from: retryData)
-                    return decoded.samples
+                    return (decoded.samples, false)
                 }
                 logger.warning("Samples fetch for \(rideId): 401, token refresh failed")
-                return []
+                return ([], true)
             }
             guard (200...299).contains(http.statusCode) else {
                 throw URLError(.badServerResponse)
@@ -155,7 +168,7 @@ final class RideSyncService {
         }
 
         let decoded = try JSONDecoder().decode(ServerSamplesResponse.self, from: data)
-        return decoded.samples
+        return (decoded.samples, false)
     }
 
     private func insertSamples(_ serverSamples: [ServerSample], for ride: PersistedRide) {

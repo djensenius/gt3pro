@@ -177,14 +177,12 @@ struct SettingsView: View {
                 Button("Clear Logs", role: .destructive) { logStore.clear() }
                     .listRowBackground(Theme.Colors.elevatedBackground)
             }
-            #if DEBUG
             NavigationLink {
                 WeatherDebugView()
             } label: {
                 Label("Weather Debug", systemImage: "cloud.sun.rain.fill")
             }
             .listRowBackground(Theme.Colors.elevatedBackground)
-            #endif
         } header: {
             Text("Diagnostics")
         } footer: {
