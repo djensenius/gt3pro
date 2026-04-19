@@ -81,6 +81,7 @@ extension AppCoordinator {
             return persisted
         }
         persisted.samples = persistedSamples
+        persisted.samplesHydrated = true
 
         context.insert(persisted)
         try? context.save()

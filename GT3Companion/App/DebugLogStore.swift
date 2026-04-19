@@ -22,6 +22,7 @@ final class DebugLogStore: ObservableObject {
 
     @Published private(set) var entries: [LogEntry] = []
     @AppStorage("verboseLoggingEnabled") var verboseLoggingEnabled = true
+    @AppStorage("bleDiscoveryLoggingEnabled") var bleDiscoveryLoggingEnabled = false
 
     private init() {}
 
