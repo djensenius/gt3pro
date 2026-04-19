@@ -228,7 +228,8 @@ actor RideTracker {
     func shouldSkipWeatherFetch() -> Bool {
         if weatherRetryCount >= maxWeatherRetries { return true }
         if let last = lastWeatherAttempt {
-            let cooldown = weatherRetryBaseInterval * pow(2.0, Double(weatherRetryCount))
+            let backoffExponent = max(0, weatherRetryCount - 1)
+            let cooldown = weatherRetryBaseInterval * pow(2.0, Double(backoffExponent))
             return Date().timeIntervalSince(last) < cooldown
         }
         return false
