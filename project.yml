@@ -82,19 +82,9 @@ targets:
     dependencies:
       - target: GT3CompanionWidgets
         embed: true
-    postBuildScripts:
-      - name: "Embed Watch App"
-        script: |
-          WATCH_APP="${BUILT_PRODUCTS_DIR}/GT3CompanionWatch.app"
-          DEST="${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Watch"
-          if [ -d "$WATCH_APP" ]; then
-            mkdir -p "$DEST"
-            ditto "$WATCH_APP" "$DEST/GT3CompanionWatch.app"
-            echo "Embedded Watch app from $WATCH_APP"
-          else
-            echo "Watch app not found at $WATCH_APP — skipping embed"
-          fi
-        basedOnDependencyAnalysis: false
+      - target: GT3CompanionWatch
+        embed: true
+        codeSign: true
 
   GT3CompanionWidgets:
     type: app-extension
