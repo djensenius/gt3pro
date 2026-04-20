@@ -62,13 +62,14 @@ class PhoneWatchSessionManager: NSObject, ObservableObject {
     }
 
     /// Send battery via application context (survives Watch app not running).
-    func updateContext(battery: Int, isConnected: Bool) {
+    func updateContext(battery: Int, isConnected: Bool, rideActive: Bool = false) {
         guard let session = wcSession,
               session.activationState == .activated else { return }
         do {
             try session.updateApplicationContext([
                 "battery": battery,
-                "isConnected": isConnected
+                "isConnected": isConnected,
+                "rideActive": rideActive
             ])
         } catch {
             logger.warning("Failed to update Watch context: \(error)")

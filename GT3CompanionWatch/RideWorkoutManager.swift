@@ -24,10 +24,15 @@ class RideWorkoutManager: NSObject, ObservableObject {
         }
     }
 
-    func startWorkout() {
-        let config = HKWorkoutConfiguration()
-        config.activityType = .cycling
-        config.locationType = .outdoor
+    func startWorkout(with configuration: HKWorkoutConfiguration? = nil) {
+        guard session == nil else { return }
+
+        let config = configuration ?? {
+            let cfg = HKWorkoutConfiguration()
+            cfg.activityType = .cycling
+            cfg.locationType = .outdoor
+            return cfg
+        }()
 
         do {
             session = try HKWorkoutSession(healthStore: healthStore, configuration: config)
@@ -48,7 +53,9 @@ class RideWorkoutManager: NSObject, ObservableObject {
     }
 
     func endWorkout() {
+        guard session != nil else { return }
         session?.end()
+        session = nil
         DispatchQueue.main.async { self.isWorkoutActive = false }
     }
 }

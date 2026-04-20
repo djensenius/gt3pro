@@ -12,7 +12,7 @@ struct WatchRideView: View {
     @EnvironmentObject private var workout: RideWorkoutManager
 
     var body: some View {
-        if connectivity.isRiding {
+        if connectivity.isRiding || connectivity.rideActive {
             ridingView
         } else if connectivity.isConnected {
             standbyView
@@ -62,10 +62,18 @@ struct WatchRideView: View {
             workout.endWorkout()
         }
         .onChange(of: connectivity.isRiding) { _, riding in
-            if riding {
+            if riding && !workout.isWorkoutActive {
                 workout.requestAuthorization()
                 workout.startWorkout()
-            } else {
+            } else if !riding && !connectivity.rideActive {
+                workout.endWorkout()
+            }
+        }
+        .onChange(of: connectivity.rideActive) { _, active in
+            if active && !workout.isWorkoutActive {
+                workout.requestAuthorization()
+                workout.startWorkout()
+            } else if !active && !connectivity.isRiding {
                 workout.endWorkout()
             }
         }
