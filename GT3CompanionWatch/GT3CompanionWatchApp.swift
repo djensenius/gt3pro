@@ -10,11 +10,12 @@ import WatchKit
 import HealthKit
 
 class WatchAppDelegate: NSObject, WKApplicationDelegate {
-    var onWorkoutConfiguration: ((HKWorkoutConfiguration) -> Void)?
+    let workoutManager = RideWorkoutManager()
 
     func handle(_ workoutConfiguration: HKWorkoutConfiguration) {
         print("[Watch] Received workout configuration from iPhone: \(workoutConfiguration.activityType.rawValue)")
-        onWorkoutConfiguration?(workoutConfiguration)
+        workoutManager.requestAuthorization()
+        workoutManager.startWorkout(with: workoutConfiguration)
     }
 }
 
@@ -22,19 +23,12 @@ class WatchAppDelegate: NSObject, WKApplicationDelegate {
 struct GT3CompanionWatchApp: App {
     @WKApplicationDelegateAdaptor private var appDelegate: WatchAppDelegate
     @StateObject private var connectivity = WatchConnectivityManager.shared
-    @StateObject private var workoutManager = RideWorkoutManager()
 
     var body: some Scene {
         WindowGroup {
             WatchRideView()
                 .environmentObject(connectivity)
-                .environmentObject(workoutManager)
-                .onAppear {
-                    appDelegate.onWorkoutConfiguration = { [workoutManager] _ in
-                        workoutManager.requestAuthorization()
-                        workoutManager.startWorkout()
-                    }
-                }
+                .environmentObject(appDelegate.workoutManager)
         }
     }
 }

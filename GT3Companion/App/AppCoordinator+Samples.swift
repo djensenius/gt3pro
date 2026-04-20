@@ -76,6 +76,16 @@ extension AppCoordinator {
             )
         }
 
+        let wasRiding = !wasIdle
+        let nowIdle = await rideTracker.state == .idle
+        if wasRiding && nowIdle {
+            watchSession.updateContext(
+                battery: currentBattery,
+                isConnected: true,
+                rideActive: false
+            )
+        }
+
         await fetchWeatherIfNeeded(gpsSample: gpsSample)
         isRiding = await rideTracker.state != .idle
 
