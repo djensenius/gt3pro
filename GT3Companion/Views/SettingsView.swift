@@ -256,16 +256,28 @@ struct PrivacyPolicyView: View {
                     .font(Theme.Fonts.headerXL())
                     .foregroundStyle(Theme.Colors.textPrimary)
                 Text("""
-GT3 Companion collects ride telemetry (speed, battery, GPS route) and uploads \
-it to your personal FluxHaus server instance at api.fluxhaus.io.
+GT3 Companion collects ride telemetry (speed, battery, GPS route, surface \
+roughness) and stores it locally on your device. If you sign in with a \
+FluxHaus account, data is uploaded to your self-hosted FluxHaus Server instance.
 
 Your data is associated with your FluxHaus account and is never shared with \
-third parties. GPS data is only recorded during active rides.
+third parties. GPS and motion data are only recorded during active rides.
 
 Heart rate data from your Apple Watch is stored locally and in Apple Health. \
-It is uploaded to your server only with your consent.
+It is uploaded to your server only if you have cloud sync enabled.
 
-You can delete all local data at any time from Settings → Data → Clear Local Data.
+Weather data may be fetched during rides via Apple WeatherKit and is stored \
+with your ride data.
+
+The app does not collect analytics, use advertising SDKs, or share data with \
+Segway, Ninebot, or any other third party.
+
+You can delete all local data at any time from Settings → Data → Clear Local \
+Data. You can revoke Bluetooth, Location, Motion, or Health permissions in \
+iOS Settings at any time.
+
+For the full privacy policy, visit:
+https://github.com/djensenius/gt3pro/blob/main/PRIVACY.md
 """)
                     .font(Theme.Fonts.bodyMedium)
                     .foregroundStyle(Theme.Colors.textSecondary)

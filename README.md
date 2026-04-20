@@ -1,13 +1,17 @@
 # GT3 Companion
 
-A native SwiftUI app for the Segway SuperScooter GT3 Pro that provides:
+A native SwiftUI app for the **Segway SuperScooter GT3 Pro** that connects over Bluetooth Low Energy, reads live telemetry, records GPS routes, tracks surface roughness, monitors heart rate via Apple Watch, and optionally syncs everything to a self-hosted [FluxHaus Server](https://github.com/djensenius/FluxHaus-Server).
 
-- **Live Activity** — Speed, battery, trip data on Dynamic Island and Lock Screen
-- **Automatic ride logging** — BLE telemetry, GPS routes, surface roughness
-- **Turn-by-turn navigation** — MapKit directions with Dynamic Island integration
-- **Apple Watch companion** — Heart rate tracking, HealthKit workouts, wrist display
-- **Ride data explorer** — Charts, maps, aggregate analytics
-- **Multi-platform** — iPhone, iPad, Mac, Apple Vision Pro
+## Features
+
+- **Live Dashboard** — Real-time speed, battery, range, and gear mode with Live Activity on the Lock Screen and Dynamic Island
+- **Automatic Ride Logging** — Rides start and stop based on speed. GPS routes, surface roughness, and BLE telemetry are recorded automatically
+- **Turn-by-Turn Navigation** — MapKit directions with Dynamic Island integration
+- **Apple Watch Companion** — Speed, battery, and distance on your wrist. HealthKit workout tracking with heart rate
+- **Detailed Telemetry** — Battery voltage/current/temperature, body temp, gear mode, trip stats, estimated range, error codes
+- **Ride History** — Browse past rides with charts, maps, and aggregate analytics. Export routes as GPX
+- **Scooter Diagnostics** — Odometer, firmware versions, serial number, battery health, BMS cell voltages
+- **Multi-Platform** — iPhone, iPad, Mac (Catalyst), Apple Vision Pro
 
 ## Architecture
 
@@ -15,19 +19,60 @@ A native SwiftUI app for the Segway SuperScooter GT3 Pro that provides:
 GT3 Pro ←—BLE—→ iPhone ←—WCSession—→ Apple Watch
                    │                      │
                    ↓                      ├── Heart Rate
-              fluxhaus-server             ├── Workouts
+            FluxHaus Server               ├── HKWorkoutSession
                    │                      └── Wrist Display
-              PostgreSQL + InfluxDB → Grafana
+            PostgreSQL + InfluxDB → Grafana
 ```
+
+The iPhone is the central hub — it connects to the scooter via BLE, collects telemetry, records GPS, and optionally uploads data to your [FluxHaus Server](https://github.com/djensenius/FluxHaus-Server) instance. The Apple Watch acts as a health sensor and secondary display, communicating with the iPhone over WatchConnectivity.
+
+## Server Setup (Optional)
+
+Cloud sync requires a self-hosted [FluxHaus Server](https://github.com/djensenius/FluxHaus-Server) instance. The server provides:
+
+- **Ride storage** — PostgreSQL for ride history and metadata
+- **Telemetry streaming** — InfluxDB for time-series telemetry data
+- **Dashboards** — Grafana for visualization and analytics
+- **Authentication** — OIDC via [Authentik](https://goauthentik.io/) (or any OIDC provider)
+
+See the [FluxHaus Server README](https://github.com/djensenius/FluxHaus-Server#readme) for setup instructions. The app works fully offline without a server — all data is stored locally on-device.
+
+### Configuring the App for Your Server
+
+By default the app points to `api.fluxhaus.io`. To use your own server, set these keys in `Info.plist`:
+
+| Key | Description | Default |
+|-----|-------------|---------|
+| `OIDCIssuerBase` | Your OIDC issuer URL | `https://auth.fluxhaus.io/application/o/gt3-companion` |
+| `OIDCClientID` | OIDC client ID | `gt3companion` |
+
+The API base URL is configured in `GT3APIClient.swift`.
 
 ## Building
 
-Requires macOS with Xcode 16+.
+Requires **macOS** with **Xcode 16+** and **SwiftLint**.
 
 ```bash
 brew install swiftlint
 open GT3Companion.xcodeproj
 ```
+
+### Command-Line Builds
+
+```bash
+# iOS
+xcodebuild -project GT3Companion.xcodeproj \
+  -scheme "GT3Companion" \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -configuration Debug build CODE_SIGNING_ALLOWED=NO
+
+# macOS
+xcodebuild -project GT3Companion.xcodeproj \
+  -scheme "GT3CompanionMac" \
+  -configuration Debug build CODE_SIGNING_ALLOWED=NO
+```
+
+> **⚠️ Do not run `xcodegen generate` locally.** The checked-in `.xcodeproj` is the source of truth. XcodeGen is only used in CI. Running it locally resets code signing, capabilities, and entitlements.
 
 ## First-Time Setup: Extracting the Pairing Password
 
@@ -109,6 +154,32 @@ xcodebuild test \
   CODE_SIGNING_ALLOWED=NO
 ```
 
+Unit tests cover crypto, frame parsing, telemetry parsing, and data models. BLE and HealthKit functionality require a physical device and cannot be tested in the simulator.
+
+## Project Structure
+
+```
+GT3Companion/
+├── App/          # @main entry point, AppDelegate, AppCoordinator
+├── BLE/          # CoreBluetooth transport, frame codec
+├── Crypto/       # AES-128, key derivation, auth handshake
+├── Data/         # Register reader, parser, GPS, ride tracker
+├── Upload/       # API client, upload queue
+├── Views/        # SwiftUI views and components
+├── Navigation/   # MapKit turn-by-turn
+├── Health/       # WatchConnectivity, HealthKit bridge
+GT3CompanionWatch/  # watchOS companion app
+GT3CompanionWidgets/ # Live Activity widget extension
+GT3CompanionMac/    # macOS target
+GT3CompanionVision/ # visionOS target
+Shared/             # Code shared between targets (SwiftData models, AuthManager)
+docs/               # BLE protocol spec, Grafana dashboard
+```
+
+## Privacy
+
+See the [Privacy Policy](PRIVACY.md) for details on what data the app collects and how it is used.
+
 ## License
 
-MIT
+Apache 2.0 — see [LICENSE](LICENSE) for details.
