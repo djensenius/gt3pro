@@ -118,6 +118,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         Task {
             do {
                 try await apiClient.requestActivityStart()
+                debugLog.log("Push-to-start request succeeded", category: "BLE")
             } catch {
                 debugLog.log("Push-to-start failed: \(error)", category: "BLE", level: .error)
             }

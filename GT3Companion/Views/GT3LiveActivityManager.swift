@@ -49,14 +49,26 @@ class GT3LiveActivityManager {
             let weakManager = self
             for await tokenData in Activity<GT3RideAttributes>.pushToStartTokenUpdates {
                 let tokenHex = tokenData.map { String(format: "%02x", $0) }.joined()
+                let tokenPrefix = String(tokenHex.prefix(8))
                 await MainActor.run {
-                    DebugLogStore.shared.log("Received push-to-start token", category: "LiveActivity")
+                    DebugLogStore.shared.log(
+                        "Received push-to-start token: \(tokenPrefix)...",
+                        category: "LiveActivity"
+                    )
                 }
 
                 let alreadyRegistered = await MainActor.run {
                     weakManager?.lastRegisteredToken == tokenHex
                 }
-                if alreadyRegistered { continue }
+                if alreadyRegistered {
+                    await MainActor.run {
+                        DebugLogStore.shared.log(
+                            "Token \(tokenPrefix)... already registered — skipping",
+                            category: "LiveActivity", level: .debug
+                        )
+                    }
+                    continue
+                }
 
                 var registered = false
                 for attempt in 0..<3 {
@@ -76,7 +88,8 @@ class GT3LiveActivityManager {
                         }
                         await MainActor.run {
                             DebugLogStore.shared.log(
-                                "Registered push-to-start token", category: "LiveActivity"
+                                "Registered push-to-start token \(tokenPrefix)... with server",
+                                category: "LiveActivity"
                             )
                         }
                         registered = true
@@ -84,7 +97,7 @@ class GT3LiveActivityManager {
                     } catch {
                         await MainActor.run {
                             DebugLogStore.shared.log(
-                                "Token registration attempt \(attempt + 1) failed: \(error)",
+                                "Token \(tokenPrefix)... registration attempt \(attempt + 1) failed: \(error)",
                                 category: "LiveActivity", level: .warning
                             )
                         }
@@ -93,7 +106,7 @@ class GT3LiveActivityManager {
                 if !registered {
                     await MainActor.run {
                         DebugLogStore.shared.log(
-                            "Failed to register push-to-start token after 3 attempts",
+                            "Failed to register token \(tokenPrefix)... after 3 attempts",
                             category: "LiveActivity", level: .error
                         )
                     }

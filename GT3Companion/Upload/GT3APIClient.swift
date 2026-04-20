@@ -60,8 +60,10 @@ actor GT3APIClient {
     /// Request the server to send a push-to-start APNs notification
     /// to create a Live Activity (used on background BLE reconnect).
     func requestActivityStart() async throws {
-        try await post(path: "/gt3/activity/start", body: Data("{}".utf8))
-        logger.info("Requested push-to-start from server")
+        let data = try await post(path: "/gt3/activity/start", body: Data("{}".utf8))
+        if let responseStr = String(data: data, encoding: .utf8) {
+            logger.info("Push-to-start response: \(responseStr)")
+        }
     }
 
     /// Register a push-to-start token with the server.
