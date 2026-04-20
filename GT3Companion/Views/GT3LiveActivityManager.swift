@@ -28,6 +28,9 @@ class GT3LiveActivityManager {
     private var lastRegisteredToken: String?
     private let debugLog = DebugLogStore.shared
 
+    /// Key for persisting the latest push-to-start token across app launches.
+    private static let tokenDefaultsKey = "pushToStartToken"
+
     private init() {}
 
     private func laLog(_ message: String, level: LogEntry.Level = .info) {
@@ -50,6 +53,10 @@ class GT3LiveActivityManager {
             for await tokenData in Activity<GT3RideAttributes>.pushToStartTokenUpdates {
                 let tokenHex = tokenData.map { String(format: "%02x", $0) }.joined()
                 let tokenPrefix = String(tokenHex.prefix(8))
+
+                // Persist token so we can re-register after login
+                UserDefaults.standard.set(tokenHex, forKey: GT3LiveActivityManager.tokenDefaultsKey)
+
                 await MainActor.run {
                     DebugLogStore.shared.log(
                         "Received push-to-start token: \(tokenPrefix)...",
@@ -70,47 +77,78 @@ class GT3LiveActivityManager {
                     continue
                 }
 
-                var registered = false
-                for attempt in 0..<3 {
-                    if attempt > 0 {
-                        do {
-                            try await Task.sleep(for: .seconds(Double(attempt) * 3))
-                        } catch is CancellationError {
-                            return
-                        } catch {
-                            continue
-                        }
-                    }
-                    do {
-                        try await apiClient.registerPushToStartToken(tokenHex)
-                        await MainActor.run {
-                            weakManager?.lastRegisteredToken = tokenHex
-                        }
-                        await MainActor.run {
-                            DebugLogStore.shared.log(
-                                "Registered push-to-start token \(tokenPrefix)... with server",
-                                category: "LiveActivity"
-                            )
-                        }
-                        registered = true
-                        break
-                    } catch {
-                        await MainActor.run {
-                            DebugLogStore.shared.log(
-                                "Token \(tokenPrefix)... registration attempt \(attempt + 1) failed: \(error)",
-                                category: "LiveActivity", level: .warning
-                            )
-                        }
-                    }
+                await Self.registerToken(tokenHex, apiClient: apiClient, manager: weakManager)
+            }
+        }
+    }
+
+    /// Re-register the persisted push-to-start token with the server.
+    /// Call after login to handle tokens that arrived before auth was ready.
+    func reregisterTokenIfNeeded(apiClient: GT3APIClient) {
+        guard let tokenHex = UserDefaults.standard.string(
+            forKey: Self.tokenDefaultsKey
+        ) else {
+            debugLog.log("No persisted push-to-start token to re-register", category: "LiveActivity", level: .debug)
+            return
+        }
+        if lastRegisteredToken == tokenHex {
+            debugLog.log(
+                "Token \(tokenHex.prefix(8))... already registered — skipping re-register",
+                category: "LiveActivity", level: .debug
+            )
+            return
+        }
+        debugLog.log("Re-registering persisted token \(tokenHex.prefix(8))... after auth", category: "LiveActivity")
+        Task {
+            await Self.registerToken(tokenHex, apiClient: apiClient, manager: self)
+        }
+    }
+
+    private static func registerToken(
+        _ tokenHex: String,
+        apiClient: GT3APIClient,
+        manager: GT3LiveActivityManager?
+    ) async {
+        let tokenPrefix = String(tokenHex.prefix(8))
+        var registered = false
+        for attempt in 0..<3 {
+            if attempt > 0 {
+                do {
+                    try await Task.sleep(for: .seconds(Double(attempt) * 3))
+                } catch is CancellationError {
+                    return
+                } catch {
+                    continue
                 }
-                if !registered {
-                    await MainActor.run {
-                        DebugLogStore.shared.log(
-                            "Failed to register token \(tokenPrefix)... after 3 attempts",
-                            category: "LiveActivity", level: .error
-                        )
-                    }
+            }
+            do {
+                try await apiClient.registerPushToStartToken(tokenHex)
+                await MainActor.run {
+                    manager?.lastRegisteredToken = tokenHex
                 }
+                await MainActor.run {
+                    DebugLogStore.shared.log(
+                        "Registered push-to-start token \(tokenPrefix)... with server",
+                        category: "LiveActivity"
+                    )
+                }
+                registered = true
+                break
+            } catch {
+                await MainActor.run {
+                    DebugLogStore.shared.log(
+                        "Token \(tokenPrefix)... registration attempt \(attempt + 1) failed: \(error)",
+                        category: "LiveActivity", level: .warning
+                    )
+                }
+            }
+        }
+        if !registered {
+            await MainActor.run {
+                DebugLogStore.shared.log(
+                    "Failed to register token \(tokenPrefix)... after 3 attempts",
+                    category: "LiveActivity", level: .error
+                )
             }
         }
     }
