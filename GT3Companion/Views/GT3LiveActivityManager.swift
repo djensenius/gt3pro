@@ -31,6 +31,15 @@ class GT3LiveActivityManager {
     /// Key for persisting the latest push-to-start token across app launches.
     private static let tokenDefaultsKey = "pushToStartToken"
 
+    /// Clear the persisted push-to-start token when the server reports it as invalid.
+    /// This forces iOS to deliver a fresh token via `pushToStartTokenUpdates`.
+    func clearCachedToken() {
+        let old = UserDefaults.standard.string(forKey: Self.tokenDefaultsKey)
+        UserDefaults.standard.removeObject(forKey: Self.tokenDefaultsKey)
+        lastRegisteredToken = nil
+        laLog("Cleared cached token \(old?.prefix(8) ?? "nil")...", level: .warning)
+    }
+
     private init() {}
 
     private func laLog(_ message: String, level: LogEntry.Level = .info) {

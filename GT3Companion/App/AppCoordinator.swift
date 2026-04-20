@@ -118,8 +118,16 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         debugLog.log("Calling POST /gt3/activity/start", category: "BLE")
         Task {
             do {
-                try await apiClient.requestActivityStart()
-                debugLog.log("Push-to-start request succeeded", category: "BLE")
+                let success = try await apiClient.requestActivityStart()
+                if success {
+                    debugLog.log("Push-to-start request succeeded", category: "BLE")
+                } else {
+                    debugLog.log(
+                        "Push-to-start: server reported all tokens failed — clearing cached token",
+                        category: "BLE", level: .warning
+                    )
+                    liveActivityManager.clearCachedToken()
+                }
             } catch {
                 debugLog.log("Push-to-start failed: \(error)", category: "BLE", level: .error)
             }
