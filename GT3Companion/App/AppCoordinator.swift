@@ -95,6 +95,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         self.storedPassword = storedPassword
         connectionManager.start(storedPassword: storedPassword)
         liveActivityManager.observePushToStartToken(apiClient: apiClient)
+        liveActivityManager.reregisterTokenIfNeeded(apiClient: apiClient)
         Task {
             await liveActivityManager.endRideActivity()
             await retryPendingUploads()
