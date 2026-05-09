@@ -19,7 +19,7 @@ struct RidePhotoMapAnnotation: Identifiable {
     let id: String
     let latitude: Double
     let longitude: Double
-    let imageData: Data
+    let image: UIImage?
     let createdAt: Date
 }
 
@@ -59,12 +59,12 @@ private func speedColor(speed: Double, maxSpeed: Double) -> Color {
 
 struct MapRouteView: View {
     let coordinates: [RouteCoordinate]
-    let photoAnnotations: [RidePhotoMapAnnotation]
+    let ridePhotos: [RidePhotoMapAnnotation]
     @State private var selectedPhoto: RidePhotoMapAnnotation?
 
-    init(coordinates: [RouteCoordinate], photoAnnotations: [RidePhotoMapAnnotation] = []) {
+    init(coordinates: [RouteCoordinate], ridePhotos: [RidePhotoMapAnnotation] = []) {
         self.coordinates = coordinates
-        self.photoAnnotations = photoAnnotations
+        self.ridePhotos = ridePhotos
     }
 
     private var segments: [SpeedSegment] {
@@ -134,14 +134,14 @@ struct MapRouteView: View {
                             .foregroundStyle(Theme.Colors.error)
                     }
                 }
-                ForEach(photoAnnotations) { photo in
+                ForEach(ridePhotos) { photo in
                     Annotation("Photo", coordinate: CLLocationCoordinate2D(
                         latitude: photo.latitude, longitude: photo.longitude
                     )) {
                         Button {
                             selectedPhoto = photo
                         } label: {
-                            if let image = UIImage(data: photo.imageData) {
+                            if let image = photo.image {
                                 Image(uiImage: image)
                                     .resizable()
                                     .scaledToFill()
@@ -167,7 +167,7 @@ struct MapRouteView: View {
             .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius))
             .sheet(item: $selectedPhoto) { photo in
                 VStack(spacing: Theme.Spacing.medium) {
-                    if let image = UIImage(data: photo.imageData) {
+                    if let image = photo.image {
                         Image(uiImage: image)
                             .resizable()
                             .scaledToFit()

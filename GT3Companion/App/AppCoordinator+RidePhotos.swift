@@ -1,6 +1,5 @@
 #if os(iOS)
 import SwiftData
-import UIKit
 import os
 
 private let ridePhotoLogger = Logger(
@@ -96,7 +95,11 @@ extension AppCoordinator {
         let uploadedId = await uploadQueue.uploadRidePhoto(rideId: ride.rideId, payload: payload)
         photo.uploadAttemptedAt = Date()
         photo.uploaded = uploadedId != nil
-        try? PersistenceController.shared.context.save()
+        do {
+            try PersistenceController.shared.context.save()
+        } catch {
+            ridePhotoLogger.error("Failed saving photo upload state: \(error.localizedDescription)")
+        }
     }
 
     private func currentPhotoCoordinates() -> (Double?, Double?) {
@@ -110,13 +113,16 @@ extension AppCoordinator {
     }
 
     private func normalizedPhotoData(_ imageData: Data) -> Data? {
-        guard let image = UIImage(data: imageData) else { return nil }
-        return image.jpegData(compressionQuality: 0.82)
+        RidePhotoPickerSupport.compressJPEGData(imageData)
     }
 
     private func fallbackRideCoordinate(for ride: PersistedRide) -> (Double?, Double?) {
-        let sorted = (ride.samples ?? []).sorted { $0.timestamp < $1.timestamp }
-        if let match = sorted.reversed().first(where: { $0.latitude != nil && $0.longitude != nil }) {
+        let latestValid = (ride.samples ?? []).reduce(nil as PersistedSample?) { latest, sample in
+            guard sample.latitude != nil, sample.longitude != nil else { return latest }
+            guard let latest else { return sample }
+            return sample.timestamp > latest.timestamp ? sample : latest
+        }
+        if let match = latestValid {
             return (match.latitude, match.longitude)
         }
         return (nil, nil)

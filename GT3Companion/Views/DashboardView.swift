@@ -71,14 +71,7 @@ struct DashboardView: View {
                 }
             }
         }
-        .alert("Ride Photos", isPresented: Binding(
-            get: { photoAttachStatus != nil },
-            set: { if !$0 { photoAttachStatus = nil } }
-        )) {
-            Button("OK", role: .cancel) { photoAttachStatus = nil }
-        } message: {
-            Text(photoAttachStatus ?? "")
-        }
+        .ridePhotoStatusAlert($photoAttachStatus)
         #endif
     }
 

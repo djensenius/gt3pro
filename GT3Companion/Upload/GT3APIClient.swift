@@ -39,10 +39,11 @@ actor GT3APIClient {
     ///
     /// TODO(API): Server endpoint should accept this JSON contract at
     /// `POST /gt3/rides/:rideId/photos` and return `{ "id": "<photoId>" }`.
-    /// - capturedAt: ISO8601 capture timestamp
-    /// - latitude/longitude: optional geotag used for route placement
-    /// - mimeType: currently `image/jpeg`
-    /// - imageData: binary image bytes
+    /// Payload fields:
+    /// - `capturedAt`: ISO8601 capture timestamp
+    /// - `latitude` / `longitude`: optional geotag used for route placement
+    /// - `mimeType`: currently `image/jpeg`
+    /// - `imageData`: base64 string in JSON (Swift `Data` Codable encoding)
     func uploadRidePhoto(rideId: String, payload: RidePhotoUploadPayload) async throws -> String? {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601

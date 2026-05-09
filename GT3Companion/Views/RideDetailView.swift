@@ -9,6 +9,7 @@ import Charts
 import SwiftUI
 #if os(iOS)
 import PhotosUI
+import UIKit
 #endif
 
 struct RideDetailView: View {
@@ -28,6 +29,9 @@ struct RideDetailView: View {
         let speeds: [(Date, Double)]
         let batteries: [(Date, Int)]
         let temps: [TempSample]
+        #if os(iOS)
+        let photos: [RidePhotoDisplay]
+        #endif
 
         init(ride: PersistedRide) {
             let all = (ride.samples ?? []).sorted { $0.timestamp < $1.timestamp }
@@ -38,6 +42,19 @@ struct RideDetailView: View {
             self.speeds = all.map { ($0.timestamp, $0.speed) }
             self.batteries = all.map { ($0.timestamp, $0.battery) }
             self.temps = all.map { TempSample(timestamp: $0.timestamp, bms: $0.bmsTemp) }
+            #if os(iOS)
+            self.photos = (ride.photos ?? [])
+                .sorted { $0.createdAt < $1.createdAt }
+                .map { photo in
+                    RidePhotoDisplay(
+                        id: photo.photoId,
+                        createdAt: photo.createdAt,
+                        image: UIImage(data: photo.imageData),
+                        latitude: photo.latitude,
+                        longitude: photo.longitude
+                    )
+                }
+            #endif
         }
     }
 
@@ -46,17 +63,27 @@ struct RideDetailView: View {
         let bms: Double
     }
 
+    #if os(iOS)
+    private struct RidePhotoDisplay: Identifiable {
+        let id: String
+        let createdAt: Date
+        let image: UIImage?
+        let latitude: Double?
+        let longitude: Double?
+    }
+    #endif
+
     private var cache: CachedSamples { CachedSamples(ride: ride) }
 
     #if os(iOS)
     private var photoAnnotations: [RidePhotoMapAnnotation] {
-        ride.sortedPhotos.compactMap { photo in
+        cache.photos.compactMap { photo in
             guard let latitude = photo.latitude, let longitude = photo.longitude else { return nil }
             return RidePhotoMapAnnotation(
-                id: photo.photoId,
+                id: photo.id,
                 latitude: latitude,
                 longitude: longitude,
-                imageData: photo.imageData,
+                image: photo.image,
                 createdAt: photo.createdAt
             )
         }
@@ -164,14 +191,7 @@ struct RideDetailView: View {
                 }
             }
         }
-        .alert("Ride Photos", isPresented: Binding(
-            get: { photoAttachStatus != nil },
-            set: { if !$0 { photoAttachStatus = nil } }
-        )) {
-            Button("OK", role: .cancel) { photoAttachStatus = nil }
-        } message: {
-            Text(photoAttachStatus ?? "")
-        }
+        .ridePhotoStatusAlert($photoAttachStatus)
         #endif
     }
 
@@ -255,7 +275,7 @@ struct RideDetailView: View {
             #if os(iOS)
             MapRouteView(
                 coordinates: cache.routes,
-                photoAnnotations: photoAnnotations
+                ridePhotos: photoAnnotations
             )
                 .padding(.horizontal)
             #endif
@@ -283,7 +303,7 @@ struct RideDetailView: View {
             }
             .padding(.horizontal)
 
-            if ride.sortedPhotos.isEmpty {
+            if cache.photos.isEmpty {
                 RoundedRectangle(cornerRadius: Theme.cornerRadius)
                     .fill(Theme.Colors.secondaryBackground)
                     .frame(height: 110)
@@ -294,9 +314,9 @@ struct RideDetailView: View {
                     .padding(.horizontal)
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: Theme.Spacing.small) {
-                        ForEach(ride.sortedPhotos, id: \.photoId) { photo in
-                            if let image = UIImage(data: photo.imageData) {
+                    LazyHStack(spacing: Theme.Spacing.small) {
+                        ForEach(cache.photos) { photo in
+                            if let image = photo.image {
                                 VStack(alignment: .leading, spacing: 6) {
                                     Image(uiImage: image)
                                         .resizable()
