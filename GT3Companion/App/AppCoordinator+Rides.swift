@@ -19,6 +19,7 @@ extension AppCoordinator {
     func handleRideComplete(_ rideLog: RideLog) async {
         rideLogger.info("Ride complete: \(rideLog.totalDistance) km")
         let context = PersistenceController.shared.context
+        let localRideId = rideLog.rideId
         let persisted = PersistedRide(
             rideId: rideLog.rideId,
             startTime: rideLog.startTime,
@@ -85,6 +86,7 @@ extension AppCoordinator {
 
         context.insert(persisted)
         try? context.save()
+        await processPendingRidePhotos(for: persisted, localRideId: localRideId)
         await uploadQueue.flushSamples()
 
         // Upload enriched snapshot with ride-end inferred values
@@ -106,6 +108,7 @@ extension AppCoordinator {
             persisted.rideId = serverId
             persisted.uploaded = true
             try? context.save()
+            await processPendingRidePhotos(for: persisted)
         } else {
             let encoder = JSONEncoder()
             encoder.dateEncodingStrategy = .iso8601
@@ -120,8 +123,14 @@ extension AppCoordinator {
 
     func retryPendingUploads() async {
         let context = PersistenceController.shared.context
-        guard let items = try? context.fetch(FetchDescriptor<UploadQueueItem>()),
-              !items.isEmpty else { return }
+        guard let items = try? context.fetch(FetchDescriptor<UploadQueueItem>()) else {
+            await retryPendingRidePhotoUploads()
+            return
+        }
+        guard !items.isEmpty else {
+            await retryPendingRidePhotoUploads()
+            return
+        }
         rideLogger.info("Found \(items.count) pending upload(s) to retry")
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
@@ -138,6 +147,7 @@ extension AppCoordinator {
                     if let match = try? context.fetch(FetchDescriptor(predicate: pred)).first {
                         match.rideId = serverId
                         match.uploaded = true
+                        await processPendingRidePhotos(for: match)
                     }
                 }
                 context.delete(item)
@@ -150,6 +160,7 @@ extension AppCoordinator {
                 rideLogger.warning("Retry \(item.endpoint) failed (#\(item.retryCount)): \(error)")
             }
         }
+        await retryPendingRidePhotoUploads()
     }
 
     /// Auto-launch the Watch companion app to start a workout session.

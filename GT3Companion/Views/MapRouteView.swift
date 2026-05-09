@@ -15,6 +15,14 @@ struct RouteCoordinate {
     let speed: Double
 }
 
+struct RidePhotoMapAnnotation: Identifiable {
+    let id: String
+    let latitude: Double
+    let longitude: Double
+    let imageData: Data
+    let createdAt: Date
+}
+
 /// A segment of consecutive coordinates sharing a similar speed color.
 private struct SpeedSegment: Identifiable {
     let id: Int
@@ -51,6 +59,13 @@ private func speedColor(speed: Double, maxSpeed: Double) -> Color {
 
 struct MapRouteView: View {
     let coordinates: [RouteCoordinate]
+    let photoAnnotations: [RidePhotoMapAnnotation]
+    @State private var selectedPhoto: RidePhotoMapAnnotation?
+
+    init(coordinates: [RouteCoordinate], photoAnnotations: [RidePhotoMapAnnotation] = []) {
+        self.coordinates = coordinates
+        self.photoAnnotations = photoAnnotations
+    }
 
     private var segments: [SpeedSegment] {
         guard coordinates.count >= 2 else { return [] }
@@ -119,6 +134,30 @@ struct MapRouteView: View {
                             .foregroundStyle(Theme.Colors.error)
                     }
                 }
+                ForEach(photoAnnotations) { photo in
+                    Annotation("Photo", coordinate: CLLocationCoordinate2D(
+                        latitude: photo.latitude, longitude: photo.longitude
+                    )) {
+                        Button {
+                            selectedPhoto = photo
+                        } label: {
+                            if let image = UIImage(data: photo.imageData) {
+                                Image(uiImage: image)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 36, height: 36)
+                                    .clipShape(Circle())
+                                    .overlay(Circle().stroke(.white, lineWidth: 2))
+                                    .shadow(radius: 2)
+                            } else {
+                                Image(systemName: "photo.circle.fill")
+                                    .font(.title2)
+                                    .foregroundStyle(Theme.Colors.accent)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
                 ForEach(segments) { segment in
                     MapPolyline(coordinates: segment.coordinates)
                         .stroke(speedColor(speed: segment.speed, maxSpeed: maxSpeed), lineWidth: 4)
@@ -126,6 +165,22 @@ struct MapRouteView: View {
             }
             .frame(height: 250)
             .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius))
+            .sheet(item: $selectedPhoto) { photo in
+                VStack(spacing: Theme.Spacing.medium) {
+                    if let image = UIImage(data: photo.imageData) {
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFit()
+                    } else {
+                        ContentUnavailableView("Unable to load photo", systemImage: "photo")
+                    }
+                    Text(photo.createdAt.formatted(date: .abbreviated, time: .shortened))
+                        .font(Theme.Fonts.bodySmall)
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                }
+                .padding()
+                .presentationDetents([.medium, .large])
+            }
         }
     }
 }

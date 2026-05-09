@@ -7,12 +7,18 @@
 
 import Charts
 import SwiftUI
+#if os(iOS)
+import PhotosUI
+#endif
 
 struct RideDetailView: View {
     let ride: PersistedRide
 
     #if os(iOS)
+    @EnvironmentObject private var coordinator: AppCoordinator
     @State private var showShareSheet = false
+    @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var photoAttachStatus: String?
     #endif
 
     /// Cache sorted samples so the sort only runs once per view evaluation.
@@ -41,6 +47,21 @@ struct RideDetailView: View {
     }
 
     private var cache: CachedSamples { CachedSamples(ride: ride) }
+
+    #if os(iOS)
+    private var photoAnnotations: [RidePhotoMapAnnotation] {
+        ride.sortedPhotos.compactMap { photo in
+            guard let latitude = photo.latitude, let longitude = photo.longitude else { return nil }
+            return RidePhotoMapAnnotation(
+                id: photo.photoId,
+                latitude: latitude,
+                longitude: longitude,
+                imageData: photo.imageData,
+                createdAt: photo.createdAt
+            )
+        }
+    }
+    #endif
 
     var body: some View {
         ZStack {
@@ -94,6 +115,9 @@ struct RideDetailView: View {
 
                     weatherSection
                     routeSection
+                    #if os(iOS)
+                    photosSection
+                    #endif
                     speedChartSection
                     batteryChartSection
                     tempChartSection
@@ -129,6 +153,24 @@ struct RideDetailView: View {
         }
         .sheet(isPresented: $showShareSheet) {
             ShareRideSheet(rideId: ride.rideId)
+        }
+        .onChange(of: selectedPhotoItem) { _, newItem in
+            guard let newItem else { return }
+            Task {
+                let success = await handleRidePhotoSelection(item: newItem)
+                await MainActor.run {
+                    photoAttachStatus = success ? "Photo added to ride." : "Could not add photo."
+                    selectedPhotoItem = nil
+                }
+            }
+        }
+        .alert("Ride Photos", isPresented: Binding(
+            get: { photoAttachStatus != nil },
+            set: { if !$0 { photoAttachStatus = nil } }
+        )) {
+            Button("OK", role: .cancel) { photoAttachStatus = nil }
+        } message: {
+            Text(photoAttachStatus ?? "")
         }
         #endif
     }
@@ -211,11 +253,76 @@ struct RideDetailView: View {
                 .foregroundStyle(Theme.Colors.textPrimary)
                 .padding(.horizontal)
             #if os(iOS)
-            MapRouteView(coordinates: cache.routes)
+            MapRouteView(
+                coordinates: cache.routes,
+                photoAnnotations: photoAnnotations
+            )
                 .padding(.horizontal)
             #endif
         }
     }
+
+    #if os(iOS)
+    private var photosSection: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.small) {
+            HStack {
+                Text("Photos")
+                    .font(Theme.Fonts.headerLarge())
+                    .foregroundStyle(Theme.Colors.textPrimary)
+                Spacer()
+                PhotosPicker(
+                    selection: $selectedPhotoItem,
+                    matching: .images,
+                    photoLibrary: .shared()
+                ) {
+                    Label("Add", systemImage: "plus")
+                        .font(Theme.Fonts.bodySmall)
+                }
+                .buttonStyle(.bordered)
+                .tint(Theme.Colors.accent)
+            }
+            .padding(.horizontal)
+
+            if ride.sortedPhotos.isEmpty {
+                RoundedRectangle(cornerRadius: Theme.cornerRadius)
+                    .fill(Theme.Colors.secondaryBackground)
+                    .frame(height: 110)
+                    .overlay {
+                        Text("No photos attached")
+                            .foregroundStyle(Theme.Colors.textSecondary)
+                    }
+                    .padding(.horizontal)
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: Theme.Spacing.small) {
+                        ForEach(ride.sortedPhotos, id: \.photoId) { photo in
+                            if let image = UIImage(data: photo.imageData) {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Image(uiImage: image)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 110, height: 110)
+                                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                                    Text(photo.createdAt, style: .time)
+                                        .font(Theme.Fonts.caption)
+                                        .foregroundStyle(Theme.Colors.textSecondary)
+                                }
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+            }
+        }
+    }
+
+    private func handleRidePhotoSelection(item: PhotosPickerItem) async -> Bool {
+        guard let imageData = await RidePhotoPickerSupport.loadCompressedImageData(from: item) else {
+            return false
+        }
+        return await coordinator.addPhoto(imageData: imageData, to: ride)
+    }
+    #endif
 
     private var speedChartSection: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.small) {

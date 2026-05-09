@@ -6,10 +6,15 @@
 //
 
 import SwiftUI
+#if os(iOS)
+import PhotosUI
+#endif
 
 struct DashboardView: View {
     #if os(iOS)
     @EnvironmentObject private var coordinator: AppCoordinator
+    @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var photoAttachStatus: String?
     @ObservedObject private var auth = AuthManager.shared
 
     private var isDemo: Bool { auth.isDemoMode }
@@ -55,6 +60,26 @@ struct DashboardView: View {
             }
             .navigationTitle("GT3 Companion")
         }
+        #if os(iOS)
+        .onChange(of: selectedPhotoItem) { _, newItem in
+            guard let newItem else { return }
+            Task {
+                let success = await handleDashboardPhotoSelection(item: newItem)
+                await MainActor.run {
+                    photoAttachStatus = success ? "Photo attached to current ride." : "Could not attach photo."
+                    selectedPhotoItem = nil
+                }
+            }
+        }
+        .alert("Ride Photos", isPresented: Binding(
+            get: { photoAttachStatus != nil },
+            set: { if !$0 { photoAttachStatus = nil } }
+        )) {
+            Button("OK", role: .cancel) { photoAttachStatus = nil }
+        } message: {
+            Text(photoAttachStatus ?? "")
+        }
+        #endif
     }
 
     private var demoBanner: some View {
@@ -184,6 +209,24 @@ struct DashboardView: View {
             }
 
             #if os(iOS)
+            if coordinator.isRiding {
+                PhotosPicker(
+                    selection: $selectedPhotoItem,
+                    matching: .images,
+                    photoLibrary: .shared()
+                ) {
+                    Label("Attach Photo to Current Ride", systemImage: "camera.fill")
+                        .font(Theme.Fonts.bodyMedium)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, Theme.Spacing.small)
+                }
+                .buttonStyle(.bordered)
+                .tint(Theme.Colors.accent)
+                .padding(.horizontal)
+            }
+            #endif
+
+            #if os(iOS)
             PowerSlideButton(
                 title: "Slide to Power Off",
                 systemImage: "power",
@@ -218,6 +261,15 @@ struct DashboardView: View {
         default: return "Mode \(gearMode)"
         }
     }
+
+    #if os(iOS)
+    private func handleDashboardPhotoSelection(item: PhotosPickerItem) async -> Bool {
+        guard let imageData = await RidePhotoPickerSupport.loadCompressedImageData(from: item) else {
+            return false
+        }
+        return await coordinator.addPhotoToCurrentRide(imageData: imageData)
+    }
+    #endif
 }
 
 #if DEBUG

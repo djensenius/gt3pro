@@ -69,6 +69,17 @@ actor UploadQueue {
         }
     }
 
+    /// Upload a ride photo attachment.
+    func uploadRidePhoto(rideId: String, payload: RidePhotoUploadPayload) async -> String? {
+        do {
+            return try await apiClient.uploadRidePhoto(rideId: rideId, payload: payload)
+        } catch {
+            logger.error("Failed to upload ride photo: \(error)")
+            debugLog("Ride photo upload failed: \(error.localizedDescription)", level: .error)
+            return nil
+        }
+    }
+
     /// Upload a scooter snapshot.
     func uploadSnapshot(_ snapshot: [String: String]) async {
         do {

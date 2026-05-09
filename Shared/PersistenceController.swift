@@ -19,6 +19,7 @@ final class PersistenceController {
         let schema = Schema([
             PersistedRide.self,
             PersistedSample.self,
+            PersistedRidePhoto.self,
             UploadQueueItem.self,
             StoredCredential.self
         ])
