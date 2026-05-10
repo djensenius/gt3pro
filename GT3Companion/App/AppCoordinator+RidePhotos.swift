@@ -59,7 +59,10 @@ extension AppCoordinator {
         }
 
         if ride.uploaded {
-            await uploadRidePhoto(photo, for: ride)
+            Task { [weak self] in
+                guard let self else { return }
+                await self.uploadRidePhoto(photo, for: ride)
+            }
         }
         return true
     }
