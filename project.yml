@@ -245,6 +245,11 @@ targets:
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         ITSAppUsesNonExemptEncryption: false
         LSApplicationCategoryType: public.app-category.travel
+        CFBundleURLTypes:
+          - CFBundleURLSchemes:
+              - gt3companion
+        OIDCIssuerBase: https://auth.fluxhaus.io/application/o/gt3-companion
+        OIDCClientID: gcQHXtphJwbyF6az9rMLavWOqR1vrQqq12t6cjvH
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion
@@ -281,6 +286,11 @@ targets:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         ITSAppUsesNonExemptEncryption: false
+        CFBundleURLTypes:
+          - CFBundleURLSchemes:
+              - gt3companion
+        OIDCIssuerBase: https://auth.fluxhaus.io/application/o/gt3-companion
+        OIDCClientID: gcQHXtphJwbyF6az9rMLavWOqR1vrQqq12t6cjvH
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion
