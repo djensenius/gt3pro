@@ -59,7 +59,13 @@ extension AppCoordinator {
         }
 
         if ride.uploaded {
-            await uploadRidePhoto(photo, for: ride)
+            // Fire-and-forget: upload errors are logged inside uploadRidePhoto.
+            // Any failed photo (uploaded == false) will be retried by retryPendingRidePhotoUploads
+            // on the next app launch or BLE reconnect.
+            Task { [weak self] in
+                guard let self else { return }
+                await self.uploadRidePhoto(photo, for: ride)
+            }
         }
         return true
     }
