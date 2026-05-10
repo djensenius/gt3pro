@@ -1,5 +1,6 @@
 #if os(iOS)
 import PhotosUI
+import SwiftUI
 import UIKit
 
 enum RidePhotoPickerSupport {

@@ -1,4 +1,5 @@
 #if os(iOS)
+import Foundation
 import SwiftData
 import os
 

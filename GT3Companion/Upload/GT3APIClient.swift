@@ -37,8 +37,8 @@ actor GT3APIClient {
 
     /// Upload a ride photo attachment.
     ///
-    /// TODO(API): Server endpoint should accept this JSON contract at
-    /// `POST /gt3/rides/:rideId/photos` and return `{ "id": "<photoId>" }`.
+    /// Server endpoint contract: `POST /gt3/rides/:rideId/photos`
+    /// accepts this JSON payload and returns `{ "id": "<photoId>" }`.
     /// Payload fields:
     /// - `capturedAt`: ISO8601 capture timestamp
     /// - `latitude` / `longitude`: optional geotag used for route placement

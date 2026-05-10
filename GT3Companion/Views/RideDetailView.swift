@@ -12,6 +12,56 @@ import PhotosUI
 import UIKit
 #endif
 
+private struct RideDetailCachedSamples {
+    let sorted: [PersistedSample]
+    let routes: [RouteCoordinate]
+    let speeds: [(Date, Double)]
+    let batteries: [(Date, Int)]
+    let temps: [RideDetailTempSample]
+    #if os(iOS)
+    let photos: [RidePhotoDisplay]
+    #endif
+
+    init(ride: PersistedRide) {
+        let all = (ride.samples ?? []).sorted { $0.timestamp < $1.timestamp }
+        self.sorted = all
+        self.routes = all
+            .filter { $0.latitude != nil && $0.longitude != nil }
+            .map { RouteCoordinate(latitude: $0.latitude!, longitude: $0.longitude!, speed: $0.speed) }
+        self.speeds = all.map { ($0.timestamp, $0.speed) }
+        self.batteries = all.map { ($0.timestamp, $0.battery) }
+        self.temps = all.map { RideDetailTempSample(timestamp: $0.timestamp, bms: $0.bmsTemp) }
+        #if os(iOS)
+        self.photos = (ride.photos ?? [])
+            .sorted { $0.createdAt < $1.createdAt }
+            .map { photo in
+                RidePhotoDisplay(
+                    id: photo.photoId,
+                    createdAt: photo.createdAt,
+                    image: UIImage(data: photo.imageData),
+                    latitude: photo.latitude,
+                    longitude: photo.longitude
+                )
+            }
+        #endif
+    }
+}
+
+private struct RideDetailTempSample {
+    let timestamp: Date
+    let bms: Double
+}
+
+#if os(iOS)
+private struct RidePhotoDisplay: Identifiable {
+    let id: String
+    let createdAt: Date
+    let image: UIImage?
+    let latitude: Double?
+    let longitude: Double?
+}
+#endif
+
 struct RideDetailView: View {
     let ride: PersistedRide
 
@@ -22,58 +72,7 @@ struct RideDetailView: View {
     @State private var photoAttachStatus: String?
     #endif
 
-    /// Cache sorted samples so the sort only runs once per view evaluation.
-    private struct CachedSamples {
-        let sorted: [PersistedSample]
-        let routes: [RouteCoordinate]
-        let speeds: [(Date, Double)]
-        let batteries: [(Date, Int)]
-        let temps: [TempSample]
-        #if os(iOS)
-        let photos: [RidePhotoDisplay]
-        #endif
-
-        init(ride: PersistedRide) {
-            let all = (ride.samples ?? []).sorted { $0.timestamp < $1.timestamp }
-            self.sorted = all
-            self.routes = all
-                .filter { $0.latitude != nil && $0.longitude != nil }
-                .map { RouteCoordinate(latitude: $0.latitude!, longitude: $0.longitude!, speed: $0.speed) }
-            self.speeds = all.map { ($0.timestamp, $0.speed) }
-            self.batteries = all.map { ($0.timestamp, $0.battery) }
-            self.temps = all.map { TempSample(timestamp: $0.timestamp, bms: $0.bmsTemp) }
-            #if os(iOS)
-            self.photos = (ride.photos ?? [])
-                .sorted { $0.createdAt < $1.createdAt }
-                .map { photo in
-                    RidePhotoDisplay(
-                        id: photo.photoId,
-                        createdAt: photo.createdAt,
-                        image: UIImage(data: photo.imageData),
-                        latitude: photo.latitude,
-                        longitude: photo.longitude
-                    )
-                }
-            #endif
-        }
-    }
-
-    private struct TempSample {
-        let timestamp: Date
-        let bms: Double
-    }
-
-    #if os(iOS)
-    private struct RidePhotoDisplay: Identifiable {
-        let id: String
-        let createdAt: Date
-        let image: UIImage?
-        let latitude: Double?
-        let longitude: Double?
-    }
-    #endif
-
-    private var cache: CachedSamples { CachedSamples(ride: ride) }
+    private var cache: RideDetailCachedSamples { RideDetailCachedSamples(ride: ride) }
 
     #if os(iOS)
     private var photoAnnotations: [RidePhotoMapAnnotation] {
