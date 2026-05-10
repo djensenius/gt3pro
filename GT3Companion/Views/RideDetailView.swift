@@ -32,17 +32,15 @@ private struct RideDetailCachedSamples {
         self.batteries = all.map { ($0.timestamp, $0.battery) }
         self.temps = all.map { RideDetailTempSample(timestamp: $0.timestamp, bms: $0.bmsTemp) }
         #if os(iOS)
-        self.photos = (ride.photos ?? [])
-            .sorted { $0.createdAt < $1.createdAt }
-            .map { photo in
-                RidePhotoDisplay(
-                    id: photo.photoId,
-                    createdAt: photo.createdAt,
-                    image: UIImage(data: photo.imageData),
-                    latitude: photo.latitude,
-                    longitude: photo.longitude
-                )
-            }
+        self.photos = ride.sortedPhotos.map { photo in
+            RidePhotoDisplay(
+                id: photo.photoId,
+                createdAt: photo.createdAt,
+                imageData: photo.imageData,
+                latitude: photo.latitude,
+                longitude: photo.longitude
+            )
+        }
         #endif
     }
 }
@@ -56,7 +54,7 @@ private struct RideDetailTempSample {
 private struct RidePhotoDisplay: Identifiable {
     let id: String
     let createdAt: Date
-    let image: UIImage?
+    let imageData: Data
     let latitude: Double?
     let longitude: Double?
 }
@@ -82,7 +80,7 @@ struct RideDetailView: View {
                 id: photo.id,
                 latitude: latitude,
                 longitude: longitude,
-                image: photo.image,
+                imageData: photo.imageData,
                 createdAt: photo.createdAt
             )
         }
@@ -315,17 +313,17 @@ struct RideDetailView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     LazyHStack(spacing: Theme.Spacing.small) {
                         ForEach(cache.photos) { photo in
-                            if let image = photo.image {
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Image(uiImage: image)
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 110, height: 110)
-                                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                                    Text(photo.createdAt, style: .time)
-                                        .font(Theme.Fonts.caption)
-                                        .foregroundStyle(Theme.Colors.textSecondary)
-                                }
+                            VStack(alignment: .leading, spacing: 6) {
+                                RidePhotoThumbnailView(
+                                    imageData: photo.imageData,
+                                    cacheKey: photo.id,
+                                    width: 110,
+                                    height: 110,
+                                    cornerRadius: 10
+                                )
+                                Text(photo.createdAt, style: .time)
+                                    .font(Theme.Fonts.caption)
+                                    .foregroundStyle(Theme.Colors.textSecondary)
                             }
                         }
                     }
@@ -452,5 +450,6 @@ struct RideDetailView: View {
     NavigationStack {
         RideDetailView(ride: PreviewData.sampleRide)
     }
+    .environmentObject(AppCoordinator.shared)
 }
 #endif

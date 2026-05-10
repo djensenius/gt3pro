@@ -23,9 +23,15 @@ extension AppCoordinator {
             pendingRideId: rideId
         )
         context.insert(photo)
-        try? context.save()
-        ridePhotoLogger.info("Queued photo for active ride \(rideId)")
-        return true
+        do {
+            try context.save()
+            ridePhotoLogger.info("Queued photo for active ride \(rideId)")
+            return true
+        } catch {
+            context.rollback()
+            ridePhotoLogger.error("Failed saving active ride photo: \(error.localizedDescription)")
+            return false
+        }
     }
 
     /// Attach a photo to an already persisted ride.
@@ -44,7 +50,13 @@ extension AppCoordinator {
             ride: ride
         )
         context.insert(photo)
-        try? context.save()
+        do {
+            try context.save()
+        } catch {
+            context.rollback()
+            ridePhotoLogger.error("Failed saving ride photo: \(error.localizedDescription)")
+            return false
+        }
 
         if ride.uploaded {
             await uploadRidePhoto(photo, for: ride)

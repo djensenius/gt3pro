@@ -8,6 +8,7 @@
 #if os(iOS)
 import MapKit
 import SwiftUI
+import UIKit
 
 struct RouteCoordinate {
     let latitude: Double
@@ -19,8 +20,58 @@ struct RidePhotoMapAnnotation: Identifiable {
     let id: String
     let latitude: Double
     let longitude: Double
-    let image: UIImage?
+    let imageData: Data
     let createdAt: Date
+}
+
+private let ridePhotoImageCache = NSCache<NSString, UIImage>()
+
+struct RidePhotoThumbnailView: View {
+    let imageData: Data
+    let cacheKey: String
+    let width: CGFloat
+    let height: CGFloat
+    let cornerRadius: CGFloat
+
+    @State private var image: UIImage?
+
+    init(imageData: Data, cacheKey: String, width: CGFloat, height: CGFloat, cornerRadius: CGFloat) {
+        self.imageData = imageData
+        self.cacheKey = cacheKey
+        self.width = width
+        self.height = height
+        self.cornerRadius = cornerRadius
+        _image = State(initialValue: ridePhotoImageCache.object(forKey: cacheKey as NSString))
+    }
+
+    var body: some View {
+        Group {
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                ZStack {
+                    Theme.Colors.secondaryBackground
+                    Image(systemName: "photo")
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                }
+            }
+        }
+        .frame(width: width, height: height)
+        .clipped()
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+        .task {
+            guard image == nil else { return }
+            let decoded = await Task.detached(priority: .utility) {
+                UIImage(data: imageData)
+            }.value
+            if let decoded {
+                ridePhotoImageCache.setObject(decoded, forKey: cacheKey as NSString)
+            }
+            image = decoded
+        }
+    }
 }
 
 /// A segment of consecutive coordinates sharing a similar speed color.
@@ -141,19 +192,15 @@ struct MapRouteView: View {
                         Button {
                             selectedPhoto = photo
                         } label: {
-                            if let image = photo.image {
-                                Image(uiImage: image)
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: 36, height: 36)
-                                    .clipShape(Circle())
-                                    .overlay(Circle().stroke(.white, lineWidth: 2))
-                                    .shadow(radius: 2)
-                            } else {
-                                Image(systemName: "photo.circle.fill")
-                                    .font(.title2)
-                                    .foregroundStyle(Theme.Colors.accent)
-                            }
+                            RidePhotoThumbnailView(
+                                imageData: photo.imageData,
+                                cacheKey: photo.id,
+                                width: 36,
+                                height: 36,
+                                cornerRadius: 18
+                            )
+                            .overlay(Circle().stroke(.white, lineWidth: 2))
+                            .shadow(radius: 2)
                         }
                         .buttonStyle(.plain)
                     }
@@ -167,13 +214,13 @@ struct MapRouteView: View {
             .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius))
             .sheet(item: $selectedPhoto) { photo in
                 VStack(spacing: Theme.Spacing.medium) {
-                    if let image = photo.image {
-                        Image(uiImage: image)
-                            .resizable()
-                            .scaledToFit()
-                    } else {
-                        ContentUnavailableView("Unable to load photo", systemImage: "photo")
-                    }
+                    RidePhotoThumbnailView(
+                        imageData: photo.imageData,
+                        cacheKey: photo.id,
+                        width: 320,
+                        height: 320,
+                        cornerRadius: 12
+                    )
                     Text(photo.createdAt.formatted(date: .abbreviated, time: .shortened))
                         .font(Theme.Fonts.bodySmall)
                         .foregroundStyle(Theme.Colors.textSecondary)
