@@ -44,6 +44,10 @@ extension PersistedRide {
         }
         totalDistance = total
     }
+
+    var sortedPhotos: [PersistedRidePhoto] {
+        (photos ?? []).sorted { $0.createdAt < $1.createdAt }
+    }
 }
 
 @Model
@@ -60,6 +64,7 @@ class PersistedRide {
     var uploaded: Bool
     var primaryGearMode: Int
     @Relationship(deleteRule: .cascade) var samples: [PersistedSample]?
+    @Relationship(deleteRule: .cascade, inverse: \PersistedRidePhoto.ride) var photos: [PersistedRidePhoto]?
     var gpsTrackJSON: Data?
     var healthDataJSON: Data?
     var metadataJSON: Data?
@@ -86,7 +91,43 @@ class PersistedRide {
         self.uploaded = false
         self.primaryGearMode = 0
         self.samples = []
+        self.photos = []
         self.samplesHydrated = false
+    }
+}
+
+@Model
+class PersistedRidePhoto {
+    var photoId: String
+    var createdAt: Date
+    var imageData: Data
+    var mimeType: String
+    var latitude: Double?
+    var longitude: Double?
+    var uploaded: Bool
+    var uploadAttemptedAt: Date?
+    var pendingRideId: String?
+    var ride: PersistedRide?
+
+    init(
+        imageData: Data,
+        mimeType: String = "image/jpeg",
+        createdAt: Date = Date(),
+        latitude: Double? = nil,
+        longitude: Double? = nil,
+        ride: PersistedRide? = nil,
+        pendingRideId: String? = nil
+    ) {
+        self.photoId = UUID().uuidString
+        self.createdAt = createdAt
+        self.imageData = imageData
+        self.mimeType = mimeType
+        self.latitude = latitude
+        self.longitude = longitude
+        self.uploaded = false
+        self.uploadAttemptedAt = nil
+        self.pendingRideId = pendingRideId
+        self.ride = ride
     }
 }
 

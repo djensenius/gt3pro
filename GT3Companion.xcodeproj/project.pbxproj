@@ -12,6 +12,7 @@
 		0758E056912DD69BF99B8A33 /* InfoRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0856E72AC9FBE6ED37B60387 /* InfoRow.swift */; };
 		084A0587EFCFF51932FBCFF3 /* ServerRide.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B7F41D6D8220A7D36237600 /* ServerRide.swift */; };
 		0AFA469BD2324170B4FC8D6D /* AppCoordinator+Rides.swift in Sources */ = {isa = PBXBuildFile; fileRef = 322964BC9F4B4071A3DC239B /* AppCoordinator+Rides.swift */; };
+		0AFDA6B2455C4F8B9E72C911 /* RidePhotoPickerSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AA2A5D9A4D44509A6E8C0AA /* RidePhotoPickerSupport.swift */; };
 		0C443ACB5D677B99D0E69918 /* GeoUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAF14C3E0963BCC86C3FAFA8 /* GeoUtils.swift */; };
 		0C8889E0C40B8FE46C7B7384 /* GT3CompanionWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACAA4BB834A0DB9BE3860C6D /* GT3CompanionWidgetsBundle.swift */; };
 		0DDE0F6E5810331FB90EFC95 /* ScooterKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 374129A26773B2CE08A45568 /* ScooterKeychain.swift */; };
@@ -25,6 +26,7 @@
 		1BA065423E7014CBEF7E5789 /* PreviewHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEC6013FFE64589ED662804D /* PreviewHelpers.swift */; };
 		1BCC17969E11E97F3D009E00 /* GT3CompanionWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 891BD92EAAEA3BFE7C483FEA /* GT3CompanionWatchApp.swift */; };
 		1BEF8CF4A46AD2CD9A912CDD /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 997B5274C0201254D5A58FB9 /* SettingsView.swift */; };
+		1C0B0E7C253847208D4D7F58 /* RidePhotoUploadPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E07C6AECA8A4894B3E5D0E7 /* RidePhotoUploadPayload.swift */; };
 		B22737315AA1AFCF8EFFAB98 /* ShareRideSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5F78F4577A6BABA69A0917D /* ShareRideSheet.swift */; };
 		ACC2F8F448509E79AFB5E9A1 /* WeatherDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89BEA8CACB2AA9F9E55904FA /* WeatherDebugView.swift */; };
 		1D4D239F64B82E1540DD3E93 /* GT3CompanionWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BDE60F2A3E20E8CFCAE04D6A /* GT3CompanionWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -36,6 +38,7 @@
 		261785EC3E13BC3AB3C00A65 /* WeatherSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76748A8FCEA32D8A9B372A34 /* WeatherSnapshot.swift */; };
 		26C102E076E1FE7419A7098B /* WeatherSnapshotVisionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF81FC21527F1DA9CB13D850 /* WeatherSnapshotVisionTests.swift */; };
 		2845F91100AAD99587071D9B /* RouteNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71C4965BA8E974E0A6B214CF /* RouteNavigationView.swift */; };
+		289D2A20EF9A423DA93A44F9 /* AppCoordinator+RidePhotos.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FD1F21B18134E438A48952D /* AppCoordinator+RidePhotos.swift */; };
 		2B401A698FFB367DE95FD69F /* ComplicationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D7EC839B4E3F7B106C2E6C /* ComplicationProvider.swift */; };
 		2EC4462F146FF8FF09753F09 /* GT3LiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35AB36E7D729C0D68B6B3A03 /* GT3LiveActivity.swift */; };
 		301CE4D692028486F466BF18 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE53582C2CC4F2EFA20AD815 /* Theme.swift */; };
@@ -70,6 +73,7 @@
 		571D0940C9C51CBBDB35589D /* SurfaceRoughnessTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C76AE1C74BD9FB056599493D /* SurfaceRoughnessTracker.swift */; };
 		5895CDEDBED135E910777F7D /* StatCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFA059564462F3ED6EFEE13A /* StatCard.swift */; };
 		339E92E0FDE51F2AC2EE5703 /* WeatherAttributionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D85E4BE5C4ED517DFCED8C4 /* WeatherAttributionView.swift */; };
+		58BB4F4717824CFF89467240 /* RidePhotoStatusAlertModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5A567D46E03443492FEA03C /* RidePhotoStatusAlertModifier.swift */; };
 		5B8B2DEF2BEAD0E2F187FC2A /* GT3CompanionVisionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58211C5A6E89A9919BDE331B /* GT3CompanionVisionApp.swift */; };
 		5C87DAD23B4EFD25C8768839 /* RideTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493E6A4BC6CC47F6D1F9762B /* RideTrackerTests.swift */; };
 		5D1C2C708109269FA6E8BCA2 /* GPSTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3529E2F04653B7962C5A5B /* GPSTrackerTests.swift */; };
@@ -265,6 +269,7 @@
 		1CC4405231C979E994BA6E9B /* AppCoordinator+Telemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppCoordinator+Telemetry.swift"; sourceTree = "<group>"; };
 		1DCD3F4E090513234E3E93D4 /* VisionContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionContentView.swift; sourceTree = "<group>"; };
 		1E34BA6710E1650D5275870E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		2AA2A5D9A4D44509A6E8C0AA /* RidePhotoPickerSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RidePhotoPickerSupport.swift; sourceTree = "<group>"; };
 		21D1E227816962A170A4BB65 /* GT3CompanionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3CompanionUITests.swift; sourceTree = "<group>"; };
 		2CFA6EEC6FC4981ACF73576B /* GT3CompanionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3CompanionTests.swift; sourceTree = "<group>"; };
 		2D0BC7212A2BD252D996C21B /* GT3RideAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3RideAttributes.swift; sourceTree = "<group>"; };
@@ -305,6 +310,7 @@
 		75D7EC839B4E3F7B106C2E6C /* ComplicationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComplicationProvider.swift; sourceTree = "<group>"; };
 		76748A8FCEA32D8A9B372A34 /* WeatherSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherSnapshot.swift; sourceTree = "<group>"; };
 		7EA8C9B9596FCD2188B27DCB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		7E07C6AECA8A4894B3E5D0E7 /* RidePhotoUploadPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RidePhotoUploadPayload.swift; sourceTree = "<group>"; };
 		7FC63A3A2D8799086BC58523 /* RegisterReaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterReaderTests.swift; sourceTree = "<group>"; };
 		83460368F60A53C5A30952A7 /* NinebotTransportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NinebotTransportTests.swift; sourceTree = "<group>"; };
 		863AE1336A31A4B389EB86D6 /* WatchConnectivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityManager.swift; sourceTree = "<group>"; };
@@ -316,6 +322,7 @@
 		8C269B95A54B2B0EBC527B62 /* GT3CompanionMacTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GT3CompanionMacTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8FC8DF5E472D510C6DDEDF69 /* GT3Companion.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GT3Companion.entitlements; sourceTree = "<group>"; };
 		8FDD78758A79865ACE4CE701 /* NinebotFrameBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NinebotFrameBuilder.swift; sourceTree = "<group>"; };
+		8FD1F21B18134E438A48952D /* AppCoordinator+RidePhotos.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppCoordinator+RidePhotos.swift"; sourceTree = "<group>"; };
 		92CE9C01F56D431F573E856B /* BatteryIconWatchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryIconWatchTests.swift; sourceTree = "<group>"; };
 		997B5274C0201254D5A58FB9 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		D5F78F4577A6BABA69A0917D /* ShareRideSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareRideSheet.swift; sourceTree = "<group>"; };
@@ -353,6 +360,7 @@
 		DFA059564462F3ED6EFEE13A /* StatCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatCard.swift; sourceTree = "<group>"; };
 		4D85E4BE5C4ED517DFCED8C4 /* WeatherAttributionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherAttributionView.swift; sourceTree = "<group>"; };
 		E379C350721281EE18112EFE /* BatteryIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryIcon.swift; sourceTree = "<group>"; };
+		E5A567D46E03443492FEA03C /* RidePhotoStatusAlertModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RidePhotoStatusAlertModifier.swift; sourceTree = "<group>"; };
 		E4967528A480BD2A3DAAC694 /* GT3LiveActivityManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GT3LiveActivityManagerTests.swift; sourceTree = "<group>"; };
 		EA3529E2F04653B7962C5A5B /* GPSTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSTrackerTests.swift; sourceTree = "<group>"; };
 		EB74E70511E2177DEC4F0210 /* RideTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideTracker.swift; sourceTree = "<group>"; };
@@ -463,6 +471,8 @@
 				B34E5080C0FEEDFDC393EE9C /* PowerSlideButton.swift */,
 				55FE211690F8E6728DBC3A59 /* RideDetailView.swift */,
 				05FA94F2A81DC172E483E5B4 /* RideHistoryView.swift */,
+				2AA2A5D9A4D44509A6E8C0AA /* RidePhotoPickerSupport.swift */,
+				E5A567D46E03443492FEA03C /* RidePhotoStatusAlertModifier.swift */,
 				71C4965BA8E974E0A6B214CF /* RouteNavigationView.swift */,
 				55D4452F70F7EF550BC5F879 /* ScooterInfoView.swift */,
 				997B5274C0201254D5A58FB9 /* SettingsView.swift */,
@@ -553,6 +563,7 @@
 			isa = PBXGroup;
 			children = (
 				C894222A35BFDE918279DBCA /* GT3APIClient.swift */,
+				7E07C6AECA8A4894B3E5D0E7 /* RidePhotoUploadPayload.swift */,
 				44F46F784FC8CE9B05A670EC /* UploadQueue.swift */,
 			);
 			path = Upload;
@@ -611,6 +622,7 @@
 				C578ACBA36D95C48E179455A /* AppCoordinator.swift */,
 				1CC4405231C979E994BA6E9B /* AppCoordinator+Telemetry.swift */,
 				322964BC9F4B4071A3DC239B /* AppCoordinator+Rides.swift */,
+				8FD1F21B18134E438A48952D /* AppCoordinator+RidePhotos.swift */,
 				0B7F0F62CF736A1FF5E9A25D /* AppDelegate.swift */,
 				B37C34C9C57F04F3812AA098 /* DataExtensions.swift */,
 				117232BCF6C3AE194334376A /* DebugLogStore.swift */,
@@ -1093,6 +1105,7 @@
 				7BCA1A87C3E4288C37743552 /* AggregateAnalyticsView.swift in Sources */,
 				50DCEBBA4B34D69387DC0185 /* AppCoordinator+Telemetry.swift in Sources */,
 				0AFA469BD2324170B4FC8D6D /* AppCoordinator+Rides.swift in Sources */,
+				289D2A20EF9A423DA93A44F9 /* AppCoordinator+RidePhotos.swift in Sources */,
 				6D5E2588CE829224EC18BB68 /* AppCoordinator.swift in Sources */,
 				D10EA4C12CF515E173B4F943 /* AppDelegate.swift in Sources */,
 				CC50E05252F13993B116F455 /* AuthManager.swift in Sources */,
@@ -1130,7 +1143,10 @@
 				8F085638E5D961EC00DE31CE /* RegisterReader.swift in Sources */,
 				E98E90FD43E65AD77479B30B /* RideDetailView.swift in Sources */,
 				923ECACC43B67071CB146A14 /* RideHistoryView.swift in Sources */,
+				0AFDA6B2455C4F8B9E72C911 /* RidePhotoPickerSupport.swift in Sources */,
+				58BB4F4717824CFF89467240 /* RidePhotoStatusAlertModifier.swift in Sources */,
 				3A27C6677CA7CD4D7D5821FF /* RideSyncService.swift in Sources */,
+				1C0B0E7C253847208D4D7F58 /* RidePhotoUploadPayload.swift in Sources */,
 				516E7EE6D37E51B5133E143D /* RideTracker.swift in Sources */,
 				2845F91100AAD99587071D9B /* RouteNavigationView.swift in Sources */,
 				729BBDA62779EBF888A6BDD0 /* ScooterConnectionManager.swift in Sources */,

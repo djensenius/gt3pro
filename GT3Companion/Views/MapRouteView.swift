@@ -8,11 +8,70 @@
 #if os(iOS)
 import MapKit
 import SwiftUI
+import UIKit
 
 struct RouteCoordinate {
     let latitude: Double
     let longitude: Double
     let speed: Double
+}
+
+struct RidePhotoMapAnnotation: Identifiable {
+    let id: String
+    let latitude: Double
+    let longitude: Double
+    let imageData: Data
+    let createdAt: Date
+}
+
+private let ridePhotoImageCache = NSCache<NSString, UIImage>()
+
+struct RidePhotoThumbnailView: View {
+    let imageData: Data
+    let cacheKey: String
+    let width: CGFloat
+    let height: CGFloat
+    let cornerRadius: CGFloat
+
+    @State private var image: UIImage?
+
+    init(imageData: Data, cacheKey: String, width: CGFloat, height: CGFloat, cornerRadius: CGFloat) {
+        self.imageData = imageData
+        self.cacheKey = cacheKey
+        self.width = width
+        self.height = height
+        self.cornerRadius = cornerRadius
+        _image = State(initialValue: ridePhotoImageCache.object(forKey: cacheKey as NSString))
+    }
+
+    var body: some View {
+        Group {
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                ZStack {
+                    Theme.Colors.secondaryBackground
+                    Image(systemName: "photo")
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                }
+            }
+        }
+        .frame(width: width, height: height)
+        .clipped()
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+        .task {
+            guard image == nil else { return }
+            let decoded = await Task.detached(priority: .utility) {
+                UIImage(data: imageData)
+            }.value
+            if let decoded {
+                ridePhotoImageCache.setObject(decoded, forKey: cacheKey as NSString)
+            }
+            image = decoded
+        }
+    }
 }
 
 /// A segment of consecutive coordinates sharing a similar speed color.
@@ -51,6 +110,13 @@ private func speedColor(speed: Double, maxSpeed: Double) -> Color {
 
 struct MapRouteView: View {
     let coordinates: [RouteCoordinate]
+    let ridePhotos: [RidePhotoMapAnnotation]
+    @State private var selectedPhoto: RidePhotoMapAnnotation?
+
+    init(coordinates: [RouteCoordinate], ridePhotos: [RidePhotoMapAnnotation] = []) {
+        self.coordinates = coordinates
+        self.ridePhotos = ridePhotos
+    }
 
     private var segments: [SpeedSegment] {
         guard coordinates.count >= 2 else { return [] }
@@ -119,6 +185,26 @@ struct MapRouteView: View {
                             .foregroundStyle(Theme.Colors.error)
                     }
                 }
+                ForEach(ridePhotos) { photo in
+                    Annotation("Photo", coordinate: CLLocationCoordinate2D(
+                        latitude: photo.latitude, longitude: photo.longitude
+                    )) {
+                        Button {
+                            selectedPhoto = photo
+                        } label: {
+                            RidePhotoThumbnailView(
+                                imageData: photo.imageData,
+                                cacheKey: photo.id,
+                                width: 36,
+                                height: 36,
+                                cornerRadius: 18
+                            )
+                            .overlay(Circle().stroke(.white, lineWidth: 2))
+                            .shadow(radius: 2)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
                 ForEach(segments) { segment in
                     MapPolyline(coordinates: segment.coordinates)
                         .stroke(speedColor(speed: segment.speed, maxSpeed: maxSpeed), lineWidth: 4)
@@ -126,6 +212,22 @@ struct MapRouteView: View {
             }
             .frame(height: 250)
             .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius))
+            .sheet(item: $selectedPhoto) { photo in
+                VStack(spacing: Theme.Spacing.medium) {
+                    RidePhotoThumbnailView(
+                        imageData: photo.imageData,
+                        cacheKey: photo.id,
+                        width: 320,
+                        height: 320,
+                        cornerRadius: 12
+                    )
+                    Text(photo.createdAt.formatted(date: .abbreviated, time: .shortened))
+                        .font(Theme.Fonts.bodySmall)
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                }
+                .padding()
+                .presentationDetents([.medium, .large])
+            }
         }
     }
 }

@@ -47,6 +47,10 @@
 	<string>GT3 Companion records your GPS route during rides.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>GT3 Companion uses motion sensors to detect road surface quality.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>GT3 Companion saves ride photos that you attach to your rides.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>GT3 Companion lets you choose photos to attach to your rides.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>NSSupportsLiveActivitiesFrequentUpdates</key>

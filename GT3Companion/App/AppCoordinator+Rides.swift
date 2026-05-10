@@ -19,6 +19,7 @@ extension AppCoordinator {
     func handleRideComplete(_ rideLog: RideLog) async {
         rideLogger.info("Ride complete: \(rideLog.totalDistance) km")
         let context = PersistenceController.shared.context
+        let preUploadRideId = rideLog.rideId
         let persisted = PersistedRide(
             rideId: rideLog.rideId,
             startTime: rideLog.startTime,
@@ -85,6 +86,7 @@ extension AppCoordinator {
 
         context.insert(persisted)
         try? context.save()
+        await processPendingRidePhotos(for: persisted, localRideId: preUploadRideId)
         await uploadQueue.flushSamples()
 
         // Upload enriched snapshot with ride-end inferred values
@@ -106,6 +108,7 @@ extension AppCoordinator {
             persisted.rideId = serverId
             persisted.uploaded = true
             try? context.save()
+            await processPendingRidePhotos(for: persisted)
         } else {
             let encoder = JSONEncoder()
             encoder.dateEncodingStrategy = .iso8601
@@ -120,36 +123,39 @@ extension AppCoordinator {
 
     func retryPendingUploads() async {
         let context = PersistenceController.shared.context
-        guard let items = try? context.fetch(FetchDescriptor<UploadQueueItem>()),
-              !items.isEmpty else { return }
-        rideLogger.info("Found \(items.count) pending upload(s) to retry")
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        for item in items {
-            do {
-                let data = try await uploadQueue.retryUpload(
-                    payload: item.payload, endpoint: item.endpoint
-                )
-                if item.endpoint == "/gt3/ride",
-                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                   let serverId = json["id"] as? String,
-                   let ride = try? decoder.decode(RideLog.self, from: item.payload) {
-                    let pred = #Predicate<PersistedRide> { $0.rideId == ride.rideId }
-                    if let match = try? context.fetch(FetchDescriptor(predicate: pred)).first {
-                        match.rideId = serverId
-                        match.uploaded = true
+        let items = (try? context.fetch(FetchDescriptor<UploadQueueItem>())) ?? []
+        if !items.isEmpty {
+            rideLogger.info("Found \(items.count) pending upload(s) to retry")
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            for item in items {
+                do {
+                    let data = try await uploadQueue.retryUpload(
+                        payload: item.payload, endpoint: item.endpoint
+                    )
+                    if item.endpoint == "/gt3/ride",
+                       let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                       let serverId = json["id"] as? String,
+                       let ride = try? decoder.decode(RideLog.self, from: item.payload) {
+                        let pred = #Predicate<PersistedRide> { $0.rideId == ride.rideId }
+                        if let match = try? context.fetch(FetchDescriptor(predicate: pred)).first {
+                            match.rideId = serverId
+                            match.uploaded = true
+                            await processPendingRidePhotos(for: match)
+                        }
                     }
+                    context.delete(item)
+                    try? context.save()
+                    rideLogger.info("Retry succeeded: \(item.endpoint)")
+                } catch {
+                    item.retryCount += 1
+                    item.lastAttempt = Date()
+                    try? context.save()
+                    rideLogger.warning("Retry \(item.endpoint) failed (#\(item.retryCount)): \(error)")
                 }
-                context.delete(item)
-                try? context.save()
-                rideLogger.info("Retry succeeded: \(item.endpoint)")
-            } catch {
-                item.retryCount += 1
-                item.lastAttempt = Date()
-                try? context.save()
-                rideLogger.warning("Retry \(item.endpoint) failed (#\(item.retryCount)): \(error)")
             }
         }
+        await retryPendingRidePhotoUploads()
     }
 
     /// Auto-launch the Watch companion app to start a workout session.

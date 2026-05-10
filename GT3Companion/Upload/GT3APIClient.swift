@@ -35,6 +35,28 @@ actor GT3APIClient {
         return nil
     }
 
+    /// Upload a ride photo attachment.
+    ///
+    /// Server endpoint contract: `POST /gt3/rides/:rideId/photos`
+    /// accepts this JSON payload and returns `{ "id": "<photoId>" }`.
+    /// Payload fields:
+    /// - `capturedAt`: ISO8601 capture timestamp
+    /// - `latitude` / `longitude`: optional geotag used for route placement
+    /// - `mimeType`: currently `image/jpeg`
+    /// - `imageData`: base64 string in JSON (Swift `Data` Codable encoding)
+    func uploadRidePhoto(rideId: String, payload: RidePhotoUploadPayload) async throws -> String? {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let body = try encoder.encode(payload)
+        let data = try await post(path: "/gt3/rides/\(rideId)/photos", body: body)
+        if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let photoId = json["id"] as? String {
+            logger.info("Uploaded ride photo: \(photoId)")
+            return photoId
+        }
+        return nil
+    }
+
     /// Upload a scooter snapshot.
     func uploadSnapshot(_ snapshot: [String: String]) async throws {
         let body = try JSONSerialization.data(withJSONObject: snapshot)
