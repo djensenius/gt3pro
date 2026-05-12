@@ -9,6 +9,7 @@ class RideWorkoutManager: NSObject, ObservableObject {
     private var authorizationCompletions: [(Bool) -> Void] = []
     private var pendingStartConfiguration: HKWorkoutConfiguration?
     private var isEndingWorkout = false
+    private static let workoutType = HKObjectType.workoutType()
 
     @Published var heartRate: Double = 0
     @Published var activeCalories: Double = 0
@@ -17,7 +18,7 @@ class RideWorkoutManager: NSObject, ObservableObject {
     @Published var workoutError: String?
 
     private var isWorkoutAuthorized: Bool {
-        healthStore.authorizationStatus(for: HKObjectType.workoutType()) == .sharingAuthorized
+        healthStore.authorizationStatus(for: Self.workoutType) == .sharingAuthorized
     }
 
     func requestAuthorization(completion: ((Bool) -> Void)? = nil) {
@@ -30,7 +31,6 @@ class RideWorkoutManager: NSObject, ObservableObject {
             return
         }
 
-        let workoutType = HKObjectType.workoutType()
         if isWorkoutAuthorized {
             DispatchQueue.main.async {
                 self.workoutError = nil
@@ -46,7 +46,7 @@ class RideWorkoutManager: NSObject, ObservableObject {
         guard !authorizationInProgress else { return }
         authorizationInProgress = true
 
-        let typesToShare: Set<HKSampleType> = [workoutType]
+        let typesToShare: Set<HKSampleType> = [Self.workoutType]
         let typesToRead: Set<HKObjectType> = [
             HKQuantityType(.heartRate),
             HKQuantityType(.activeEnergyBurned),
@@ -73,6 +73,7 @@ class RideWorkoutManager: NSObject, ObservableObject {
 
     func startWorkout(with configuration: HKWorkoutConfiguration? = nil) {
         guard session == nil, !isEndingWorkout else {
+            pendingStartConfiguration = nil
             print("Ignoring workout start: session already active or ending")
             return
         }
