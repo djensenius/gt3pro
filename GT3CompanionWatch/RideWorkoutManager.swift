@@ -18,16 +18,23 @@ class RideWorkoutManager: NSObject, ObservableObject {
     @Published var workoutError: String?
 
     private var isWorkoutAuthorized: Bool {
-        isAuthorizationGranted || healthStore.authorizationStatus(for: Self.workoutType) == .sharingAuthorized
+        healthStore.authorizationStatus(for: Self.workoutType) == .sharingAuthorized
     }
 
-    func requestAuthorization(completion: ((Bool) -> Void)? = nil) {
+    private func healthKitIsAvailable() -> Bool {
         guard HKHealthStore.isHealthDataAvailable() else {
             DispatchQueue.main.async {
                 self.workoutError = "HealthKit is not available on this device."
                 self.isAuthorizationGranted = false
-                completion?(false)
             }
+            return false
+        }
+        return true
+    }
+
+    func requestAuthorization(completion: ((Bool) -> Void)? = nil) {
+        guard healthKitIsAvailable() else {
+            completion?(false)
             return
         }
 
@@ -77,10 +84,7 @@ class RideWorkoutManager: NSObject, ObservableObject {
             print("Ignoring workout start: session already active or ending")
             return
         }
-        guard HKHealthStore.isHealthDataAvailable() else {
-            DispatchQueue.main.async {
-                self.workoutError = "HealthKit is not available on this device."
-            }
+        guard healthKitIsAvailable() else {
             return
         }
 
@@ -92,7 +96,8 @@ class RideWorkoutManager: NSObject, ObservableObject {
         }()
 
         guard isWorkoutAuthorized else {
-            if authorizationInProgress, pendingStartConfiguration != nil {
+            if authorizationInProgress {
+                pendingStartConfiguration = pendingStartConfiguration ?? config
                 print("Ignoring workout start: authorization already pending")
                 return
             }

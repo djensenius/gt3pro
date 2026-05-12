@@ -56,7 +56,7 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
             self.rideActive = message["rideActive"] as? Bool ?? self.rideActive
             self.isConnected = true
             self.clearSpeedWhenRideInactive()
-            self.isRiding = self.derivedIsRiding
+            self.isRiding = self.isMovingDuringActiveRide
         }
     }
 
@@ -73,11 +73,11 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
             self.estimatedRange = applicationContext["estimatedRange"] as? Double ?? self.estimatedRange
             self.gearMode = applicationContext["gearMode"] as? Int ?? self.gearMode
             self.clearSpeedWhenRideInactive()
-            self.isRiding = self.derivedIsRiding
+            self.isRiding = self.isMovingDuringActiveRide
         }
     }
 
-    private var derivedIsRiding: Bool {
+    private var isMovingDuringActiveRide: Bool {
         rideActive && speed > 0
     }
 

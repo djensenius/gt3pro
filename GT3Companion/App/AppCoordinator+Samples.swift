@@ -65,7 +65,7 @@ extension AppCoordinator {
         await rideTracker.addSample(sample)
         let rideState = await rideTracker.state
         let isCurrentlyMoving = rideState == .riding
-        let hasActiveRide = rideState == .riding || rideState == .stopped
+        let hasActiveRide = isCurrentlyMoving || rideState == .stopped
 
         if wasIdle && isCurrentlyMoving {
             isRiding = true
