@@ -48,6 +48,79 @@ extension PersistedRide {
     var sortedPhotos: [PersistedRidePhoto] {
         (photos ?? []).sorted { $0.createdAt < $1.createdAt }
     }
+
+    var ridePresentation: RidePresentation {
+        RidePresentation(ride: self)
+    }
+}
+
+struct RidePresentation {
+    let sortedSamples: [PersistedSample]
+    let routeCoordinates: [RouteCoordinate]
+    let speedSamples: [(timestamp: Date, value: Double)]
+    let batterySamples: [(timestamp: Date, value: Int)]
+    let bmsTempSamples: [(timestamp: Date, value: Double)]
+    let roughnessSamples: [(timestamp: Date, value: Double)]
+    let heartRateSamples: [(timestamp: Date, value: Int)]
+
+    init(ride: PersistedRide) {
+        let samples = (ride.samples ?? []).sorted { $0.timestamp < $1.timestamp }
+        self.sortedSamples = samples
+        self.routeCoordinates = samples.compactMap { sample in
+            guard let latitude = sample.latitude,
+                  let longitude = sample.longitude,
+                  latitude != 0,
+                  longitude != 0 else { return nil }
+            if let accuracy = sample.horizontalAccuracy,
+               accuracy <= 0 || accuracy >= gpsAccuracyThresholdMetres {
+                return nil
+            }
+            return RouteCoordinate(latitude: latitude, longitude: longitude, speed: sample.speed)
+        }
+        self.speedSamples = samples.map { ($0.timestamp, $0.speed) }
+        self.batterySamples = samples.map { ($0.timestamp, $0.battery) }
+        self.bmsTempSamples = samples
+            .filter { $0.bmsTemp > 0 }
+            .map { ($0.timestamp, $0.bmsTemp) }
+        self.roughnessSamples = samples.compactMap { sample in
+            guard let roughness = sample.roughnessScore else { return nil }
+            return (sample.timestamp, roughness)
+        }
+        self.heartRateSamples = samples.compactMap { sample in
+            guard let heartRate = sample.heartRate, heartRate > 0 else { return nil }
+            return (sample.timestamp, heartRate)
+        }
+    }
+
+    var hasTelemetry: Bool {
+        !sortedSamples.isEmpty
+    }
+
+    var hasRoute: Bool {
+        routeCoordinates.count >= 2
+    }
+
+    var averageRoughness: Double? {
+        average(roughnessSamples.map { $0.value })
+    }
+
+    var maxRoughness: Double? {
+        roughnessSamples.map { $0.value }.max()
+    }
+
+    var averageHeartRate: Int? {
+        guard let avg = average(heartRateSamples.map { Double($0.value) }) else { return nil }
+        return Int(avg.rounded())
+    }
+
+    var maxHeartRate: Int? {
+        heartRateSamples.map { $0.value }.max()
+    }
+
+    private func average(_ values: [Double]) -> Double? {
+        guard !values.isEmpty else { return nil }
+        return values.reduce(0, +) / Double(values.count)
+    }
 }
 
 @Model

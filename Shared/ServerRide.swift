@@ -7,6 +7,10 @@
 
 import Foundation
 
+enum GT3APIConfig {
+    static let baseURL = "https://api.fluxhaus.io"
+}
+
 /// Paginated response from GET /gt3/rides.
 struct ServerRidesResponse: Decodable {
     let rides: [ServerRide]

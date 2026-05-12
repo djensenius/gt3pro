@@ -19,6 +19,7 @@
 		0DF2E1196C1BC1747DDE07D4 /* GT3RideAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0BC7212A2BD252D996C21B /* GT3RideAttributes.swift */; };
 		12BC724CF4BE3DEDED407778 /* GPSTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C1ECE09CFA84C86FA1A4892 /* GPSTracker.swift */; };
 		14081CD2FA3DE9C3454C6EF0 /* RideSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5321F13F45361AC2D0345AF4 /* RideSyncService.swift */; };
+		14A1B2C3D4E5F60718293A01 /* RideShareLinkSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14A1B2C3D4E5F60718293A00 /* RideShareLinkSheet.swift */; };
 		18816EF42D84BEE79BAECC77 /* VisionContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DCD3F4E090513234E3E93D4 /* VisionContentView.swift */; };
 		197556F75B3820A1000D15DA /* GT3CompanionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21D1E227816962A170A4BB65 /* GT3CompanionUITests.swift */; };
 		1A073CC2F36A0042C580A3B0 /* DataExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B37C34C9C57F04F3812AA098 /* DataExtensions.swift */; };
@@ -51,6 +52,7 @@
 		37CF00D5FFFA017AA1C2B81A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7EA8C9B9596FCD2188B27DCB /* Assets.xcassets */; };
 		37E955B952D040BD813B6BA6 /* ScooterInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55D4452F70F7EF550BC5F879 /* ScooterInfoView.swift */; };
 		3A27C6677CA7CD4D7D5821FF /* RideSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5321F13F45361AC2D0345AF4 /* RideSyncService.swift */; };
+		3A27C6677CA7CD4D7D5821F1 /* RideShareLinkSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14A1B2C3D4E5F60718293A00 /* RideShareLinkSheet.swift */; };
 		3DF0D808D46289DC26A9D8EB /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00985FF0F4FBE77CCCE61CE6 /* PersistenceController.swift */; };
 		3F9E66D56F8851A8BF3A7C56 /* RegisterReaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FC63A3A2D8799086BC58523 /* RegisterReaderTests.swift */; };
 		4015788E36F5E39F65B91E0A /* RideWorkoutManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8D580E2A873BE70E1F49EE /* RideWorkoutManager.swift */; };
@@ -152,6 +154,7 @@
 		E849A2BAB32AACC0A8D08C37 /* MacContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA58425277ED9CA3252868B8 /* MacContentView.swift */; };
 		E98E90FD43E65AD77479B30B /* RideDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55FE211690F8E6728DBC3A59 /* RideDetailView.swift */; };
 		E9B979044EDB3417C1DBBAB7 /* RideSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5321F13F45361AC2D0345AF4 /* RideSyncService.swift */; };
+		E9B979044EDB3417C1DBBAB1 /* RideShareLinkSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14A1B2C3D4E5F60718293A00 /* RideShareLinkSheet.swift */; };
 		E9CAA780DC33797AB9417F97 /* SwiftDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 189ACD3403BEBC384D6A42CE /* SwiftDataModels.swift */; };
 		EA1B494C1BE3A861C9BB878F /* PreviewHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEC6013FFE64589ED662804D /* PreviewHelpers.swift */; };
 		EB5A30564B4E37F9D8F36416 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE53582C2CC4F2EFA20AD815 /* Theme.swift */; };
@@ -162,6 +165,7 @@
 		F2CD2B1D502623C41495B602 /* NinebotTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4E04531F9A6C7BD543444A1 /* NinebotTransport.swift */; };
 		F3E43A2E9CD4321FFDF4AB01 /* NinebotFrameBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5312D85AD3849B1B86711DF6 /* NinebotFrameBuilderTests.swift */; };
 		F446839ED07C359D80263844 /* RideSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5321F13F45361AC2D0345AF4 /* RideSyncService.swift */; };
+		F446839ED07C359D80263841 /* RideShareLinkSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14A1B2C3D4E5F60718293A00 /* RideShareLinkSheet.swift */; };
 		F8CCDB6EEDE70D23A759D87E /* PairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11C5682B34F0870664C57915 /* PairingView.swift */; };
 		F90C28FF4E903E649E6B549C /* BatteryIconMacTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A95375BDE24C29871153315 /* BatteryIconMacTests.swift */; };
 		FA13A2007A1B2131ED1C0C01 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F60D7016AF895D2E94ABCA0 /* AuthManager.swift */; };
@@ -265,6 +269,7 @@
 		13B4AB9F1F1CAE720C0A2B9B /* NavigationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationManager.swift; sourceTree = "<group>"; };
 		15ECCFB9DA9B244FB4261E4E /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		189ACD3403BEBC384D6A42CE /* SwiftDataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataModels.swift; sourceTree = "<group>"; };
+		14A1B2C3D4E5F60718293A00 /* RideShareLinkSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideShareLinkSheet.swift; sourceTree = "<group>"; };
 		19905BAB58FB3DB581F8B592 /* GPXExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPXExporter.swift; sourceTree = "<group>"; };
 		1CC4405231C979E994BA6E9B /* AppCoordinator+Telemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppCoordinator+Telemetry.swift"; sourceTree = "<group>"; };
 		1DCD3F4E090513234E3E93D4 /* VisionContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionContentView.swift; sourceTree = "<group>"; };
@@ -679,6 +684,7 @@
 				5E9E161CA55B49466B7C67D5 /* LoginView.swift */,
 				00985FF0F4FBE77CCCE61CE6 /* PersistenceController.swift */,
 				AEC6013FFE64589ED662804D /* PreviewHelpers.swift */,
+				14A1B2C3D4E5F60718293A00 /* RideShareLinkSheet.swift */,
 				5321F13F45361AC2D0345AF4 /* RideSyncService.swift */,
 				3B7F41D6D8220A7D36237600 /* ServerRide.swift */,
 				189ACD3403BEBC384D6A42CE /* SwiftDataModels.swift */,
@@ -993,6 +999,7 @@
 				8C8633C36AE3426F055EE202 /* LoginView.swift in Sources */,
 				3DF0D808D46289DC26A9D8EB /* PersistenceController.swift in Sources */,
 				326A8EAD4EA3A92FECD50F3F /* PreviewHelpers.swift in Sources */,
+				E9B979044EDB3417C1DBBAB1 /* RideShareLinkSheet.swift in Sources */,
 				E9B979044EDB3417C1DBBAB7 /* RideSyncService.swift in Sources */,
 				D7536E330454E44B176F4E62 /* ServerRide.swift in Sources */,
 				349A8C3B5D23DFA1CC8AB497 /* SwiftDataModels.swift in Sources */,
@@ -1053,6 +1060,7 @@
 				E849A2BAB32AACC0A8D08C37 /* MacContentView.swift in Sources */,
 				C1D0C33C2FBFC0B1F0A65A57 /* PersistenceController.swift in Sources */,
 				EA1B494C1BE3A861C9BB878F /* PreviewHelpers.swift in Sources */,
+				F446839ED07C359D80263841 /* RideShareLinkSheet.swift in Sources */,
 				F446839ED07C359D80263844 /* RideSyncService.swift in Sources */,
 				C5559FE402431B7C4A7EC470 /* ScooterInfoView.swift in Sources */,
 				475496F3CAA9923B88C471B7 /* ServerRide.swift in Sources */,
@@ -1086,6 +1094,7 @@
 				24B89E2606E4F5CC3CCDEE13 /* LoginView.swift in Sources */,
 				E2945ED06BB15957725B2660 /* PersistenceController.swift in Sources */,
 				CAFB4CAD608DDFEFE747D4D3 /* PreviewHelpers.swift in Sources */,
+				14A1B2C3D4E5F60718293A01 /* RideShareLinkSheet.swift in Sources */,
 				14081CD2FA3DE9C3454C6EF0 /* RideSyncService.swift in Sources */,
 				37E955B952D040BD813B6BA6 /* ScooterInfoView.swift in Sources */,
 				084A0587EFCFF51932FBCFF3 /* ServerRide.swift in Sources */,
@@ -1140,6 +1149,7 @@
 				2267FF4882DF7605904F8B50 /* PhoneWatchSessionManager.swift in Sources */,
 				FCFE42FB92CC3817499DC885 /* PowerSlideButton.swift in Sources */,
 				1BA065423E7014CBEF7E5789 /* PreviewHelpers.swift in Sources */,
+				3A27C6677CA7CD4D7D5821F1 /* RideShareLinkSheet.swift in Sources */,
 				8F085638E5D961EC00DE31CE /* RegisterReader.swift in Sources */,
 				E98E90FD43E65AD77479B30B /* RideDetailView.swift in Sources */,
 				923ECACC43B67071CB146A14 /* RideHistoryView.swift in Sources */,

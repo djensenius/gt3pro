@@ -4,7 +4,6 @@
 //
 //  Created by David Jensenius.
 //
-
 import Foundation
 import os
 import SwiftData
@@ -21,11 +20,11 @@ private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", catego
 final class RideSyncService {
     static let shared = RideSyncService()
 
-    private let baseURL = "https://api.fluxhaus.io"
+    private let baseURL = GT3APIConfig.baseURL
     private var isSyncing = false
 
     /// Maximum rides to hydrate with samples per sync (new + backfill).
-    private let maxHydrations = 10
+    private let maxHydrations = 25
 
     /// Fetch all rides from the server and upsert any that are missing locally.
     func syncRides() async {
@@ -48,6 +47,7 @@ final class RideSyncService {
                     insert(serverRide, into: context)
                     newRideIds.append(serverRide.id)
                 }
+
                 hasMore = serverRides.count == 20
                 page += 1
             }
@@ -62,6 +62,26 @@ final class RideSyncService {
 
         // Phase 2: Hydrate samples for rides that need them
         await hydrateSamples(newRideIds: newRideIds, context: context)
+    }
+
+    @discardableResult
+    func hydrateRideSamples(for ride: PersistedRide) async -> Bool {
+        guard ride.samplesHydrated != true else { return true }
+        do {
+            let (samples, isAuthFailure) = try await fetchSamples(rideId: ride.rideId)
+            guard !isAuthFailure else {
+                logger.warning("Skipping selected ride hydration for \(ride.rideId) due to auth failure")
+                return false
+            }
+            insertSamples(samples, for: ride)
+            ride.samplesHydrated = true
+            try PersistenceController.shared.context.save()
+            logger.info("Hydrated selected ride \(ride.rideId)")
+            return true
+        } catch {
+            logger.warning("Failed to hydrate selected ride \(ride.rideId): \(error.localizedDescription)")
+            return false
+        }
     }
 
     // MARK: - Sample Hydration
