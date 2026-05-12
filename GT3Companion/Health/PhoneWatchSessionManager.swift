@@ -15,6 +15,24 @@ private let logger = Logger(
     category: "WatchSession"
 )
 
+struct WatchTelemetryContext {
+    let battery: Int
+    let isConnected: Bool
+    let rideActive: Bool
+    let speed: Double
+    let tripDistance: Double
+    let range: Double
+    let mode: Int
+
+    func hasKeyChange(from previous: WatchTelemetryContext?) -> Bool {
+        guard let previous else { return true }
+        return battery != previous.battery
+            || isConnected != previous.isConnected
+            || rideActive != previous.rideActive
+            || mode != previous.mode
+    }
+}
+
 /// Manages WatchConnectivity from the iPhone side.
 /// Sends telemetry to Watch, receives heart rate back.
 @MainActor
@@ -25,6 +43,9 @@ class PhoneWatchSessionManager: NSObject, ObservableObject {
     @Published var isWatchReachable: Bool = false
 
     private var wcSession: WCSession?
+    private var lastTelemetryContext: WatchTelemetryContext?
+    private var lastTelemetryContextUpdate: Date?
+    private let telemetryContextUpdateInterval: TimeInterval = 15
 
     override init() {
         super.init()
@@ -39,38 +60,43 @@ class PhoneWatchSessionManager: NSObject, ObservableObject {
     }
 
     /// Send live telemetry to the Watch (interactive message — Watch must be reachable).
-    func sendTelemetry(
-        speed: Double,
-        battery: Int,
-        tripDistance: Double,
-        range: Double,
-        mode: Int,
-        rideActive: Bool
-    ) {
-        updateContext(
-            battery: battery,
-            isConnected: true,
-            rideActive: rideActive,
-            speed: speed,
-            tripDistance: tripDistance,
-            range: range,
-            mode: mode
-        )
+    func sendTelemetry(_ context: WatchTelemetryContext) {
+        updateTelemetryContextIfNeeded(context)
 
         guard let session = wcSession,
               session.isReachable else { return }
 
         let message: [String: Any] = [
-            "speed": speed,
-            "battery": battery,
-            "tripDistance": tripDistance,
-            "estimatedRange": range,
-            "gearMode": mode,
-            "rideActive": rideActive
+            "speed": context.speed,
+            "battery": context.battery,
+            "tripDistance": context.tripDistance,
+            "estimatedRange": context.range,
+            "gearMode": context.mode,
+            "rideActive": context.rideActive
         ]
         session.sendMessage(message, replyHandler: nil) { error in
             logger.warning("Failed to send telemetry to Watch: \(error)")
         }
+    }
+
+    private func updateTelemetryContextIfNeeded(_ context: WatchTelemetryContext) {
+        let now = Date()
+        let hasKeyChange = context.hasKeyChange(from: lastTelemetryContext)
+        let shouldRefreshUnreachableContext = !(wcSession?.isReachable ?? false)
+            && now.timeIntervalSince(lastTelemetryContextUpdate ?? .distantPast) >= telemetryContextUpdateInterval
+        guard hasKeyChange || shouldRefreshUnreachableContext else { return }
+
+        updateContext(
+            battery: context.battery,
+            isConnected: context.isConnected,
+            rideActive: context.rideActive,
+            speed: context.speed,
+            tripDistance: context.tripDistance,
+            range: context.range,
+            mode: context.mode
+        )
+        lastTelemetryContext = context
+        lastTelemetryContextUpdate = now
     }
 
     /// Send battery via application context (survives Watch app not running).

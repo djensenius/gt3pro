@@ -81,7 +81,6 @@ class RideWorkoutManager: NSObject, ObservableObject {
     func startWorkout(with configuration: HKWorkoutConfiguration? = nil) {
         guard session == nil, !isEndingWorkout else {
             pendingStartConfiguration = nil
-            print("Ignoring workout start: session already active or ending")
             return
         }
         guard healthKitIsAvailable() else {
@@ -98,7 +97,6 @@ class RideWorkoutManager: NSObject, ObservableObject {
         guard isWorkoutAuthorized else {
             if authorizationInProgress {
                 pendingStartConfiguration = pendingStartConfiguration ?? config
-                print("Ignoring workout start: authorization already pending")
                 return
             }
             pendingStartConfiguration = config
@@ -145,7 +143,6 @@ class RideWorkoutManager: NSObject, ObservableObject {
 
     func endWorkout() {
         guard session != nil, !isEndingWorkout else {
-            print("Ignoring workout end: no active session or already ending")
             return
         }
         isEndingWorkout = true

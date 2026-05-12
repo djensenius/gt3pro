@@ -18,15 +18,7 @@ private let rideLogger = Logger(subsystem: "org.davidjensenius.GT3Companion", ca
 extension AppCoordinator {
     func handleRideComplete(_ rideLog: RideLog) async {
         rideLogger.info("Ride complete: \(rideLog.totalDistance) km")
-        watchSession.updateContext(
-            battery: rideLog.endBattery,
-            isConnected: connectionState == .connected,
-            rideActive: false,
-            speed: 0,
-            tripDistance: rideLog.totalDistance,
-            range: estimatedRange,
-            mode: rideLog.primaryGearMode
-        )
+        updateWatchForCompletedRide(rideLog)
         let context = PersistenceController.shared.context
         let preUploadRideId = rideLog.rideId
         let persisted = PersistedRide(
@@ -165,6 +157,18 @@ extension AppCoordinator {
             }
         }
         await retryPendingRidePhotoUploads()
+    }
+
+    private func updateWatchForCompletedRide(_ rideLog: RideLog) {
+        watchSession.updateContext(
+            battery: rideLog.endBattery,
+            isConnected: connectionState == .connected,
+            rideActive: false,
+            speed: 0,
+            tripDistance: rideLog.totalDistance,
+            range: estimatedRange,
+            mode: rideLog.primaryGearMode
+        )
     }
 
     /// Auto-launch the Watch companion app to start a workout session.

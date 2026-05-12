@@ -101,14 +101,15 @@ extension AppCoordinator {
 
         await uploadQueue.enqueueSamples([sample])
 
-        watchSession.sendTelemetry(
-            speed: currentSpeed,
+        watchSession.sendTelemetry(WatchTelemetryContext(
             battery: currentBattery,
+            isConnected: true,
+            rideActive: hasActiveRide,
+            speed: currentSpeed,
             tripDistance: liveTripDistance,
             range: estimatedRange,
-            mode: sample.gearMode,
-            rideActive: hasActiveRide
-        )
+            mode: sample.gearMode
+        ))
 
         await liveActivityManager.updateActivity(state: .init(
             speed: currentSpeed,
