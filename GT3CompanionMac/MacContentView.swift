@@ -144,9 +144,9 @@ private struct MacLatestRideCard: View {
     let ride: PersistedRide
     let openRide: () -> Void
 
-    private var presentation: RidePresentation { ride.ridePresentation }
-
     var body: some View {
+        let presentation = ride.ridePresentation
+
         VStack(alignment: .leading, spacing: Theme.Spacing.medium) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
@@ -264,13 +264,13 @@ private struct MacRideDetailView: View {
     @State private var hydrationFailed = false
     @State private var showShareSheet = false
 
-    private var presentation: RidePresentation { ride.ridePresentation }
-
     var body: some View {
+        let presentation = ride.ridePresentation
+
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.Spacing.large) {
                 detailHeader
-                telemetryStatus
+                telemetryStatus(presentation: presentation)
                 MacRouteMapView(coordinates: presentation.routeCoordinates)
                     .frame(height: 360)
 
@@ -334,7 +334,7 @@ private struct MacRideDetailView: View {
     }
 
     @ViewBuilder
-    private var telemetryStatus: some View {
+    private func telemetryStatus(presentation: RidePresentation) -> some View {
         if isHydrating {
             Label("Loading detailed telemetry…", systemImage: "arrow.triangle.2.circlepath")
                 .font(Theme.Fonts.bodySmall)

@@ -141,9 +141,9 @@ private struct VisionHeroRideCard: View {
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     @State private var isOpeningSpace = false
 
-    private var presentation: RidePresentation { ride.ridePresentation }
-
     var body: some View {
+        let presentation = ride.ridePresentation
+
         VStack(alignment: .leading, spacing: Theme.Spacing.large) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 6) {
@@ -257,9 +257,9 @@ private struct VisionRideDetailView: View {
     @State private var hydrationFailed = false
     @State private var showShareSheet = false
 
-    private var presentation: RidePresentation { ride.ridePresentation }
-
     var body: some View {
+        let presentation = ride.ridePresentation
+
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.Spacing.large) {
                 HStack(alignment: .top) {
@@ -280,7 +280,7 @@ private struct VisionRideDetailView: View {
                         .buttonStyle(.gt3Primary)
                         .frame(width: 160)
                     }
-                    telemetryStatus
+                    telemetryStatus(presentation: presentation)
                 }
 
                 VisionRouteMapView(coordinates: presentation.routeCoordinates)
@@ -320,7 +320,7 @@ private struct VisionRideDetailView: View {
     }
 
     @ViewBuilder
-    private var telemetryStatus: some View {
+    private func telemetryStatus(presentation: RidePresentation) -> some View {
         if isHydrating {
             Label("Loading telemetry", systemImage: "arrow.triangle.2.circlepath")
                 .foregroundStyle(Theme.Colors.textSecondary)

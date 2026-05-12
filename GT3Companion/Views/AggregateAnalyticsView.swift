@@ -21,9 +21,17 @@ struct AggregateAnalyticsView: View {
     }
 
     private var averageRoughness: Double? {
-        let values = rides.compactMap { $0.ridePresentation.averageRoughness }
+        let values = roughnessByRide.map(\.roughness)
         guard !values.isEmpty else { return nil }
         return values.reduce(0, +) / Double(values.count)
+    }
+
+    private var roughnessByRide: [(date: Date, roughness: Double)] {
+        rides.compactMap { ride in
+            let presentation = ride.ridePresentation
+            guard let roughness = presentation.averageRoughness else { return nil }
+            return (ride.startTime, roughness)
+        }
     }
 
     private var recentRides: [PersistedRide] {
@@ -98,7 +106,7 @@ struct AggregateAnalyticsView: View {
                                 analyticsCard(speedTrendChart)
                                 analyticsCard(batteryEfficiencyChart)
                                 analyticsCard(weatherChart)
-                                analyticsCard(roughnessChart)
+                                analyticsCard(roughnessChart(values: roughnessByRide))
                             }
 
                             SectionHeader(title: "Personal Records")
@@ -216,22 +224,18 @@ struct AggregateAnalyticsView: View {
         }
     }
 
-    private var roughnessChart: some View {
+    private func roughnessChart(values: [(date: Date, roughness: Double)]) -> some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.small) {
             Text("Roughness by Ride")
                 .font(Theme.Fonts.headerLarge())
-            let values = recentRides.compactMap { ride -> (Date, Double)? in
-                guard let roughness = ride.ridePresentation.averageRoughness else { return nil }
-                return (ride.startTime, roughness)
-            }
             if values.isEmpty {
                 emptyChart("Hydrate rides to see roughness")
             } else {
                 Chart {
                     ForEach(Array(values.enumerated()), id: \.offset) { _, sample in
                         BarMark(
-                            x: .value("Date", sample.0, unit: .day),
-                            y: .value("Roughness", sample.1)
+                            x: .value("Date", sample.date, unit: .day),
+                            y: .value("Roughness", sample.roughness)
                         )
                         .foregroundStyle(Theme.Colors.primary)
                     }

@@ -9,7 +9,7 @@ private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", catego
 /// Note: Authentication (OIDC via AuthManager) will be integrated in a future PR.
 /// Currently sends unauthenticated requests.
 actor GT3APIClient {
-    private let baseURL = "https://api.fluxhaus.io"
+    private let baseURL = GT3APIConfig.baseURL
     private let session = URLSession(configuration: .default)
 
     /// Upload a batch of telemetry samples.
@@ -122,7 +122,7 @@ actor GT3APIClient {
 
     /// Build the full shareable URL from a token.
     nonisolated func shareURL(for token: String) -> URL? {
-        var components = URLComponents(string: "https://api.fluxhaus.io/gt3/ride.html")
+        var components = URLComponents(string: "\(GT3APIConfig.baseURL)/gt3/ride.html")
         components?.queryItems = [URLQueryItem(name: "share", value: token)]
         return components?.url
     }
