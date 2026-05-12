@@ -20,7 +20,7 @@ struct AggregateAnalyticsView: View {
         return values.reduce(0, +) / Double(values.count)
     }
 
-    private var averageRoughness: Double? {
+    private func averageRoughness(from roughnessByRide: [(date: Date, roughness: Double)]) -> Double? {
         let values = roughnessByRide.map(\.roughness)
         guard !values.isEmpty else { return nil }
         return values.reduce(0, +) / Double(values.count)
@@ -46,6 +46,9 @@ struct AggregateAnalyticsView: View {
     }
 
     var body: some View {
+        let roughnessByRide = roughnessByRide
+        let averageRoughness = averageRoughness(from: roughnessByRide)
+
         NavigationStack {
             ZStack {
                 Theme.Colors.background.ignoresSafeArea()
