@@ -5,27 +5,76 @@ class RideWorkoutManager: NSObject, ObservableObject {
     let healthStore = HKHealthStore()
     private var session: HKWorkoutSession?
     private var builder: HKLiveWorkoutBuilder?
+    private var authorizationInProgress = false
+    private var authorizationCompletions: [(Bool) -> Void] = []
+    private var pendingStartConfiguration: HKWorkoutConfiguration?
+    private var isEndingWorkout = false
 
     @Published var heartRate: Double = 0
     @Published var activeCalories: Double = 0
     @Published var isWorkoutActive = false
+    @Published var isAuthorizationGranted = false
+    @Published var workoutError: String?
 
-    func requestAuthorization() {
-        let typesToShare: Set = [HKQuantityType.workoutType()]
-        let typesToRead: Set = [
+    func requestAuthorization(completion: ((Bool) -> Void)? = nil) {
+        guard HKHealthStore.isHealthDataAvailable() else {
+            DispatchQueue.main.async {
+                self.workoutError = "HealthKit is not available on this device."
+                self.isAuthorizationGranted = false
+                completion?(false)
+            }
+            return
+        }
+
+        let workoutType = HKObjectType.workoutType()
+        if healthStore.authorizationStatus(for: workoutType) == .sharingAuthorized {
+            DispatchQueue.main.async {
+                self.workoutError = nil
+                self.isAuthorizationGranted = true
+                completion?(true)
+            }
+            return
+        }
+
+        if let completion {
+            authorizationCompletions.append(completion)
+        }
+        guard !authorizationInProgress else { return }
+        authorizationInProgress = true
+
+        let typesToShare: Set<HKSampleType> = [workoutType]
+        let typesToRead: Set<HKObjectType> = [
             HKQuantityType(.heartRate),
             HKQuantityType(.activeEnergyBurned),
         ]
-
         healthStore.requestAuthorization(toShare: typesToShare, read: typesToRead) { success, error in
-            if let error {
-                print("HealthKit auth error: \(error)")
+            DispatchQueue.main.async {
+                self.authorizationInProgress = false
+                let authorized = success && self.healthStore.authorizationStatus(for: workoutType) == .sharingAuthorized
+                self.isAuthorizationGranted = authorized
+                if let error {
+                    self.workoutError = "HealthKit authorization failed: \(error.localizedDescription)"
+                    print("HealthKit auth error: \(error)")
+                } else if !authorized {
+                    self.workoutError = "HealthKit workout permission was not granted."
+                } else {
+                    self.workoutError = nil
+                }
+                let completions = self.authorizationCompletions
+                self.authorizationCompletions.removeAll()
+                completions.forEach { $0(authorized) }
             }
         }
     }
 
     func startWorkout(with configuration: HKWorkoutConfiguration? = nil) {
-        guard session == nil else { return }
+        guard session == nil, !isEndingWorkout else { return }
+        guard HKHealthStore.isHealthDataAvailable() else {
+            DispatchQueue.main.async {
+                self.workoutError = "HealthKit is not available on this device."
+            }
+            return
+        }
 
         let config = configuration ?? {
             let cfg = HKWorkoutConfiguration()
@@ -33,6 +82,17 @@ class RideWorkoutManager: NSObject, ObservableObject {
             cfg.locationType = .outdoor
             return cfg
         }()
+
+        guard healthStore.authorizationStatus(for: HKObjectType.workoutType()) == .sharingAuthorized else {
+            pendingStartConfiguration = config
+            requestAuthorization { [weak self] authorized in
+                guard let self, authorized else { return }
+                let pending = self.pendingStartConfiguration
+                self.pendingStartConfiguration = nil
+                self.startWorkout(with: pending)
+            }
+            return
+        }
 
         do {
             session = try HKWorkoutSession(healthStore: healthStore, configuration: config)
@@ -44,18 +104,32 @@ class RideWorkoutManager: NSObject, ObservableObject {
 
             let startDate = Date()
             session?.startActivity(with: startDate)
-            builder?.beginCollection(withStart: startDate) { _, _ in }
+            builder?.beginCollection(withStart: startDate) { [weak self] _, error in
+                guard let error else { return }
+                DispatchQueue.main.async {
+                    self?.workoutError = "Workout collection failed: \(error.localizedDescription)"
+                }
+            }
 
-            DispatchQueue.main.async { self.isWorkoutActive = true }
+            DispatchQueue.main.async {
+                self.workoutError = nil
+                self.isWorkoutActive = true
+            }
         } catch {
+            DispatchQueue.main.async {
+                self.workoutError = "Failed to start workout: \(error.localizedDescription)"
+                self.isWorkoutActive = false
+                self.session = nil
+                self.builder = nil
+            }
             print("Failed to start workout: \(error)")
         }
     }
 
     func endWorkout() {
-        guard session != nil else { return }
+        guard session != nil, !isEndingWorkout else { return }
+        isEndingWorkout = true
         session?.end()
-        session = nil
         DispatchQueue.main.async { self.isWorkoutActive = false }
     }
 }
@@ -68,14 +142,36 @@ extension RideWorkoutManager: HKWorkoutSessionDelegate {
         date: Date
     ) {
         if toState == .ended {
-            builder?.endCollection(withEnd: date) { _, _ in
-                self.builder?.finishWorkout { _, _ in }
+            builder?.endCollection(withEnd: date) { [weak self] _, error in
+                if let error {
+                    DispatchQueue.main.async {
+                        self?.workoutError = "Failed to end workout collection: \(error.localizedDescription)"
+                    }
+                }
+                self?.builder?.finishWorkout { [weak self] _, error in
+                    DispatchQueue.main.async {
+                        if let error {
+                            self?.workoutError = "Failed to save workout: \(error.localizedDescription)"
+                        }
+                        self?.builder = nil
+                        self?.session = nil
+                        self?.isEndingWorkout = false
+                        self?.isWorkoutActive = false
+                    }
+                }
             }
         }
     }
 
     func workoutSession(_ workoutSession: HKWorkoutSession, didFailWithError error: Error) {
         print("Workout session error: \(error)")
+        DispatchQueue.main.async {
+            self.workoutError = "Workout session failed: \(error.localizedDescription)"
+            self.isWorkoutActive = false
+            self.isEndingWorkout = false
+            self.session = nil
+            self.builder = nil
+        }
     }
 }
 

@@ -44,8 +44,19 @@ class PhoneWatchSessionManager: NSObject, ObservableObject {
         battery: Int,
         tripDistance: Double,
         range: Double,
-        mode: Int
+        mode: Int,
+        rideActive: Bool
     ) {
+        updateContext(
+            battery: battery,
+            isConnected: true,
+            rideActive: rideActive,
+            speed: speed,
+            tripDistance: tripDistance,
+            range: range,
+            mode: mode
+        )
+
         guard let session = wcSession,
               session.isReachable else { return }
 
@@ -54,7 +65,8 @@ class PhoneWatchSessionManager: NSObject, ObservableObject {
             "battery": battery,
             "tripDistance": tripDistance,
             "estimatedRange": range,
-            "gearMode": mode
+            "gearMode": mode,
+            "rideActive": rideActive
         ]
         session.sendMessage(message, replyHandler: nil) { error in
             logger.warning("Failed to send telemetry to Watch: \(error)")
@@ -62,15 +74,36 @@ class PhoneWatchSessionManager: NSObject, ObservableObject {
     }
 
     /// Send battery via application context (survives Watch app not running).
-    func updateContext(battery: Int, isConnected: Bool, rideActive: Bool = false) {
+    func updateContext(
+        battery: Int,
+        isConnected: Bool,
+        rideActive: Bool = false,
+        speed: Double? = nil,
+        tripDistance: Double? = nil,
+        range: Double? = nil,
+        mode: Int? = nil
+    ) {
         guard let session = wcSession,
-              session.activationState == .activated else { return }
+               session.activationState == .activated else { return }
+        var context: [String: Any] = [
+            "battery": battery,
+            "isConnected": isConnected,
+            "rideActive": rideActive
+        ]
+        if let speed {
+            context["speed"] = speed
+        }
+        if let tripDistance {
+            context["tripDistance"] = tripDistance
+        }
+        if let range {
+            context["estimatedRange"] = range
+        }
+        if let mode {
+            context["gearMode"] = mode
+        }
         do {
-            try session.updateApplicationContext([
-                "battery": battery,
-                "isConnected": isConnected,
-                "rideActive": rideActive
-            ])
+            try session.updateApplicationContext(context)
         } catch {
             logger.warning("Failed to update Watch context: \(error)")
         }

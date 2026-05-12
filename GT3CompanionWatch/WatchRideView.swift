@@ -12,13 +12,31 @@ struct WatchRideView: View {
     @EnvironmentObject private var workout: RideWorkoutManager
 
     var body: some View {
-        if connectivity.isRiding || connectivity.rideActive {
-            ridingView
-        } else if connectivity.isConnected {
-            standbyView
-        } else {
-            idleView
+        Group {
+            if shouldRecordWorkout {
+                ridingView
+            } else if connectivity.isConnected {
+                standbyView
+            } else {
+                idleView
+            }
         }
+        .onAppear {
+            synchronizeWorkout()
+        }
+        .onChange(of: connectivity.isRiding) { _, riding in
+            synchronizeWorkout(isRiding: riding, rideActive: connectivity.rideActive)
+        }
+        .onChange(of: connectivity.rideActive) { _, active in
+            synchronizeWorkout(isRiding: connectivity.isRiding, rideActive: active)
+        }
+        .onChange(of: workout.heartRate) { _, hr in
+            connectivity.sendHeartRate(Int(hr))
+        }
+    }
+
+    private var shouldRecordWorkout: Bool {
+        connectivity.rideActive || connectivity.isRiding
     }
 
     private var ridingView: some View {
@@ -37,6 +55,13 @@ struct WatchRideView: View {
                     Text("\(Int(workout.heartRate))")
                         .font(.headline)
                 }
+            } else if workout.workoutError != nil {
+                HStack {
+                    Image(systemName: "heart.slash.fill")
+                    Text("HR unavailable")
+                }
+                .font(.caption2)
+                .foregroundStyle(.red)
             }
 
             HStack(spacing: 12) {
@@ -54,31 +79,17 @@ struct WatchRideView: View {
                 .font(.caption2)
                 .foregroundStyle(.cyan.opacity(0.7))
         }
-        .onAppear {
-            workout.requestAuthorization()
+    }
+
+    private func synchronizeWorkout(
+        isRiding: Bool? = nil,
+        rideActive: Bool? = nil
+    ) {
+        let shouldStart = (rideActive ?? connectivity.rideActive) || (isRiding ?? connectivity.isRiding)
+        if shouldStart {
             workout.startWorkout()
-        }
-        .onDisappear {
+        } else {
             workout.endWorkout()
-        }
-        .onChange(of: connectivity.isRiding) { _, riding in
-            if riding && !workout.isWorkoutActive {
-                workout.requestAuthorization()
-                workout.startWorkout()
-            } else if !riding && !connectivity.rideActive {
-                workout.endWorkout()
-            }
-        }
-        .onChange(of: connectivity.rideActive) { _, active in
-            if active && !workout.isWorkoutActive {
-                workout.requestAuthorization()
-                workout.startWorkout()
-            } else if !active && !connectivity.isRiding {
-                workout.endWorkout()
-            }
-        }
-        .onChange(of: workout.heartRate) { _, hr in
-            connectivity.sendHeartRate(Int(hr))
         }
     }
 

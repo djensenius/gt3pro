@@ -18,6 +18,15 @@ private let rideLogger = Logger(subsystem: "org.davidjensenius.GT3Companion", ca
 extension AppCoordinator {
     func handleRideComplete(_ rideLog: RideLog) async {
         rideLogger.info("Ride complete: \(rideLog.totalDistance) km")
+        watchSession.updateContext(
+            battery: rideLog.endBattery,
+            isConnected: connectionState == .connected,
+            rideActive: false,
+            speed: 0,
+            tripDistance: rideLog.totalDistance,
+            range: estimatedRange,
+            mode: rideLog.primaryGearMode
+        )
         let context = PersistenceController.shared.context
         let preUploadRideId = rideLog.rideId
         let persisted = PersistedRide(

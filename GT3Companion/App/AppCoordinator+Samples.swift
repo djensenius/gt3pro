@@ -63,7 +63,9 @@ extension AppCoordinator {
 
         let wasIdle = await rideTracker.state == .idle
         await rideTracker.addSample(sample)
-        let nowRiding = await rideTracker.state == .riding
+        let rideState = await rideTracker.state
+        let nowRiding = rideState == .riding
+        let rideActive = rideState != .idle
 
         if wasIdle && nowRiding {
             isRiding = true
@@ -72,22 +74,30 @@ extension AppCoordinator {
             watchSession.updateContext(
                 battery: currentBattery,
                 isConnected: true,
-                rideActive: true
+                rideActive: true,
+                speed: currentSpeed,
+                tripDistance: liveTripDistance,
+                range: estimatedRange,
+                mode: sample.gearMode
             )
         }
 
         let wasRiding = !wasIdle
-        let nowIdle = await rideTracker.state == .idle
+        let nowIdle = !rideActive
         if wasRiding && nowIdle {
             watchSession.updateContext(
                 battery: currentBattery,
                 isConnected: true,
-                rideActive: false
+                rideActive: false,
+                speed: 0,
+                tripDistance: liveTripDistance,
+                range: estimatedRange,
+                mode: sample.gearMode
             )
         }
 
         await fetchWeatherIfNeeded(gpsSample: gpsSample)
-        isRiding = await rideTracker.state != .idle
+        isRiding = rideActive
 
         await uploadQueue.enqueueSamples([sample])
 
@@ -96,7 +106,8 @@ extension AppCoordinator {
             battery: currentBattery,
             tripDistance: liveTripDistance,
             range: estimatedRange,
-            mode: sample.gearMode
+            mode: sample.gearMode,
+            rideActive: rideActive
         )
 
         await liveActivityManager.updateActivity(state: .init(
