@@ -16,6 +16,10 @@ class RideWorkoutManager: NSObject, ObservableObject {
     @Published var isAuthorizationGranted = false
     @Published var workoutError: String?
 
+    private var isWorkoutAuthorized: Bool {
+        healthStore.authorizationStatus(for: HKObjectType.workoutType()) == .sharingAuthorized
+    }
+
     func requestAuthorization(completion: ((Bool) -> Void)? = nil) {
         guard HKHealthStore.isHealthDataAvailable() else {
             DispatchQueue.main.async {
@@ -27,7 +31,7 @@ class RideWorkoutManager: NSObject, ObservableObject {
         }
 
         let workoutType = HKObjectType.workoutType()
-        if healthStore.authorizationStatus(for: workoutType) == .sharingAuthorized {
+        if isWorkoutAuthorized {
             DispatchQueue.main.async {
                 self.workoutError = nil
                 self.isAuthorizationGranted = true
@@ -50,7 +54,7 @@ class RideWorkoutManager: NSObject, ObservableObject {
         healthStore.requestAuthorization(toShare: typesToShare, read: typesToRead) { success, error in
             DispatchQueue.main.async {
                 self.authorizationInProgress = false
-                let authorized = success && self.healthStore.authorizationStatus(for: workoutType) == .sharingAuthorized
+                let authorized = success && self.isWorkoutAuthorized
                 self.isAuthorizationGranted = authorized
                 if let error {
                     self.workoutError = "HealthKit authorization failed: \(error.localizedDescription)"
@@ -68,7 +72,10 @@ class RideWorkoutManager: NSObject, ObservableObject {
     }
 
     func startWorkout(with configuration: HKWorkoutConfiguration? = nil) {
-        guard session == nil, !isEndingWorkout else { return }
+        guard session == nil, !isEndingWorkout else {
+            print("Ignoring workout start: session already active or ending")
+            return
+        }
         guard HKHealthStore.isHealthDataAvailable() else {
             DispatchQueue.main.async {
                 self.workoutError = "HealthKit is not available on this device."
@@ -83,7 +90,7 @@ class RideWorkoutManager: NSObject, ObservableObject {
             return cfg
         }()
 
-        guard healthStore.authorizationStatus(for: HKObjectType.workoutType()) == .sharingAuthorized else {
+        guard isWorkoutAuthorized else {
             pendingStartConfiguration = config
             requestAuthorization { [weak self] authorized in
                 guard let self, authorized else { return }
@@ -127,7 +134,10 @@ class RideWorkoutManager: NSObject, ObservableObject {
     }
 
     func endWorkout() {
-        guard session != nil, !isEndingWorkout else { return }
+        guard session != nil, !isEndingWorkout else {
+            print("Ignoring workout end: no active session or already ending")
+            return
+        }
         isEndingWorkout = true
         session?.end()
     }

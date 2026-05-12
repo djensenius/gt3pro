@@ -24,11 +24,11 @@ struct WatchRideView: View {
         .onAppear {
             synchronizeWorkout()
         }
-        .onChange(of: connectivity.isRiding) { _, riding in
-            synchronizeWorkout(isRiding: riding, rideActive: connectivity.rideActive)
+        .onChange(of: connectivity.isRiding) { _, _ in
+            synchronizeWorkout()
         }
-        .onChange(of: connectivity.rideActive) { _, active in
-            synchronizeWorkout(isRiding: connectivity.isRiding, rideActive: active)
+        .onChange(of: connectivity.rideActive) { _, _ in
+            synchronizeWorkout()
         }
         .onChange(of: workout.heartRate) { _, hr in
             connectivity.sendHeartRate(Int(hr))
@@ -81,12 +81,8 @@ struct WatchRideView: View {
         }
     }
 
-    private func synchronizeWorkout(
-        isRiding: Bool? = nil,
-        rideActive: Bool? = nil
-    ) {
-        let shouldStart = (rideActive ?? connectivity.rideActive) || (isRiding ?? connectivity.isRiding)
-        if shouldStart {
+    private func synchronizeWorkout() {
+        if shouldRecordWorkout {
             workout.startWorkout()
         } else {
             workout.endWorkout()
