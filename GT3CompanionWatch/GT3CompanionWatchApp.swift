@@ -14,7 +14,6 @@ class WatchAppDelegate: NSObject, WKApplicationDelegate {
 
     func handle(_ workoutConfiguration: HKWorkoutConfiguration) {
         print("[Watch] Received workout configuration from iPhone: \(workoutConfiguration.activityType.rawValue)")
-        workoutManager.requestAuthorization()
         workoutManager.startWorkout(with: workoutConfiguration)
     }
 }

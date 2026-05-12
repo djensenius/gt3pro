@@ -63,41 +63,53 @@ extension AppCoordinator {
 
         let wasIdle = await rideTracker.state == .idle
         await rideTracker.addSample(sample)
-        let nowRiding = await rideTracker.state == .riding
+        let rideState = await rideTracker.state
+        let isCurrentlyMoving = rideState == .riding
+        let hasActiveRide = isCurrentlyMoving || rideState == .stopped
 
-        if wasIdle && nowRiding {
+        if wasIdle && isCurrentlyMoving {
             isRiding = true
             sendRideStartNotification()
             launchWatchApp()
             watchSession.updateContext(
                 battery: currentBattery,
                 isConnected: true,
-                rideActive: true
+                rideActive: true,
+                speed: currentSpeed,
+                tripDistance: liveTripDistance,
+                range: estimatedRange,
+                mode: sample.gearMode
             )
         }
 
         let wasRiding = !wasIdle
-        let nowIdle = await rideTracker.state == .idle
-        if wasRiding && nowIdle {
+        let rideInactive = !hasActiveRide
+        if wasRiding && rideInactive {
             watchSession.updateContext(
                 battery: currentBattery,
                 isConnected: true,
-                rideActive: false
+                rideActive: false,
+                speed: 0,
+                tripDistance: liveTripDistance,
+                range: estimatedRange,
+                mode: sample.gearMode
             )
         }
 
         await fetchWeatherIfNeeded(gpsSample: gpsSample)
-        isRiding = await rideTracker.state != .idle
+        isRiding = hasActiveRide
 
         await uploadQueue.enqueueSamples([sample])
 
-        watchSession.sendTelemetry(
-            speed: currentSpeed,
+        watchSession.sendTelemetry(WatchTelemetryContext(
             battery: currentBattery,
+            isConnected: true,
+            rideActive: hasActiveRide,
+            speed: currentSpeed,
             tripDistance: liveTripDistance,
             range: estimatedRange,
             mode: sample.gearMode
-        )
+        ))
 
         await liveActivityManager.updateActivity(state: .init(
             speed: currentSpeed,

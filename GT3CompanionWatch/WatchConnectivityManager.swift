@@ -34,7 +34,9 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         WCSession.default.sendMessage(
             ["heartRate": heartRate],
             replyHandler: nil,
-            errorHandler: nil
+            errorHandler: { error in
+                print("[Watch] Failed to send heart rate: \(error.localizedDescription)")
+            }
         )
     }
 
@@ -51,8 +53,10 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
             self.tripDistance = message["tripDistance"] as? Double ?? self.tripDistance
             self.estimatedRange = message["estimatedRange"] as? Double ?? self.estimatedRange
             self.gearMode = message["gearMode"] as? Int ?? self.gearMode
-            self.isRiding = self.speed > 0
+            self.rideActive = message["rideActive"] as? Bool ?? self.rideActive
             self.isConnected = true
+            self.clearSpeedWhenRideInactive()
+            self.isRiding = self.isMovingDuringActiveRide
         }
     }
 
@@ -64,6 +68,22 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
             self.battery = applicationContext["battery"] as? Int ?? self.battery
             self.isConnected = applicationContext["isConnected"] as? Bool ?? self.isConnected
             self.rideActive = applicationContext["rideActive"] as? Bool ?? self.rideActive
+            self.speed = applicationContext["speed"] as? Double ?? self.speed
+            self.tripDistance = applicationContext["tripDistance"] as? Double ?? self.tripDistance
+            self.estimatedRange = applicationContext["estimatedRange"] as? Double ?? self.estimatedRange
+            self.gearMode = applicationContext["gearMode"] as? Int ?? self.gearMode
+            self.clearSpeedWhenRideInactive()
+            self.isRiding = self.isMovingDuringActiveRide
+        }
+    }
+
+    private var isMovingDuringActiveRide: Bool {
+        rideActive && speed > 0
+    }
+
+    private func clearSpeedWhenRideInactive() {
+        if !rideActive {
+            speed = 0
         }
     }
 }

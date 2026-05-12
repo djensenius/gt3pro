@@ -386,7 +386,15 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         gpsTracker.stopTracking()
         roughnessTracker.stopTracking()
         await liveActivityManager.updateActivity(state: .idle(isConnected: true))
-        watchSession.sendTelemetry(speed: 0, battery: 0, tripDistance: 0, range: 0, mode: 0)
+        watchSession.sendTelemetry(WatchTelemetryContext(
+            battery: 0,
+            isConnected: true,
+            rideActive: false,
+            speed: 0,
+            tripDistance: 0,
+            range: 0,
+            mode: 0
+        ))
         watchSession.updateContext(battery: 0, isConnected: true, rideActive: false)
         sendScooterSleepNotification()
     }
