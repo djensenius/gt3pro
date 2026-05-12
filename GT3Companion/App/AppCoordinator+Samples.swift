@@ -83,8 +83,8 @@ extension AppCoordinator {
         }
 
         let wasRiding = !wasIdle
-        let nowIdle = !rideActive
-        if wasRiding && nowIdle {
+        let rideInactive = !rideActive
+        if wasRiding && rideInactive {
             watchSession.updateContext(
                 battery: currentBattery,
                 isConnected: true,

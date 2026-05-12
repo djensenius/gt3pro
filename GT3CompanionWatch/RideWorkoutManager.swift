@@ -130,7 +130,6 @@ class RideWorkoutManager: NSObject, ObservableObject {
         guard session != nil, !isEndingWorkout else { return }
         isEndingWorkout = true
         session?.end()
-        DispatchQueue.main.async { self.isWorkoutActive = false }
     }
 }
 
