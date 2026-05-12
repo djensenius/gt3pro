@@ -18,7 +18,7 @@ class RideWorkoutManager: NSObject, ObservableObject {
     @Published var workoutError: String?
 
     private var isWorkoutAuthorized: Bool {
-        healthStore.authorizationStatus(for: Self.workoutType) == .sharingAuthorized
+        isAuthorizationGranted || healthStore.authorizationStatus(for: Self.workoutType) == .sharingAuthorized
     }
 
     func requestAuthorization(completion: ((Bool) -> Void)? = nil) {
@@ -92,6 +92,10 @@ class RideWorkoutManager: NSObject, ObservableObject {
         }()
 
         guard isWorkoutAuthorized else {
+            if authorizationInProgress, pendingStartConfiguration != nil {
+                print("Ignoring workout start: authorization already pending")
+                return
+            }
             pendingStartConfiguration = config
             requestAuthorization { [weak self] authorized in
                 guard let self, authorized else { return }
