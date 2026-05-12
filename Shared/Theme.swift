@@ -229,14 +229,21 @@ extension ButtonStyle where Self == GT3ButtonStyle {
 
 // MARK: - Liquid Glass
 
-/// A card-style view modifier that uses Liquid Glass on iOS 26+ and falls back to
-/// a solid Catppuccin surface on older versions.
+/// A card-style view modifier that uses native glass on visionOS and falls back
+/// to a solid Catppuccin surface on other platforms.
 struct GlassCard: ViewModifier {
     func body(content: Content) -> some View {
+        #if os(visionOS)
+        content
+            .padding()
+            .glassBackgroundEffect(in: .rect(cornerRadius: Theme.cornerRadius))
+            .shadow(color: .black.opacity(0.18), radius: 18, y: 8)
+        #else
         content
             .padding()
             .background(Theme.Colors.secondaryBackground)
             .cornerRadius(Theme.cornerRadius)
+        #endif
     }
 }
 

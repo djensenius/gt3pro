@@ -111,7 +111,7 @@ struct RideDetailView: View {
                         StatCard(
                             title: "Max Speed",
                             value: String(format: "%.0f km/h", ride.maxSpeed),
-                            icon: "gauge.open.with.lines.needle.84percent",
+                            icon: "speedometer",
                             color: Theme.Colors.error
                         )
                         StatCard(

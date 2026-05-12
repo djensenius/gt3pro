@@ -43,6 +43,10 @@ struct GT3CompanionVisionApp: App {
             guard phase == .active else { return }
             Task { _ = await AuthManager.shared.ensureValidToken() }
         }
+
+        ImmersiveSpace(id: "RideRouteSpace") {
+            VisionRouteImmersiveConceptView()
+        }
     }
 
     #if DEBUG

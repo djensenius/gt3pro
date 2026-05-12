@@ -224,49 +224,4 @@ enum APIError: Error {
     case invalidURL
 }
 
-/// Expiration presets for ride share links.
-enum ShareExpiry: String, CaseIterable, Identifiable {
-    case oneHour, oneDay, sevenDays, thirtyDays, never
-
-    var id: String { rawValue }
-
-    var serverValue: String {
-        switch self {
-        case .oneHour:    return "1h"
-        case .oneDay:     return "24h"
-        case .sevenDays:  return "7d"
-        case .thirtyDays: return "30d"
-        case .never:      return "never"
-        }
-    }
-
-    var label: String {
-        switch self {
-        case .oneHour:    return "1 Hour"
-        case .oneDay:     return "24 Hours"
-        case .sevenDays:  return "7 Days"
-        case .thirtyDays: return "30 Days"
-        case .never:      return "Never"
-        }
-    }
-
-    var description: String {
-        switch self {
-        case .oneHour:    return "Link expires in 1 hour"
-        case .oneDay:     return "Link expires in 24 hours"
-        case .sevenDays:  return "Link expires in 7 days"
-        case .thirtyDays: return "Link expires in 30 days"
-        case .never:      return "Link never expires"
-        }
-    }
-}
-
-/// Server response when creating a share link.
-struct ShareLinkResponse: Codable {
-    let id: String
-    let token: String
-    let expiresAt: Date?
-    let createdAt: Date
-    let status: String
-}
 #endif
