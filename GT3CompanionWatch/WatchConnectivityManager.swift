@@ -25,6 +25,9 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         if WCSession.isSupported() {
             WCSession.default.delegate = self
             WCSession.default.activate()
+            print("[Watch] WCSession activation requested")
+        } else {
+            print("[Watch] WCSession not supported on this device")
         }
     }
 
@@ -44,7 +47,13 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         _ session: WCSession,
         activationDidCompleteWith activationState: WCSessionActivationState,
         error: (any Error)?
-    ) { }
+    ) {
+        if let error {
+            print("[Watch] WCSession activation failed: \(error.localizedDescription)")
+        } else {
+            print("[Watch] WCSession activated with state: \(activationState.rawValue)")
+        }
+    }
 
     func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
         DispatchQueue.main.async {

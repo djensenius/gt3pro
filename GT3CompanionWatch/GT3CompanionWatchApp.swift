@@ -12,6 +12,10 @@ import HealthKit
 class WatchAppDelegate: NSObject, WKApplicationDelegate {
     let workoutManager = RideWorkoutManager()
 
+    func applicationDidFinishLaunching() {
+        print("[Watch] applicationDidFinishLaunching")
+    }
+
     func handle(_ workoutConfiguration: HKWorkoutConfiguration) {
         print("[Watch] Received workout configuration from iPhone: \(workoutConfiguration.activityType.rawValue)")
         workoutManager.startWorkout(with: workoutConfiguration)
@@ -21,7 +25,11 @@ class WatchAppDelegate: NSObject, WKApplicationDelegate {
 @main
 struct GT3CompanionWatchApp: App {
     @WKApplicationDelegateAdaptor private var appDelegate: WatchAppDelegate
-    @StateObject private var connectivity = WatchConnectivityManager.shared
+    @StateObject private var connectivity = WatchConnectivityManager()
+
+    init() {
+        print("[Watch] GT3CompanionWatchApp initialized")
+    }
 
     var body: some Scene {
         WindowGroup {
