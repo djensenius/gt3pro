@@ -13,11 +13,13 @@ class WatchAppDelegate: NSObject, WKApplicationDelegate {
     let workoutManager = RideWorkoutManager()
 
     func applicationDidFinishLaunching() {
-        print("[Watch] applicationDidFinishLaunching")
+        WatchConnectivityManager.logStartup("applicationDidFinishLaunching")
     }
 
     func handle(_ workoutConfiguration: HKWorkoutConfiguration) {
-        print("[Watch] Received workout configuration from iPhone: \(workoutConfiguration.activityType.rawValue)")
+        WatchConnectivityManager.logStartup(
+            "Received workout configuration from iPhone: \(workoutConfiguration.activityType.rawValue)"
+        )
         workoutManager.startWorkout(with: workoutConfiguration)
     }
 }
@@ -28,7 +30,7 @@ struct GT3CompanionWatchApp: App {
     @StateObject private var connectivity = WatchConnectivityManager()
 
     init() {
-        print("[Watch] GT3CompanionWatchApp initialized")
+        WatchConnectivityManager.logStartup("GT3CompanionWatchApp initialized")
     }
 
     var body: some Scene {

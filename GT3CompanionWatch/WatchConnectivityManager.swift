@@ -7,9 +7,14 @@
 
 import Foundation
 import WatchConnectivity
+import os
 
 class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
     static let shared = WatchConnectivityManager()
+    private static let startupLogger = Logger(
+        subsystem: "org.davidjensenius.GT3Companion",
+        category: "WatchStartup"
+    )
 
     @Published var speed: Double = 0
     @Published var battery: Int = 0
@@ -25,9 +30,9 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         if WCSession.isSupported() {
             WCSession.default.delegate = self
             WCSession.default.activate()
-            print("[Watch] WCSession activation requested")
+            Self.logStartup("WCSession activation requested")
         } else {
-            print("[Watch] WCSession not supported on this device")
+            Self.logStartup("WCSession not supported on this device")
         }
     }
 
@@ -38,7 +43,7 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
             ["heartRate": heartRate],
             replyHandler: nil,
             errorHandler: { error in
-                print("[Watch] Failed to send heart rate: \(error.localizedDescription)")
+                Self.startupLogger.warning("Failed to send heart rate: \(error.localizedDescription, privacy: .public)")
             }
         )
     }
@@ -49,9 +54,34 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         error: (any Error)?
     ) {
         if let error {
-            print("[Watch] WCSession activation failed: \(error.localizedDescription)")
+            Self.logStartup("WCSession activation failed: \(error.localizedDescription)")
         } else {
-            print("[Watch] WCSession activated with state: \(activationState.rawValue)")
+            Self.logStartup("WCSession activated with state: \(activationState.rawValue)")
+        }
+    }
+
+    static func logStartup(_ message: String) {
+        startupLogger.info("\(message, privacy: .public)")
+        forwardStartupLogToPhone(message)
+    }
+
+    private static func forwardStartupLogToPhone(_ message: String) {
+        guard WCSession.isSupported() else { return }
+        let session = WCSession.default
+        guard session.activationState == .activated else { return }
+        if session.isReachable {
+            session.sendMessage(
+                ["watchLog": message],
+                replyHandler: nil,
+                errorHandler: { error in
+                    startupLogger.warning("Failed to forward watch log: \(error.localizedDescription, privacy: .public)")
+                }
+            )
+        } else {
+            _ = session.transferUserInfo([
+                "watchLog": message,
+                "watchLogDate": Date().timeIntervalSince1970
+            ])
         }
     }
 
