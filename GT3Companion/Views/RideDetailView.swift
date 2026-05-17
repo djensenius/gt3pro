@@ -18,6 +18,7 @@ private struct RideDetailCachedSamples {
     let speeds: [(Date, Double)]
     let batteries: [(Date, Int)]
     let temps: [RideDetailTempSample]
+    let heartRates: [RideHeartRateChartSample]
     #if os(iOS)
     let photos: [RidePhotoDisplay]
     #endif
@@ -31,6 +32,10 @@ private struct RideDetailCachedSamples {
         self.speeds = all.map { ($0.timestamp, $0.speed) }
         self.batteries = all.map { ($0.timestamp, $0.battery) }
         self.temps = all.map { RideDetailTempSample(timestamp: $0.timestamp, bms: $0.bmsTemp) }
+        self.heartRates = all.compactMap { sample in
+            guard let heartRate = sample.heartRate, heartRate > 0 else { return nil }
+            return RideHeartRateChartSample(timestamp: sample.timestamp, value: heartRate)
+        }
         #if os(iOS)
         self.photos = ride.sortedPhotos.map { photo in
             RidePhotoDisplay(
@@ -147,6 +152,7 @@ struct RideDetailView: View {
                     photosSection
                     #endif
                     speedChartSection
+                    RideHeartRateChart(samples: cache.heartRates)
                     batteryChartSection
                     tempChartSection
                 }
