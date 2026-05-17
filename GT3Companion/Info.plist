@@ -37,6 +37,8 @@
 	<string>GT3 Companion connects to your Segway GT3 Pro to read ride telemetry and sync data.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>GT3 Companion needs Bluetooth to communicate with your Segway GT3 Pro.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>GT3 Companion lets you take ride photos to attach to your rides.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>GT3 Companion reads heart rate data from your Apple Watch during rides.</string>
 	<key>NSHealthUpdateUsageDescription</key>
