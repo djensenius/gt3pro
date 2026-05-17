@@ -67,33 +67,26 @@ extension AppCoordinator {
         let rideState = await rideTracker.state
         let isCurrentlyMoving = rideState == .riding
         let hasActiveRide = isCurrentlyMoving || rideState == .stopped
+        let rideSessionId = await rideTracker.getCurrentRideId()
 
         if wasIdle && isCurrentlyMoving {
             isRiding = true
             sendRideStartNotification()
-            launchWatchApp()
-            watchSession.updateContext(
-                battery: currentBattery,
-                isConnected: true,
-                rideActive: true,
-                speed: currentSpeed,
+            sendWatchRideStart(
+                rideSessionId: rideSessionId,
                 tripDistance: liveTripDistance,
-                range: estimatedRange,
-                mode: sample.gearMode
+                gearMode: sample.gearMode
             )
+            launchWatchApp()
         }
 
         let wasRiding = !wasIdle
         let rideInactive = !hasActiveRide
         if wasRiding && rideInactive {
-            watchSession.updateContext(
-                battery: currentBattery,
-                isConnected: true,
-                rideActive: false,
-                speed: 0,
+            updateWatchForInactiveRide(
+                rideSessionId: rideSessionId,
                 tripDistance: liveTripDistance,
-                range: estimatedRange,
-                mode: sample.gearMode
+                gearMode: sample.gearMode
             )
         }
 
@@ -102,15 +95,12 @@ extension AppCoordinator {
 
         await uploadQueue.enqueueSamples([sample])
 
-        watchSession.sendTelemetry(WatchTelemetryContext(
-            battery: currentBattery,
-            isConnected: true,
+        sendWatchTelemetry(
             rideActive: hasActiveRide,
-            speed: currentSpeed,
+            rideSessionId: rideSessionId,
             tripDistance: liveTripDistance,
-            range: estimatedRange,
-            mode: sample.gearMode
-        ))
+            gearMode: sample.gearMode
+        )
 
         await liveActivityManager.updateActivity(state: .init(
             speed: currentSpeed,
@@ -129,6 +119,68 @@ extension AppCoordinator {
         sendNotification(
             title: "Ride Started 🛴",
             body: "GT3 Pro ride logging is active. Battery: \(currentBattery)%"
+        )
+    }
+
+    private func watchTelemetryContext(
+        rideActive: Bool,
+        rideSessionId: String?,
+        speed: Double,
+        tripDistance: Double,
+        gearMode: Int
+    ) -> WatchTelemetryContext {
+        WatchTelemetryContext(
+            battery: currentBattery,
+            isConnected: true,
+            rideActive: rideActive,
+            speed: speed,
+            tripDistance: tripDistance,
+            range: estimatedRange,
+            mode: gearMode,
+            rideSessionId: rideSessionId
+        )
+    }
+
+    private func sendWatchRideStart(rideSessionId: String?, tripDistance: Double, gearMode: Int) {
+        guard let rideSessionId else { return }
+        watchSession.sendRideStart(
+            rideId: rideSessionId,
+            context: watchTelemetryContext(
+                rideActive: true,
+                rideSessionId: rideSessionId,
+                speed: currentSpeed,
+                tripDistance: tripDistance,
+                gearMode: gearMode
+            )
+        )
+    }
+
+    private func updateWatchForInactiveRide(rideSessionId: String?, tripDistance: Double, gearMode: Int) {
+        watchSession.updateContext(
+            battery: currentBattery,
+            isConnected: true,
+            speed: 0,
+            tripDistance: tripDistance,
+            range: estimatedRange,
+            mode: gearMode,
+            rideSessionId: rideSessionId
+        )
+    }
+
+    private func sendWatchTelemetry(
+        rideActive: Bool,
+        rideSessionId: String?,
+        tripDistance: Double,
+        gearMode: Int
+    ) {
+        watchSession.sendTelemetry(
+            watchTelemetryContext(
+                rideActive: rideActive,
+                rideSessionId: rideSessionId,
+                speed: currentSpeed,
+                tripDistance: tripDistance,
+                gearMode: gearMode
+            )
         )
     }
 

@@ -23,6 +23,7 @@ struct WatchTelemetryContext {
     let tripDistance: Double
     let range: Double
     let mode: Int
+    let rideSessionId: String?
 
     func hasKeyChange(from previous: WatchTelemetryContext?) -> Bool {
         guard let previous else { return true }
@@ -30,6 +31,7 @@ struct WatchTelemetryContext {
             || isConnected != previous.isConnected
             || rideActive != previous.rideActive
             || mode != previous.mode
+            || rideSessionId != previous.rideSessionId
     }
 }
 
@@ -84,16 +86,65 @@ class PhoneWatchSessionManager: NSObject, ObservableObject {
         guard let session = wcSession,
               session.isReachable else { return }
 
-        let message: [String: Any] = [
+        var message: [String: Any] = [
             "speed": context.speed,
             "battery": context.battery,
             "tripDistance": context.tripDistance,
             "estimatedRange": context.range,
             "gearMode": context.mode,
-            "rideActive": context.rideActive
+            "rideActive": context.rideActive,
+            "contextDate": Date().timeIntervalSince1970
         ]
+        if let rideSessionId = context.rideSessionId {
+            message["rideSessionId"] = rideSessionId
+        }
         session.sendMessage(message, replyHandler: nil) { error in
             logger.warning("Failed to send telemetry to Watch: \(error)")
+        }
+    }
+
+    func sendRideStart(rideId: String, context: WatchTelemetryContext) {
+        updateContext(
+            battery: context.battery,
+            isConnected: context.isConnected,
+            rideActive: true,
+            speed: context.speed,
+            tripDistance: context.tripDistance,
+            range: context.range,
+            mode: context.mode,
+            rideSessionId: rideId,
+            rideEvent: "start"
+        )
+        sendRideEvent("start", rideId: rideId)
+    }
+
+    func sendRideEnd(rideId: String, context: WatchTelemetryContext) {
+        updateContext(
+            battery: context.battery,
+            isConnected: context.isConnected,
+            rideActive: false,
+            speed: context.speed,
+            tripDistance: context.tripDistance,
+            range: context.range,
+            mode: context.mode,
+            rideSessionId: rideId,
+            rideEvent: "end"
+        )
+        sendRideEvent("end", rideId: rideId)
+    }
+
+    private func sendRideEvent(_ event: String, rideId: String) {
+        guard let session = wcSession,
+              session.activationState == .activated else { return }
+        let payload: [String: Any] = [
+            "rideEvent": event,
+            "rideSessionId": rideId,
+            "eventDate": Date().timeIntervalSince1970
+        ]
+        session.transferUserInfo(payload)
+        guard session.isReachable else { return }
+        session.sendMessage(payload, replyHandler: nil) { error in
+            logger.warning("Failed to send Watch ride \(event) event: \(error)")
         }
     }
 
@@ -111,7 +162,8 @@ class PhoneWatchSessionManager: NSObject, ObservableObject {
             speed: context.speed,
             tripDistance: context.tripDistance,
             range: context.range,
-            mode: context.mode
+            mode: context.mode,
+            rideSessionId: context.rideSessionId
         )
         lastTelemetryContext = context
         lastTelemetryContextUpdate = now
@@ -121,19 +173,30 @@ class PhoneWatchSessionManager: NSObject, ObservableObject {
     func updateContext(
         battery: Int,
         isConnected: Bool,
-        rideActive: Bool = false,
+        rideActive: Bool? = nil,
         speed: Double? = nil,
         tripDistance: Double? = nil,
         range: Double? = nil,
-        mode: Int? = nil
+        mode: Int? = nil,
+        rideSessionId: String? = nil,
+        rideEvent: String? = nil
     ) {
         guard let session = wcSession,
                session.activationState == .activated else { return }
         var context: [String: Any] = [
             "battery": battery,
             "isConnected": isConnected,
-            "rideActive": rideActive
+            "contextDate": Date().timeIntervalSince1970
         ]
+        if let rideActive {
+            context["rideActive"] = rideActive
+        }
+        if let rideSessionId {
+            context["rideSessionId"] = rideSessionId
+        }
+        if let rideEvent {
+            context["rideEvent"] = rideEvent
+        }
         if let speed {
             context["speed"] = speed
         }

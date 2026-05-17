@@ -164,14 +164,18 @@ extension AppCoordinator {
     }
 
     private func updateWatchForCompletedRide(_ rideLog: RideLog) {
-        watchSession.updateContext(
-            battery: rideLog.endBattery,
-            isConnected: connectionState == .connected,
-            rideActive: false,
-            speed: 0,
-            tripDistance: rideLog.totalDistance,
-            range: estimatedRange,
-            mode: rideLog.primaryGearMode
+        watchSession.sendRideEnd(
+            rideId: rideLog.rideId,
+            context: WatchTelemetryContext(
+                battery: rideLog.endBattery,
+                isConnected: connectionState == .connected,
+                rideActive: false,
+                speed: 0,
+                tripDistance: rideLog.totalDistance,
+                range: estimatedRange,
+                mode: rideLog.primaryGearMode,
+                rideSessionId: rideLog.rideId
+            )
         )
     }
 
