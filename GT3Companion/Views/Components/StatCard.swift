@@ -69,9 +69,10 @@ struct RideHealthStatCards: View {
 }
 
 struct RideHeartRateChartSample: Identifiable {
-    let id = UUID()
     let timestamp: Date
     let value: Int
+
+    var id: Date { timestamp }
 }
 
 struct RideHeartRateChart: View {
