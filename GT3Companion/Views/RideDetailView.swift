@@ -179,7 +179,7 @@ struct RideDetailView: View {
         .sheet(isPresented: $showShareSheet) {
             ShareRideSheet(rideId: ride.rideId)
         }
-        .sheet(isPresented: $showCameraPicker) {
+        .fullScreenCover(isPresented: $showCameraPicker) {
             RideCameraPicker { image in
                 Task {
                     let success = await handleRidePhotoSelection(image: image)
@@ -188,6 +188,7 @@ struct RideDetailView: View {
                     }
                 }
             }
+            .ignoresSafeArea()
         }
         .onChange(of: selectedPhotoItem) { _, newItem in
             guard let newItem else { return }

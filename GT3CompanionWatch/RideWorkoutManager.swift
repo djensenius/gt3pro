@@ -1,6 +1,11 @@
 import HealthKit
 import Foundation
 
+struct WatchHeartRateSample: Equatable {
+    let bpm: Int
+    let timestamp: Date
+}
+
 class RideWorkoutManager: NSObject, ObservableObject {
     let healthStore = HKHealthStore()
     private var session: HKWorkoutSession?
@@ -12,6 +17,7 @@ class RideWorkoutManager: NSObject, ObservableObject {
     private static let workoutType = HKObjectType.workoutType()
 
     @Published var heartRate: Double = 0
+    @Published var latestHeartRateSample: WatchHeartRateSample?
     @Published var activeCalories: Double = 0
     @Published var isWorkoutActive = false
     @Published var isAuthorizationGranted = false
@@ -53,7 +59,10 @@ class RideWorkoutManager: NSObject, ObservableObject {
         guard !authorizationInProgress else { return }
         authorizationInProgress = true
 
-        let typesToShare: Set<HKSampleType> = [Self.workoutType]
+        let typesToShare: Set<HKSampleType> = [
+            Self.workoutType,
+            HKQuantityType(.activeEnergyBurned)
+        ]
         let typesToRead: Set<HKObjectType> = [
             HKQuantityType(.heartRate),
             HKQuantityType(.activeEnergyBurned),
@@ -204,8 +213,16 @@ extension RideWorkoutManager: HKLiveWorkoutBuilderDelegate {
                 DispatchQueue.main.async {
                     switch quantityType {
                     case HKQuantityType(.heartRate):
-                        self.heartRate = statistics.mostRecentQuantity()?
+                        let bpm = statistics.mostRecentQuantity()?
                             .doubleValue(for: .count().unitDivided(by: .minute())) ?? 0
+                        let timestamp = statistics.mostRecentQuantityDateInterval()?.end ?? Date()
+                        self.heartRate = bpm
+                        if bpm > 0 {
+                            self.latestHeartRateSample = WatchHeartRateSample(
+                                bpm: Int(bpm.rounded()),
+                                timestamp: timestamp
+                            )
+                        }
                     case HKQuantityType(.activeEnergyBurned):
                         self.activeCalories = statistics.sumQuantity()?.doubleValue(for: .kilocalorie()) ?? 0
                     default:

@@ -11,13 +11,14 @@ import XCTest
 
 final class RideTrackerTests: XCTestCase {
     private func makeSample(
+        timestamp: Date = Date(),
         speed: Double = 0,
         battery: Int = 90,
         tripDistance: Double = 0,
         gearMode: Int = 2
     ) -> TelemetrySample {
         TelemetrySample(
-            timestamp: Date(),
+            timestamp: timestamp,
             speed: speed,
             battery: battery,
             bmsVoltage: 58.0,
@@ -194,6 +195,47 @@ final class RideTrackerTests: XCTestCase {
             expectation.fulfill()
         }
         await tracker.addSample(self.makeSample(speed: 15.0, battery: 90))
+        await tracker.forceEndRide(endBattery: 85)
+
+        await fulfillment(of: [expectation], timeout: 2.0)
+    }
+
+    func testHeartRateBackfillUsesTimestampWindow() async {
+        let tracker = RideTracker()
+        let base = Date()
+        let expectation = XCTestExpectation(description: "Ride has heart-rate backfill")
+
+        await tracker.setCallback { rideLog in
+            XCTAssertEqual(rideLog.samples.map(\.heartRate), [101, 111, nil])
+            XCTAssertEqual(rideLog.healthData?.averageHeartRate, 106)
+            XCTAssertEqual(rideLog.healthData?.maxHeartRate, 111)
+            expectation.fulfill()
+        }
+
+        await tracker.addSample(makeSample(timestamp: base, speed: 15))
+        await tracker.addSample(makeSample(timestamp: base.addingTimeInterval(5), speed: 18))
+        await tracker.addSample(makeSample(timestamp: base.addingTimeInterval(25), speed: 20))
+        await tracker.applyHeartRateSamples([
+            WatchHeartRateSample(timestamp: base.addingTimeInterval(-1), bpm: 101),
+            WatchHeartRateSample(timestamp: base.addingTimeInterval(4), bpm: 111),
+            WatchHeartRateSample(timestamp: base.addingTimeInterval(9), bpm: 120)
+        ])
+        await tracker.forceEndRide(endBattery: 85)
+
+        await fulfillment(of: [expectation], timeout: 2.0)
+    }
+
+    func testActiveCaloriesIncludedInRideHealthData() async {
+        let tracker = RideTracker()
+        let expectation = XCTestExpectation(description: "Ride has active calories")
+
+        await tracker.setCallback { rideLog in
+            XCTAssertEqual(rideLog.healthData?.activeCalories, 123.4)
+            expectation.fulfill()
+        }
+
+        await tracker.addSample(makeSample(speed: 15))
+        await tracker.setActiveCalories(123.4)
         await tracker.forceEndRide(endBattery: 85)
 
         await fulfillment(of: [expectation], timeout: 2.0)

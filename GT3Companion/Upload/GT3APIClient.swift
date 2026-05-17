@@ -57,6 +57,14 @@ actor GT3APIClient {
         return nil
     }
 
+    func updateRideHealth(rideId: String, payload: RideHealthUpdatePayload) async throws {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let body = try encoder.encode(payload)
+        try await patch(path: "/gt3/rides/\(rideId)/health", body: body)
+        logger.info("Updated ride health data: \(rideId)")
+    }
+
     /// Upload a scooter snapshot.
     func uploadSnapshot(_ snapshot: [String: String]) async throws {
         let body = try JSONSerialization.data(withJSONObject: snapshot)
@@ -77,6 +85,10 @@ actor GT3APIClient {
     /// Retry a previously failed POST with raw payload.
     func retryPost(path: String, body: Data) async throws -> Data {
         try await post(path: path, body: body)
+    }
+
+    func retryPatch(path: String, body: Data) async throws -> Data {
+        try await patch(path: path, body: body)
     }
 
     /// Request the server to send a push-to-start APNs notification
@@ -196,6 +208,36 @@ actor GT3APIClient {
         return data
     }
 
+    @discardableResult
+    private func patch(path: String, body: Data) async throws -> Data {
+        guard let url = URL(string: baseURL + path) else {
+            throw APIError.invalidURL
+        }
+        _ = await AuthManager.shared.ensureValidToken()
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        if let auth = AuthManager.shared.authorizationHeader() {
+            request.setValue(auth, forHTTPHeaderField: "Authorization")
+        }
+        request.httpBody = body
+
+        let (data, response) = try await session.data(for: request)
+        let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+
+        if statusCode == 401 {
+            return try await retryAfterRefresh(request: request, path: path, method: "PATCH")
+        }
+
+        guard (200...299).contains(statusCode) else {
+            let bodyStr = String(data: data.prefix(500), encoding: .utf8) ?? "(non-UTF8)"
+            logger.error("PATCH \(path) failed: \(statusCode) — \(bodyStr)")
+            throw APIError.httpError(statusCode: statusCode)
+        }
+        return data
+    }
+
     /// Retry a request after forcing a token refresh (used on 401).
     private func retryAfterRefresh(request: URLRequest, path: String, method: String) async throws -> Data {
         logger.info("\(method) \(path): got 401, forcing token refresh")
@@ -222,6 +264,16 @@ enum APIError: Error {
     case httpError(statusCode: Int)
     case encodingError
     case invalidURL
+}
+
+struct RideHealthUpdatePayload: Codable {
+    struct HeartRateSample: Codable {
+        let timestamp: Date
+        let heartRate: Int
+    }
+
+    let healthData: RideHealthData?
+    let heartRateSamples: [HeartRateSample]
 }
 
 #endif

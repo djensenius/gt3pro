@@ -17,6 +17,8 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
     )
     private static let pendingStartupLogsLock = NSLock()
     private static var pendingStartupLogs: [String] = []
+    private static let healthFlushInterval: TimeInterval = 10
+    private static let maxHeartRateBatchSize = 20
 
     @Published var speed: Double = 0
     @Published var battery: Int = 0
@@ -26,6 +28,10 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
     @Published var isRiding: Bool = false
     @Published var isConnected: Bool = false
     @Published var rideActive: Bool = false
+    @Published var hasRideState: Bool = false
+    private var pendingHeartRateSamples: [[String: Any]] = []
+    private var latestActiveCalories: Double?
+    private var lastHealthFlush = Date.distantPast
 
     override init() {
         super.init()
@@ -38,14 +44,51 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         }
     }
 
-    /// Send heart rate back to iPhone.
-    func sendHeartRate(_ heartRate: Int) {
-        guard WCSession.default.isReachable else { return }
-        WCSession.default.sendMessage(
-            ["heartRate": heartRate],
+    func enqueueHeartRateSample(bpm: Int, timestamp: Date, activeCalories: Double?) {
+        guard bpm > 0 else { return }
+        pendingHeartRateSamples.append([
+            "bpm": bpm,
+            "timestamp": timestamp.timeIntervalSince1970
+        ])
+        updateActiveCalories(activeCalories)
+        if pendingHeartRateSamples.count >= Self.maxHeartRateBatchSize
+            || Date().timeIntervalSince(lastHealthFlush) >= Self.healthFlushInterval {
+            flushHealthData()
+        }
+    }
+
+    func updateActiveCalories(_ activeCalories: Double?) {
+        guard let activeCalories, activeCalories >= 0 else { return }
+        latestActiveCalories = activeCalories
+    }
+
+    func flushHealthData() {
+        guard !pendingHeartRateSamples.isEmpty || latestActiveCalories != nil else { return }
+        var payload: [String: Any] = [
+            "heartRateSamples": pendingHeartRateSamples,
+            "healthDataDate": Date().timeIntervalSince1970
+        ]
+        if let latestActiveCalories {
+            payload["activeCalories"] = latestActiveCalories
+        }
+        let session = WCSession.default
+        guard session.activationState == .activated else { return }
+        pendingHeartRateSamples.removeAll()
+        lastHealthFlush = Date()
+
+        guard session.isReachable else {
+            session.transferUserInfo(payload)
+            return
+        }
+
+        session.sendMessage(
+            payload,
             replyHandler: nil,
             errorHandler: { error in
-                Self.startupLogger.warning("Failed to send heart rate: \(error.localizedDescription, privacy: .public)")
+                Self.startupLogger.warning(
+                    "Failed to send health data: \(error.localizedDescription, privacy: .public)"
+                )
+                session.transferUserInfo(payload)
             }
         )
     }
@@ -127,6 +170,9 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
             self.estimatedRange = message["estimatedRange"] as? Double ?? self.estimatedRange
             self.gearMode = message["gearMode"] as? Int ?? self.gearMode
             self.rideActive = message["rideActive"] as? Bool ?? self.rideActive
+            if message["rideActive"] != nil {
+                self.hasRideState = true
+            }
             self.isConnected = true
             self.clearSpeedWhenRideInactive()
             self.isRiding = self.isMovingDuringActiveRide
@@ -141,6 +187,9 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
             self.battery = applicationContext["battery"] as? Int ?? self.battery
             self.isConnected = applicationContext["isConnected"] as? Bool ?? self.isConnected
             self.rideActive = applicationContext["rideActive"] as? Bool ?? self.rideActive
+            if applicationContext["rideActive"] != nil {
+                self.hasRideState = true
+            }
             self.speed = applicationContext["speed"] as? Double ?? self.speed
             self.tripDistance = applicationContext["tripDistance"] as? Double ?? self.tripDistance
             self.estimatedRange = applicationContext["estimatedRange"] as? Double ?? self.estimatedRange

@@ -39,6 +39,7 @@
 		261785EC3E13BC3AB3C00A65 /* WeatherSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76748A8FCEA32D8A9B372A34 /* WeatherSnapshot.swift */; };
 		26C102E076E1FE7419A7098B /* WeatherSnapshotVisionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF81FC21527F1DA9CB13D850 /* WeatherSnapshotVisionTests.swift */; };
 		2845F91100AAD99587071D9B /* RouteNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71C4965BA8E974E0A6B214CF /* RouteNavigationView.swift */; };
+		2855B291A45C4E75B5D5427D /* AppCoordinator+Health.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2855B290A45C4E75B5D5427D /* AppCoordinator+Health.swift */; };
 		289D2A20EF9A423DA93A44F9 /* AppCoordinator+RidePhotos.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FD1F21B18134E438A48952D /* AppCoordinator+RidePhotos.swift */; };
 		2B401A698FFB367DE95FD69F /* ComplicationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D7EC839B4E3F7B106C2E6C /* ComplicationProvider.swift */; };
 		2EC4462F146FF8FF09753F09 /* GT3LiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35AB36E7D729C0D68B6B3A03 /* GT3LiveActivity.swift */; };
@@ -328,6 +329,7 @@
 		8FC8DF5E472D510C6DDEDF69 /* GT3Companion.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GT3Companion.entitlements; sourceTree = "<group>"; };
 		8FDD78758A79865ACE4CE701 /* NinebotFrameBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NinebotFrameBuilder.swift; sourceTree = "<group>"; };
 		8FD1F21B18134E438A48952D /* AppCoordinator+RidePhotos.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppCoordinator+RidePhotos.swift"; sourceTree = "<group>"; };
+		2855B290A45C4E75B5D5427D /* AppCoordinator+Health.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppCoordinator+Health.swift"; sourceTree = "<group>"; };
 		92CE9C01F56D431F573E856B /* BatteryIconWatchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryIconWatchTests.swift; sourceTree = "<group>"; };
 		997B5274C0201254D5A58FB9 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		D5F78F4577A6BABA69A0917D /* ShareRideSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareRideSheet.swift; sourceTree = "<group>"; };
@@ -628,6 +630,7 @@
 				1CC4405231C979E994BA6E9B /* AppCoordinator+Telemetry.swift */,
 				322964BC9F4B4071A3DC239B /* AppCoordinator+Rides.swift */,
 				8FD1F21B18134E438A48952D /* AppCoordinator+RidePhotos.swift */,
+				2855B290A45C4E75B5D5427D /* AppCoordinator+Health.swift */,
 				0B7F0F62CF736A1FF5E9A25D /* AppDelegate.swift */,
 				B37C34C9C57F04F3812AA098 /* DataExtensions.swift */,
 				117232BCF6C3AE194334376A /* DebugLogStore.swift */,
@@ -1115,6 +1118,7 @@
 				50DCEBBA4B34D69387DC0185 /* AppCoordinator+Telemetry.swift in Sources */,
 				0AFA469BD2324170B4FC8D6D /* AppCoordinator+Rides.swift in Sources */,
 				289D2A20EF9A423DA93A44F9 /* AppCoordinator+RidePhotos.swift in Sources */,
+				2855B291A45C4E75B5D5427D /* AppCoordinator+Health.swift in Sources */,
 				6D5E2588CE829224EC18BB68 /* AppCoordinator.swift in Sources */,
 				D10EA4C12CF515E173B4F943 /* AppDelegate.swift in Sources */,
 				CC50E05252F13993B116F455 /* AuthManager.swift in Sources */,

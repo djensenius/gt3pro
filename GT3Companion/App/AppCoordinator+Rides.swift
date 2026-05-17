@@ -50,6 +50,9 @@ extension AppCoordinator {
         if let gpsTrack = rideLog.gpsTrack {
             persisted.gpsTrackJSON = try? JSONEncoder().encode(gpsTrack)
         }
+        if let healthData = rideLog.healthData {
+            persisted.healthDataJSON = try? JSONEncoder().encode(healthData)
+        }
 
         // Persist telemetry samples for local charts (speed, battery, temp)
         let persistedSamples = rideLog.samples.map { sample -> PersistedSample in
@@ -143,6 +146,7 @@ extension AppCoordinator {
                             match.rideId = serverId
                             match.uploaded = true
                             await processPendingRidePhotos(for: match)
+                            await uploadPersistedRideHealth(match)
                         }
                     }
                     context.delete(item)
