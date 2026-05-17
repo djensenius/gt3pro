@@ -8,12 +8,14 @@
 import SwiftUI
 #if os(iOS)
 import PhotosUI
+import UIKit
 #endif
 
 struct DashboardView: View {
     #if os(iOS)
     @EnvironmentObject private var coordinator: AppCoordinator
     @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var showCameraPicker = false
     @State private var photoAttachStatus: String?
     @ObservedObject private var auth = AuthManager.shared
 
@@ -68,6 +70,16 @@ struct DashboardView: View {
                 await MainActor.run {
                     photoAttachStatus = success ? "Photo attached to current ride." : "Could not attach photo."
                     selectedPhotoItem = nil
+                }
+            }
+        }
+        .sheet(isPresented: $showCameraPicker) {
+            RideCameraPicker { image in
+                Task {
+                    let success = await handleDashboardPhotoSelection(image: image)
+                    await MainActor.run {
+                        photoAttachStatus = success ? "Photo attached to current ride." : "Could not attach photo."
+                    }
                 }
             }
         }
@@ -203,18 +215,32 @@ struct DashboardView: View {
 
             #if os(iOS)
             if coordinator.isRiding {
-                PhotosPicker(
-                    selection: $selectedPhotoItem,
-                    matching: .images,
-                    photoLibrary: .shared()
-                ) {
-                    Label("Attach Photo to Current Ride", systemImage: "camera.fill")
-                        .font(Theme.Fonts.bodyMedium)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, Theme.Spacing.small)
+                HStack(spacing: Theme.Spacing.small) {
+                    PhotosPicker(
+                        selection: $selectedPhotoItem,
+                        matching: .images,
+                        photoLibrary: .shared()
+                    ) {
+                        Label("Add from Library", systemImage: "photo.on.rectangle")
+                            .font(Theme.Fonts.bodySmall)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, Theme.Spacing.small)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(Theme.Colors.accent)
+
+                    Button {
+                        showCameraPicker = true
+                    } label: {
+                        Label("Take Photo", systemImage: "camera")
+                            .font(Theme.Fonts.bodySmall)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, Theme.Spacing.small)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Theme.Colors.accent)
+                    .disabled(!UIImagePickerController.isSourceTypeAvailable(.camera))
                 }
-                .buttonStyle(.bordered)
-                .tint(Theme.Colors.accent)
                 .padding(.horizontal)
             }
             #endif
@@ -258,6 +284,13 @@ struct DashboardView: View {
     #if os(iOS)
     private func handleDashboardPhotoSelection(item: PhotosPickerItem) async -> Bool {
         guard let imageData = await RidePhotoPickerSupport.loadCompressedImageData(from: item) else {
+            return false
+        }
+        return await coordinator.addPhotoToCurrentRide(imageData: imageData)
+    }
+
+    private func handleDashboardPhotoSelection(image: UIImage) async -> Bool {
+        guard let imageData = RidePhotoPickerSupport.compressJPEGData(from: image) else {
             return false
         }
         return await coordinator.addPhotoToCurrentRide(imageData: imageData)

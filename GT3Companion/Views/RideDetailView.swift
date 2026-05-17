@@ -67,6 +67,7 @@ struct RideDetailView: View {
     @EnvironmentObject private var coordinator: AppCoordinator
     @State private var showShareSheet = false
     @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var showCameraPicker = false
     @State private var photoAttachStatus: String?
     #endif
 
@@ -177,6 +178,16 @@ struct RideDetailView: View {
         }
         .sheet(isPresented: $showShareSheet) {
             ShareRideSheet(rideId: ride.rideId)
+        }
+        .sheet(isPresented: $showCameraPicker) {
+            RideCameraPicker { image in
+                Task {
+                    let success = await handleRidePhotoSelection(image: image)
+                    await MainActor.run {
+                        photoAttachStatus = success ? "Photo added to ride." : "Could not add photo."
+                    }
+                }
+            }
         }
         .onChange(of: selectedPhotoItem) { _, newItem in
             guard let newItem else { return }
@@ -292,11 +303,21 @@ struct RideDetailView: View {
                     matching: .images,
                     photoLibrary: .shared()
                 ) {
-                    Label("Add", systemImage: "plus")
+                    Label("Add", systemImage: "photo.on.rectangle")
                         .font(Theme.Fonts.bodySmall)
                 }
                 .buttonStyle(.bordered)
                 .tint(Theme.Colors.accent)
+
+                Button {
+                    showCameraPicker = true
+                } label: {
+                    Label("Take Photo", systemImage: "camera")
+                        .font(Theme.Fonts.bodySmall)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(Theme.Colors.accent)
+                .disabled(!UIImagePickerController.isSourceTypeAvailable(.camera))
             }
             .padding(.horizontal)
 
@@ -335,6 +356,13 @@ struct RideDetailView: View {
 
     private func handleRidePhotoSelection(item: PhotosPickerItem) async -> Bool {
         guard let imageData = await RidePhotoPickerSupport.loadCompressedImageData(from: item) else {
+            return false
+        }
+        return await coordinator.addPhoto(imageData: imageData, to: ride)
+    }
+
+    private func handleRidePhotoSelection(image: UIImage) async -> Bool {
+        guard let imageData = RidePhotoPickerSupport.compressJPEGData(from: image) else {
             return false
         }
         return await coordinator.addPhoto(imageData: imageData, to: ride)
