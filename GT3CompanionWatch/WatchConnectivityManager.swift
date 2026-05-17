@@ -29,11 +29,13 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
     @Published var isConnected: Bool = false
     @Published var rideActive: Bool = false
     @Published var hasRideState: Bool = false
+    @Published var shouldRecordWorkout: Bool = false
     private var pendingHeartRateSamples: [[String: Any]] = []
     private var latestActiveCalories: Double?
     private var lastHealthFlush = Date.distantPast
     private var autoWorkoutStartedAt: Date?
     private var receivedActiveRideStateAfterAutoStart = false
+    private var activeRideSessionId: String?
 
     override init() {
         super.init()
@@ -70,6 +72,7 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
             self.receivedActiveRideStateAfterAutoStart = false
             self.rideActive = true
             self.hasRideState = true
+            self.shouldRecordWorkout = true
             self.isConnected = true
             Self.logStartup("Auto workout start marked ride active")
         }
@@ -177,18 +180,13 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
 
     func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
         DispatchQueue.main.async {
-            self.speed = message["speed"] as? Double ?? self.speed
-            self.battery = message["battery"] as? Int ?? self.battery
-            self.tripDistance = message["tripDistance"] as? Double ?? self.tripDistance
-            self.estimatedRange = message["estimatedRange"] as? Double ?? self.estimatedRange
-            self.gearMode = message["gearMode"] as? Int ?? self.gearMode
-            if let rideActive = message["rideActive"] as? Bool,
-               self.shouldApplyRideActive(rideActive, timestamp: message.contextDate) {
-                self.applyRideActive(rideActive)
-            }
-            self.isConnected = true
-            self.clearSpeedWhenRideInactive()
-            self.isRiding = self.isMovingDuringActiveRide
+            self.applyWatchPayload(message)
+        }
+    }
+
+    func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
+        DispatchQueue.main.async {
+            self.applyWatchPayload(userInfo)
         }
     }
 
@@ -197,18 +195,7 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         didReceiveApplicationContext applicationContext: [String: Any]
     ) {
         DispatchQueue.main.async {
-            self.battery = applicationContext["battery"] as? Int ?? self.battery
-            self.isConnected = applicationContext["isConnected"] as? Bool ?? self.isConnected
-            if let rideActive = applicationContext["rideActive"] as? Bool,
-               self.shouldApplyRideActive(rideActive, timestamp: applicationContext.contextDate) {
-                self.applyRideActive(rideActive)
-            }
-            self.speed = applicationContext["speed"] as? Double ?? self.speed
-            self.tripDistance = applicationContext["tripDistance"] as? Double ?? self.tripDistance
-            self.estimatedRange = applicationContext["estimatedRange"] as? Double ?? self.estimatedRange
-            self.gearMode = applicationContext["gearMode"] as? Int ?? self.gearMode
-            self.clearSpeedWhenRideInactive()
-            self.isRiding = self.isMovingDuringActiveRide
+            self.applyWatchPayload(applicationContext)
         }
     }
 
@@ -216,9 +203,56 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         rideActive && speed > 0
     }
 
-    private func applyRideActive(_ newValue: Bool) {
+    private func applyWatchPayload(_ payload: [String: Any]) {
+        battery = payload["battery"] as? Int ?? battery
+        isConnected = payload["isConnected"] as? Bool ?? isConnected
+        speed = payload["speed"] as? Double ?? speed
+        tripDistance = payload["tripDistance"] as? Double ?? tripDistance
+        estimatedRange = payload["estimatedRange"] as? Double ?? estimatedRange
+        gearMode = payload["gearMode"] as? Int ?? gearMode
+
+        if let event = payload["rideEvent"] as? String,
+           let rideSessionId = payload["rideSessionId"] as? String {
+            applyRideEvent(event, rideSessionId: rideSessionId)
+        } else if let rideActive = payload["rideActive"] as? Bool,
+                  shouldApplyRideActive(rideActive, timestamp: payload.contextDate) {
+            applyRideActive(rideActive, rideSessionId: payload["rideSessionId"] as? String)
+        }
+
+        clearSpeedWhenRideInactive()
+        isRiding = isMovingDuringActiveRide
+    }
+
+    private func applyRideEvent(_ event: String, rideSessionId: String) {
+        switch event {
+        case "start":
+            activeRideSessionId = rideSessionId
+            shouldRecordWorkout = true
+            applyRideActive(true, rideSessionId: rideSessionId)
+            Self.logStartup("Applied ride start event: \(rideSessionId)")
+        case "end":
+            if let activeRideSessionId {
+                guard activeRideSessionId == rideSessionId else {
+                    Self.logStartup("Ignored ride end for non-active ride: \(rideSessionId)")
+                    return
+                }
+            } else if shouldRecordWorkout {
+                Self.logStartup("Ignored ride end before active ride ID was established: \(rideSessionId)")
+                return
+            }
+            activeRideSessionId = nil
+            shouldRecordWorkout = false
+            applyRideActive(false, rideSessionId: rideSessionId)
+            Self.logStartup("Applied ride end event: \(rideSessionId)")
+        default:
+            break
+        }
+    }
+
+    private func applyRideActive(_ newValue: Bool, rideSessionId: String?) {
         if newValue {
             receivedActiveRideStateAfterAutoStart = true
+            activeRideSessionId = rideSessionId ?? activeRideSessionId
         } else {
             autoWorkoutStartedAt = nil
             receivedActiveRideStateAfterAutoStart = false
@@ -228,6 +262,10 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
     }
 
     private func shouldApplyRideActive(_ newValue: Bool, timestamp: Date?) -> Bool {
+        if !newValue && shouldRecordWorkout {
+            Self.logStartup("Ignored inactive ride state while workout awaits explicit end event")
+            return false
+        }
         guard !newValue,
               let autoWorkoutStartedAt,
               !receivedActiveRideStateAfterAutoStart else { return true }

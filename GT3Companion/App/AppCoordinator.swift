@@ -257,7 +257,7 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
         isScooterAwake = false
         gpsTracker.stopTracking()
         roughnessTracker.stopTracking()
-        watchSession.updateContext(battery: 0, isConnected: false, rideActive: false)
+        watchSession.updateContext(battery: 0, isConnected: false)
         await rideTracker.forceEndRide(endBattery: lastBattery)
         await uploadQueue.flushSamples()
         await uploadQueue.persistRemainingsamples()
@@ -409,9 +409,10 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
             speed: 0,
             tripDistance: 0,
             range: 0,
-            mode: 0
+            mode: 0,
+            rideSessionId: nil
         ))
-        watchSession.updateContext(battery: 0, isConnected: true, rideActive: false)
+        watchSession.updateContext(battery: 0, isConnected: true)
         sendScooterSleepNotification()
     }
 

@@ -52,6 +52,48 @@ extension PersistedRide {
     var ridePresentation: RidePresentation {
         RidePresentation(ride: self)
     }
+
+    var healthSummary: PersistedRideHealthSummary? {
+        let decoded = PersistedRideHealthSummary.decode(from: healthDataJSON)
+        let presentation = ridePresentation
+        let averageHeartRate = decoded?.averageHeartRate ?? presentation.averageHeartRate
+        let maxHeartRate = decoded?.maxHeartRate ?? presentation.maxHeartRate
+        let activeCalories = decoded?.activeCalories
+        guard averageHeartRate != nil || maxHeartRate != nil || activeCalories != nil else { return nil }
+        return PersistedRideHealthSummary(
+            averageHeartRate: averageHeartRate,
+            maxHeartRate: maxHeartRate,
+            activeCalories: activeCalories
+        )
+    }
+}
+
+struct PersistedRideHealthSummary {
+    let averageHeartRate: Int?
+    let maxHeartRate: Int?
+    let activeCalories: Double?
+
+    static func decode(from data: Data?) -> PersistedRideHealthSummary? {
+        guard let data else { return nil }
+        return try? JSONDecoder().decode(PersistedRideHealthSummary.self, from: data)
+    }
+}
+
+extension PersistedRideHealthSummary: Decodable {
+    enum CodingKeys: String, CodingKey {
+        case averageHeartRate
+        case avgHeartRate
+        case maxHeartRate
+        case activeCalories
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.averageHeartRate = try container.decodeIfPresent(Int.self, forKey: .averageHeartRate)
+            ?? container.decodeIfPresent(Int.self, forKey: .avgHeartRate)
+        self.maxHeartRate = try container.decodeIfPresent(Int.self, forKey: .maxHeartRate)
+        self.activeCalories = try container.decodeIfPresent(Double.self, forKey: .activeCalories)
+    }
 }
 
 struct RidePresentation {

@@ -69,6 +69,21 @@ struct RideRowView: View {
                         .font(Theme.Fonts.bodySmall)
                         .foregroundStyle(Theme.Colors.textSecondary)
                 }
+                if let healthSummary = ride.healthSummary {
+                    HStack(spacing: 8) {
+                        if let averageHeartRate = healthSummary.averageHeartRate {
+                            Label("\(averageHeartRate) avg", systemImage: "heart.fill")
+                        }
+                        if let maxHeartRate = healthSummary.maxHeartRate {
+                            Label("\(maxHeartRate) max", systemImage: "heart.text.square.fill")
+                        }
+                        if let activeCalories = healthSummary.activeCalories {
+                            Label("\(Int(activeCalories.rounded())) cal", systemImage: "flame.fill")
+                        }
+                    }
+                    .font(Theme.Fonts.caption)
+                    .foregroundStyle(Theme.Colors.textSecondary)
+                }
             }
             Spacer()
             Text(String(format: "%.0f", ride.maxSpeed))

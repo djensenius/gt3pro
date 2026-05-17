@@ -37,23 +37,19 @@ class WatchAppDelegate: NSObject, WKApplicationDelegate {
     }
 
     private func observeRideState() {
-        connectivity.$rideActive
-            .combineLatest(connectivity.$isRiding, connectivity.$hasRideState)
+        connectivity.$shouldRecordWorkout
+            .removeDuplicates()
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] rideActive, isRiding, hasRideState in
-                self?.synchronizeWorkout(
-                    rideActive: rideActive,
-                    isRiding: isRiding,
-                    hasRideState: hasRideState
-                )
+            .sink { [weak self] shouldRecordWorkout in
+                self?.synchronizeWorkout(shouldRecordWorkout: shouldRecordWorkout)
             }
             .store(in: &cancellables)
     }
 
-    private func synchronizeWorkout(rideActive: Bool, isRiding: Bool, hasRideState: Bool) {
-        if rideActive || isRiding {
+    private func synchronizeWorkout(shouldRecordWorkout: Bool) {
+        if shouldRecordWorkout {
             workoutManager.startWorkout()
-        } else if hasRideState {
+        } else {
             connectivity.flushHealthData()
             workoutManager.endWorkout()
         }

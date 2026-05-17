@@ -138,6 +138,9 @@ struct RideDetailView: View {
                         )
                     }
 
+                    if let healthSummary = ride.healthSummary {
+                        RideHealthStatCards(healthSummary: healthSummary)
+                    }
                     weatherSection
                     routeSection
                     #if os(iOS)

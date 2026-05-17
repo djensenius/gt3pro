@@ -31,6 +31,42 @@ struct StatCard: View {
     }
 }
 
+struct RideHealthStatCards: View {
+    let healthSummary: PersistedRideHealthSummary
+
+    var body: some View {
+        LazyVGrid(
+            columns: [GridItem(.adaptive(minimum: 150))],
+            spacing: Theme.Spacing.medium
+        ) {
+            if let averageHeartRate = healthSummary.averageHeartRate {
+                StatCard(
+                    title: "Avg HR",
+                    value: "\(averageHeartRate) bpm",
+                    icon: "heart.fill",
+                    color: Theme.Colors.error
+                )
+            }
+            if let maxHeartRate = healthSummary.maxHeartRate {
+                StatCard(
+                    title: "Max HR",
+                    value: "\(maxHeartRate) bpm",
+                    icon: "heart.text.square.fill",
+                    color: Theme.Colors.error
+                )
+            }
+            if let activeCalories = healthSummary.activeCalories {
+                StatCard(
+                    title: "Active Calories",
+                    value: "\(Int(activeCalories.rounded())) cal",
+                    icon: "flame.fill",
+                    color: Theme.Colors.warning
+                )
+            }
+        }
+    }
+}
+
 #if DEBUG
 #Preview {
     HStack {
