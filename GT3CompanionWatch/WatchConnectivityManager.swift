@@ -15,6 +15,8 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         subsystem: "org.davidjensenius.GT3Companion",
         category: "WatchStartup"
     )
+    private static let pendingStartupLogsLock = NSLock()
+    private static var pendingStartupLogs: [String] = []
 
     @Published var speed: Double = 0
     @Published var battery: Int = 0
@@ -58,11 +60,43 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         } else {
             Self.logStartup("WCSession activated with state: \(activationState.rawValue)")
         }
+        if activationState == .activated {
+            Self.flushPendingStartupLogs()
+        }
     }
 
     static func logStartup(_ message: String) {
         startupLogger.info("\(message, privacy: .public)")
-        forwardStartupLogToPhone(message)
+        if canForwardStartupLogsNow {
+            forwardStartupLogToPhone(message)
+        } else {
+            enqueuePendingStartupLog(message)
+        }
+    }
+
+    private static var canForwardStartupLogsNow: Bool {
+        guard WCSession.isSupported() else { return false }
+        return WCSession.default.activationState == .activated
+    }
+
+    private static func enqueuePendingStartupLog(_ message: String) {
+        pendingStartupLogsLock.lock()
+        pendingStartupLogs.append(message)
+        pendingStartupLogsLock.unlock()
+    }
+
+    private static func takePendingStartupLogs() -> [String] {
+        pendingStartupLogsLock.lock()
+        let logs = pendingStartupLogs
+        pendingStartupLogs.removeAll()
+        pendingStartupLogsLock.unlock()
+        return logs
+    }
+
+    private static func flushPendingStartupLogs() {
+        let logs = takePendingStartupLogs()
+        guard !logs.isEmpty else { return }
+        logs.forEach { forwardStartupLogToPhone($0) }
     }
 
     private static func forwardStartupLogToPhone(_ message: String) {
