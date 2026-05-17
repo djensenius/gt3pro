@@ -21,18 +21,6 @@ struct WatchRideView: View {
                 idleView
             }
         }
-        .onAppear {
-            synchronizeWorkout()
-        }
-        .onChange(of: connectivity.isRiding) { _, _ in
-            synchronizeWorkout()
-        }
-        .onChange(of: connectivity.rideActive) { _, _ in
-            synchronizeWorkout()
-        }
-        .onChange(of: connectivity.hasRideState) { _, _ in
-            synchronizeWorkout()
-        }
         .onChange(of: workout.latestHeartRateSample) { _, sample in
             guard let sample else { return }
             connectivity.enqueueHeartRateSample(
@@ -89,15 +77,6 @@ struct WatchRideView: View {
             Text(gearModeName)
                 .font(.caption2)
                 .foregroundStyle(.cyan.opacity(0.7))
-        }
-    }
-
-    private func synchronizeWorkout() {
-        if shouldRecordWorkout {
-            workout.startWorkout()
-        } else if connectivity.hasRideState {
-            connectivity.flushHealthData()
-            workout.endWorkout()
         }
     }
 

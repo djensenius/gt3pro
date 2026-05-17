@@ -32,6 +32,8 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
     private var pendingHeartRateSamples: [[String: Any]] = []
     private var latestActiveCalories: Double?
     private var lastHealthFlush = Date.distantPast
+    private var autoWorkoutStartedAt: Date?
+    private var receivedActiveRideStateAfterAutoStart = false
 
     override init() {
         super.init()
@@ -60,6 +62,17 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
     func updateActiveCalories(_ activeCalories: Double?) {
         guard let activeCalories, activeCalories >= 0 else { return }
         latestActiveCalories = activeCalories
+    }
+
+    func markAutoWorkoutStarted() {
+        DispatchQueue.main.async {
+            self.autoWorkoutStartedAt = Date()
+            self.receivedActiveRideStateAfterAutoStart = false
+            self.rideActive = true
+            self.hasRideState = true
+            self.isConnected = true
+            Self.logStartup("Auto workout start marked ride active")
+        }
     }
 
     func flushHealthData() {
@@ -169,9 +182,9 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
             self.tripDistance = message["tripDistance"] as? Double ?? self.tripDistance
             self.estimatedRange = message["estimatedRange"] as? Double ?? self.estimatedRange
             self.gearMode = message["gearMode"] as? Int ?? self.gearMode
-            self.rideActive = message["rideActive"] as? Bool ?? self.rideActive
-            if message["rideActive"] != nil {
-                self.hasRideState = true
+            if let rideActive = message["rideActive"] as? Bool,
+               self.shouldApplyRideActive(rideActive, timestamp: message.contextDate) {
+                self.applyRideActive(rideActive)
             }
             self.isConnected = true
             self.clearSpeedWhenRideInactive()
@@ -186,9 +199,9 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         DispatchQueue.main.async {
             self.battery = applicationContext["battery"] as? Int ?? self.battery
             self.isConnected = applicationContext["isConnected"] as? Bool ?? self.isConnected
-            self.rideActive = applicationContext["rideActive"] as? Bool ?? self.rideActive
-            if applicationContext["rideActive"] != nil {
-                self.hasRideState = true
+            if let rideActive = applicationContext["rideActive"] as? Bool,
+               self.shouldApplyRideActive(rideActive, timestamp: applicationContext.contextDate) {
+                self.applyRideActive(rideActive)
             }
             self.speed = applicationContext["speed"] as? Double ?? self.speed
             self.tripDistance = applicationContext["tripDistance"] as? Double ?? self.tripDistance
@@ -203,9 +216,44 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
         rideActive && speed > 0
     }
 
+    private func applyRideActive(_ newValue: Bool) {
+        if newValue {
+            receivedActiveRideStateAfterAutoStart = true
+        } else {
+            autoWorkoutStartedAt = nil
+            receivedActiveRideStateAfterAutoStart = false
+        }
+        rideActive = newValue
+        hasRideState = true
+    }
+
+    private func shouldApplyRideActive(_ newValue: Bool, timestamp: Date?) -> Bool {
+        guard !newValue,
+              let autoWorkoutStartedAt,
+              !receivedActiveRideStateAfterAutoStart else { return true }
+
+        if let timestamp {
+            let predatesAutoStart = timestamp < autoWorkoutStartedAt.addingTimeInterval(-2)
+            if predatesAutoStart {
+                Self.logStartup("Ignored stale inactive ride state after auto workout start")
+                return false
+            }
+        } else if Date().timeIntervalSince(autoWorkoutStartedAt) < 30 {
+            Self.logStartup("Ignored undated inactive ride state after auto workout start")
+            return false
+        }
+        return true
+    }
+
     private func clearSpeedWhenRideInactive() {
         if !rideActive {
             speed = 0
         }
+    }
+}
+
+private extension Dictionary where Key == String, Value == Any {
+    var contextDate: Date? {
+        (self["contextDate"] as? Double).map(Date.init(timeIntervalSince1970:))
     }
 }

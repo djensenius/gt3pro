@@ -71,7 +71,6 @@ extension AppCoordinator {
         if wasIdle && isCurrentlyMoving {
             isRiding = true
             sendRideStartNotification()
-            launchWatchApp()
             watchSession.updateContext(
                 battery: currentBattery,
                 isConnected: true,
@@ -81,6 +80,7 @@ extension AppCoordinator {
                 range: estimatedRange,
                 mode: sample.gearMode
             )
+            launchWatchApp()
         }
 
         let wasRiding = !wasIdle

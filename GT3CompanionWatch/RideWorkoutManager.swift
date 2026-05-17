@@ -127,6 +127,7 @@ class RideWorkoutManager: NSObject, ObservableObject {
             builder?.delegate = self
 
             let startDate = Date()
+            WatchConnectivityManager.logStartup("Starting HKWorkoutSession")
             session?.startActivity(with: startDate)
             builder?.beginCollection(withStart: startDate) { [weak self] _, error in
                 guard let error else { return }
@@ -151,11 +152,77 @@ class RideWorkoutManager: NSObject, ObservableObject {
     }
 
     func endWorkout() {
-        guard session != nil, !isEndingWorkout else {
+        guard let session, !isEndingWorkout else {
             return
         }
         isEndingWorkout = true
-        session?.end()
+        WatchConnectivityManager.logStartup("Stopping HKWorkoutSession")
+        switch session.state {
+        case .running, .paused:
+            session.stopActivity(with: Date())
+        case .stopped:
+            finishWorkout(at: Date())
+        case .ended:
+            cleanupEndedWorkout()
+        default:
+            session.end()
+        }
+    }
+
+    func recoverWorkout() {
+        healthStore.recoverActiveWorkoutSession { [weak self] recoveredSession, error in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                if let error {
+                    self.workoutError = "Workout recovery failed: \(error.localizedDescription)"
+                    WatchConnectivityManager.logStartup("Workout recovery failed: \(error.localizedDescription)")
+                    return
+                }
+                guard let recoveredSession else {
+                    self.workoutError = "Workout recovery did not return an active session."
+                    WatchConnectivityManager.logStartup("Workout recovery returned no active session")
+                    return
+                }
+                self.session = recoveredSession
+                self.builder = recoveredSession.associatedWorkoutBuilder()
+                self.builder?.dataSource = HKLiveWorkoutDataSource(
+                    healthStore: self.healthStore,
+                    workoutConfiguration: recoveredSession.workoutConfiguration
+                )
+                self.session?.delegate = self
+                self.builder?.delegate = self
+                self.isWorkoutActive = true
+                self.workoutError = nil
+                WatchConnectivityManager.logStartup("Recovered active HKWorkoutSession")
+            }
+        }
+    }
+
+    private func finishWorkout(at date: Date) {
+        builder?.endCollection(withEnd: date) { [weak self] _, error in
+            if let error {
+                DispatchQueue.main.async {
+                    self?.workoutError = "Failed to end workout collection: \(error.localizedDescription)"
+                }
+            }
+            self?.builder?.finishWorkout { [weak self] _, error in
+                DispatchQueue.main.async {
+                    if let error {
+                        self?.workoutError = "Failed to save workout: \(error.localizedDescription)"
+                    }
+                    self?.session?.end()
+                    self?.cleanupEndedWorkout()
+                    WatchConnectivityManager.logStartup("Finished HKWorkoutSession")
+                }
+            }
+        }
+    }
+
+    private func cleanupEndedWorkout() {
+        builder = nil
+        session = nil
+        isEndingWorkout = false
+        isWorkoutActive = false
     }
 }
 
@@ -166,25 +233,13 @@ extension RideWorkoutManager: HKWorkoutSessionDelegate {
         from fromState: HKWorkoutSessionState,
         date: Date
     ) {
-        if toState == .ended {
-            builder?.endCollection(withEnd: date) { [weak self] _, error in
-                if let error {
-                    DispatchQueue.main.async {
-                        self?.workoutError = "Failed to end workout collection: \(error.localizedDescription)"
-                    }
-                }
-                self?.builder?.finishWorkout { [weak self] _, error in
-                    DispatchQueue.main.async {
-                        if let error {
-                            self?.workoutError = "Failed to save workout: \(error.localizedDescription)"
-                        }
-                        self?.builder = nil
-                        self?.session = nil
-                        self?.isEndingWorkout = false
-                        self?.isWorkoutActive = false
-                    }
-                }
-            }
+        WatchConnectivityManager.logStartup(
+            "HKWorkoutSession state \(fromState.rawValue) → \(toState.rawValue)"
+        )
+        if toState == .stopped {
+            finishWorkout(at: date)
+        } else if toState == .ended, !isEndingWorkout {
+            cleanupEndedWorkout()
         }
     }
 

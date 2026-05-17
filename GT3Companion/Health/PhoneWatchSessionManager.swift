@@ -90,7 +90,8 @@ class PhoneWatchSessionManager: NSObject, ObservableObject {
             "tripDistance": context.tripDistance,
             "estimatedRange": context.range,
             "gearMode": context.mode,
-            "rideActive": context.rideActive
+            "rideActive": context.rideActive,
+            "contextDate": Date().timeIntervalSince1970
         ]
         session.sendMessage(message, replyHandler: nil) { error in
             logger.warning("Failed to send telemetry to Watch: \(error)")
@@ -121,7 +122,7 @@ class PhoneWatchSessionManager: NSObject, ObservableObject {
     func updateContext(
         battery: Int,
         isConnected: Bool,
-        rideActive: Bool = false,
+        rideActive: Bool? = nil,
         speed: Double? = nil,
         tripDistance: Double? = nil,
         range: Double? = nil,
@@ -132,8 +133,11 @@ class PhoneWatchSessionManager: NSObject, ObservableObject {
         var context: [String: Any] = [
             "battery": battery,
             "isConnected": isConnected,
-            "rideActive": rideActive
+            "contextDate": Date().timeIntervalSince1970
         ]
+        if let rideActive {
+            context["rideActive"] = rideActive
+        }
         if let speed {
             context["speed"] = speed
         }
