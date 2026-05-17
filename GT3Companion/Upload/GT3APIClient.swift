@@ -87,6 +87,10 @@ actor GT3APIClient {
         try await post(path: path, body: body)
     }
 
+    func retryPatch(path: String, body: Data) async throws -> Data {
+        try await patch(path: path, body: body)
+    }
+
     /// Request the server to send a push-to-start APNs notification
     /// to create a Live Activity (used on background BLE reconnect).
     /// Request the server to send a push-to-start notification.

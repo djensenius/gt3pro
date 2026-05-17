@@ -87,6 +87,7 @@ actor UploadQueue {
         } catch {
             logger.error("Failed to update ride health: \(error)")
             debugLog("Ride health update failed: \(error.localizedDescription)", level: .error)
+            persistFailedRequest(payload: payload, endpoint: "PATCH /gt3/rides/\(rideId)/health")
         }
     }
 
@@ -105,7 +106,15 @@ actor UploadQueue {
     func retryUpload(payload: Data, endpoint: String) async throws -> Data {
         debugLog("Retrying upload: \(endpoint) (\(payload.count) bytes)", level: .info)
         do {
-            let data = try await apiClient.retryPost(path: endpoint, body: payload)
+            let data: Data
+            if endpoint.hasPrefix("PATCH ") {
+                data = try await apiClient.retryPatch(
+                    path: String(endpoint.dropFirst("PATCH ".count)),
+                    body: payload
+                )
+            } else {
+                data = try await apiClient.retryPost(path: endpoint, body: payload)
+            }
             debugLog("Retry succeeded: \(endpoint)", level: .info)
             return data
         } catch {
@@ -120,8 +129,19 @@ actor UploadQueue {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         guard let payload = try? encoder.encode(["samples": samples]) else { return }
+        persistFailedPayload(payload, endpoint: "/gt3/telemetry")
+    }
+
+    private func persistFailedRequest<T: Encodable>(payload: T, endpoint: String) {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        guard let data = try? encoder.encode(payload) else { return }
+        persistFailedPayload(data, endpoint: endpoint)
+    }
+
+    private func persistFailedPayload(_ payload: Data, endpoint: String) {
         Task { @MainActor in
-            let item = UploadQueueItem(payload: payload, endpoint: "/gt3/telemetry")
+            let item = UploadQueueItem(payload: payload, endpoint: endpoint)
             PersistenceController.shared.context.insert(item)
             try? PersistenceController.shared.context.save()
         }

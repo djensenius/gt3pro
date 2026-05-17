@@ -38,6 +38,13 @@ struct WatchHeartRateSample: Codable, Sendable {
     let bpm: Int
 }
 
+struct WatchHealthDelivery: Sendable {
+    let heartRateSamples: [WatchHeartRateSample]
+    let activeCalories: Double?
+    let activeCaloriesDate: Date?
+    let queued: Bool
+}
+
 /// Manages WatchConnectivity from the iPhone side.
 /// Sends telemetry to Watch, receives heart rate back.
 @MainActor
@@ -56,7 +63,7 @@ class PhoneWatchSessionManager: NSObject, ObservableObject {
     private let heartRateBufferMaxAge: TimeInterval = 3_600
     private var heartRateSamples: [WatchHeartRateSample] = []
 
-    var onHealthDataReceived: (([WatchHeartRateSample], Double?) -> Void)?
+    var onHealthDataReceived: ((WatchHealthDelivery) -> Void)?
 
     override init() {
         super.init()
@@ -207,11 +214,14 @@ extension PhoneWatchSessionManager: WCSessionDelegate {
     private nonisolated func receiveHealthData(from payload: [String: Any], queued: Bool) {
         let samples = Self.parseHeartRateSamples(from: payload)
         let activeCalories = payload["activeCalories"] as? Double
+        let healthDataDate = (payload["healthDataDate"] as? Double).map(Date.init(timeIntervalSince1970:))
         guard !samples.isEmpty || activeCalories != nil else { return }
         Task { @MainActor in
             if !samples.isEmpty {
                 self.heartRateSamples.append(contentsOf: samples)
-                self.heartRateSamples.sort { $0.timestamp < $1.timestamp }
+                if !self.heartRateSamples.isSortedByTimestamp {
+                    self.heartRateSamples.sort { $0.timestamp < $1.timestamp }
+                }
                 self.trimHeartRateBuffer()
                 if let latest = samples.max(by: { $0.timestamp < $1.timestamp }) {
                     self.latestHeartRate = latest.bpm
@@ -220,7 +230,12 @@ extension PhoneWatchSessionManager: WCSessionDelegate {
             if let activeCalories {
                 self.latestActiveCalories = activeCalories
             }
-            self.onHealthDataReceived?(samples, activeCalories)
+            self.onHealthDataReceived?(WatchHealthDelivery(
+                heartRateSamples: samples,
+                activeCalories: activeCalories,
+                activeCaloriesDate: healthDataDate,
+                queued: queued
+            ))
         }
         let source = queued ? "queued" : "live"
         logger.info("Received \(source) Watch health data: \(samples.count) HR samples")
@@ -246,6 +261,13 @@ extension PhoneWatchSessionManager: WCSessionDelegate {
     private func trimHeartRateBuffer() {
         let cutoff = Date().addingTimeInterval(-heartRateBufferMaxAge)
         heartRateSamples.removeAll { $0.timestamp < cutoff }
+    }
+}
+
+private extension [WatchHeartRateSample] {
+    var isSortedByTimestamp: Bool {
+        guard count > 1 else { return true }
+        return zip(self, dropFirst()).allSatisfy { $0.timestamp <= $1.timestamp }
     }
 }
 #endif

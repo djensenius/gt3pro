@@ -76,16 +76,19 @@ class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
 
     private init() {
         connectionManager.delegate = self
-        watchSession.onHealthDataReceived = { [weak self] heartRateSamples, activeCalories in
+        watchSession.onHealthDataReceived = { [weak self] delivery in
             guard let self else { return }
             Task {
-                await self.rideTracker.applyHeartRateSamples(heartRateSamples)
-                await self.rideTracker.setActiveCalories(activeCalories)
-                await MainActor.run {
-                    self.backfillPersistedHealthData(
-                        heartRateSamples: heartRateSamples,
-                        activeCalories: activeCalories
-                    )
+                await self.rideTracker.applyHeartRateSamples(delivery.heartRateSamples)
+                await self.rideTracker.setActiveCalories(delivery.activeCalories)
+                if delivery.queued {
+                    await MainActor.run {
+                        self.backfillPersistedHealthData(
+                            heartRateSamples: delivery.heartRateSamples,
+                            activeCalories: delivery.activeCalories,
+                            activeCaloriesDate: delivery.activeCaloriesDate
+                        )
+                    }
                 }
             }
         }

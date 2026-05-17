@@ -153,12 +153,27 @@ actor RideTracker {
 
     func applyHeartRateSamples(_ heartRateSamples: [WatchHeartRateSample]) {
         guard !heartRateSamples.isEmpty, !samples.isEmpty else { return }
-        samples = samples.map { sample in
-            guard sample.heartRate == nil,
-                  let heartRate = Self.heartRate(for: sample.timestamp, from: heartRateSamples) else {
-                return sample
+        let sortedHeartRates = heartRateSamples.sorted { $0.timestamp < $1.timestamp }
+        var heartRateIndex = 0
+        for sampleIndex in samples.indices where samples[sampleIndex].heartRate == nil {
+            let timestamp = samples[sampleIndex].timestamp
+            let minTimestamp = timestamp.addingTimeInterval(-Self.heartRateMaxAge)
+            while heartRateIndex < sortedHeartRates.count,
+                  sortedHeartRates[heartRateIndex].timestamp < minTimestamp {
+                heartRateIndex += 1
             }
-            return sample.withHeartRate(heartRate)
+
+            var match: WatchHeartRateSample?
+            var cursor = heartRateIndex
+            while cursor < sortedHeartRates.count,
+                  sortedHeartRates[cursor].timestamp <= timestamp {
+                match = sortedHeartRates[cursor]
+                cursor += 1
+            }
+
+            if let match {
+                samples[sampleIndex] = samples[sampleIndex].withHeartRate(match.bpm)
+            }
         }
     }
 
@@ -314,13 +329,14 @@ actor RideTracker {
     }
 
     private static func heartRate(for timestamp: Date, from heartRateSamples: [WatchHeartRateSample]) -> Int? {
-        let maxAge: TimeInterval = 15
-        let minTimestamp = timestamp.addingTimeInterval(-maxAge)
+        let minTimestamp = timestamp.addingTimeInterval(-heartRateMaxAge)
         return heartRateSamples
             .filter { $0.timestamp <= timestamp && $0.timestamp >= minTimestamp }
             .max { $0.timestamp < $1.timestamp }?
             .bpm
     }
+
+    private static let heartRateMaxAge: TimeInterval = 15
 }
 
 private extension TelemetrySample {

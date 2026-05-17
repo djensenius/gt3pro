@@ -11,16 +11,23 @@ private let healthLogger = Logger(
 extension AppCoordinator {
     func backfillPersistedHealthData(
         heartRateSamples: [WatchHeartRateSample],
-        activeCalories: Double?
+        activeCalories: Double?,
+        activeCaloriesDate: Date?
     ) {
         guard !heartRateSamples.isEmpty || activeCalories != nil else { return }
         let context = PersistenceController.shared.context
-        let rides = (try? context.fetch(FetchDescriptor<PersistedRide>())) ?? []
+        let descriptor = FetchDescriptor<PersistedRide>(
+            predicate: #Predicate { $0.endTime != nil }
+        )
+        let rides = (try? context.fetch(descriptor)) ?? []
+        var pendingUploads: [(rideId: String, payload: RideHealthUpdatePayload)] = []
+        var hasChanges = false
 
-        for ride in rides where ride.endTime != nil {
+        for ride in rides {
             let caloriesForRide = activeCaloriesForRide(
                 ride,
                 activeCalories: activeCalories,
+                activeCaloriesDate: activeCaloriesDate,
                 heartRateSamples: heartRateSamples
             )
             let updates = applyHealthData(
@@ -29,21 +36,30 @@ extension AppCoordinator {
                 to: ride
             )
             guard !updates.isEmpty || caloriesForRide != nil else { continue }
+            hasChanges = true
 
-            do {
-                try context.save()
-            } catch {
-                healthLogger.error("Failed saving ride health data: \(error.localizedDescription)")
-                continue
+            if ride.uploaded {
+                pendingUploads.append((
+                    rideId: ride.rideId,
+                    payload: RideHealthUpdatePayload(
+                        healthData: decodeRideHealthData(from: ride.healthDataJSON),
+                        heartRateSamples: updates
+                    )
+                ))
             }
+        }
 
-            guard ride.uploaded else { continue }
-            let payload = RideHealthUpdatePayload(
-                healthData: decodeRideHealthData(from: ride.healthDataJSON),
-                heartRateSamples: updates
-            )
+        guard hasChanges else { return }
+        do {
+            try context.save()
+        } catch {
+            healthLogger.error("Failed saving ride health data: \(error.localizedDescription)")
+            return
+        }
+
+        for upload in pendingUploads {
             Task {
-                await uploadQueue.updateRideHealth(rideId: ride.rideId, payload: payload)
+                await uploadQueue.updateRideHealth(rideId: upload.rideId, payload: upload.payload)
             }
         }
     }
@@ -106,12 +122,16 @@ extension AppCoordinator {
     private func activeCaloriesForRide(
         _ ride: PersistedRide,
         activeCalories: Double?,
+        activeCaloriesDate: Date?,
         heartRateSamples: [WatchHeartRateSample]
     ) -> Double? {
         guard let activeCalories,
               let endTime = ride.endTime else { return nil }
         let start = ride.startTime.addingTimeInterval(-15)
         let end = endTime.addingTimeInterval(15)
+        if let activeCaloriesDate {
+            return activeCaloriesDate >= start && activeCaloriesDate <= end ? activeCalories : nil
+        }
         let hasMatchingHeartRate = heartRateSamples.contains {
             $0.timestamp >= start && $0.timestamp <= end
         }

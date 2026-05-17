@@ -85,7 +85,9 @@ class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
             payload,
             replyHandler: nil,
             errorHandler: { error in
-                Self.startupLogger.warning("Failed to send heart rate: \(error.localizedDescription, privacy: .public)")
+                Self.startupLogger.warning(
+                    "Failed to send health data: \(error.localizedDescription, privacy: .public)"
+                )
                 session.transferUserInfo(payload)
             }
         )
