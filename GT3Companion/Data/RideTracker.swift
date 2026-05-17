@@ -43,6 +43,12 @@ struct TelemetrySample: Codable, Sendable {
     let heartRate: Int?
 }
 
+struct RideHealthData: Codable, Sendable {
+    let averageHeartRate: Int?
+    let maxHeartRate: Int?
+    let activeCalories: Double?
+}
+
 /// A completed ride log.
 struct RideLog: Codable, Sendable {
     let rideId: String
@@ -58,6 +64,7 @@ struct RideLog: Codable, Sendable {
     /// Most-used gear mode during the ride (1=Walk, 2=Eco, 3=Sport, 4=Race).
     let primaryGearMode: Int
     let weather: WeatherSnapshot?
+    let healthData: RideHealthData?
     /// GeoJSON-style coordinates: [[longitude, latitude, altitude]].
     let gpsTrack: [[Double]]?
 }
@@ -81,6 +88,7 @@ actor RideTracker {
     private var stoppedSince: Date?
     private var gearModeHistogram: [Int: Int] = [:]
     private var currentWeather: WeatherSnapshot?
+    private var activeCalories: Double?
     private var fetchingWeather = false
     private var weatherRetryCount = 0
     private var lastWeatherAttempt: Date?
@@ -138,6 +146,22 @@ actor RideTracker {
         self.currentWeather = weather
     }
 
+    func setActiveCalories(_ activeCalories: Double?) {
+        guard let activeCalories, activeCalories >= 0 else { return }
+        self.activeCalories = activeCalories
+    }
+
+    func applyHeartRateSamples(_ heartRateSamples: [WatchHeartRateSample]) {
+        guard !heartRateSamples.isEmpty, !samples.isEmpty else { return }
+        samples = samples.map { sample in
+            guard sample.heartRate == nil,
+                  let heartRate = Self.heartRate(for: sample.timestamp, from: heartRateSamples) else {
+                return sample
+            }
+            return sample.withHeartRate(heartRate)
+        }
+    }
+
     private func startRide(firstSample: TelemetrySample) {
         currentRideId = UUID().uuidString
         rideStartTime = Date()
@@ -147,6 +171,7 @@ actor RideTracker {
         speedCount = 0
         gearModeHistogram = [:]
         currentWeather = nil
+        activeCalories = nil
         fetchingWeather = false
         weatherRetryCount = 0
         lastWeatherAttempt = nil
@@ -183,6 +208,7 @@ actor RideTracker {
         let gpsDistance = computeGPSDistance()
         let scooterDistance = samples.last?.tripDistance ?? 0
         let distance = gpsDistance > 0 ? gpsDistance : scooterDistance
+        let healthData = buildHealthData()
 
         let rideLog = RideLog(
             rideId: rideId,
@@ -197,6 +223,7 @@ actor RideTracker {
             endBattery: endBattery,
             primaryGearMode: primaryMode,
             weather: weather,
+            healthData: healthData,
             gpsTrack: gpsTrack
         )
 
@@ -213,6 +240,7 @@ actor RideTracker {
         stoppedSince = nil
         gearModeHistogram = [:]
         currentWeather = nil
+        activeCalories = nil
         fetchingWeather = false
         weatherRetryCount = 0
         lastWeatherAttempt = nil
@@ -250,6 +278,20 @@ actor RideTracker {
         Self.gpsDistance(from: samples)
     }
 
+    private func buildHealthData() -> RideHealthData? {
+        let heartRates = samples.compactMap(\.heartRate).filter { $0 > 0 }
+        let avgHeartRate = heartRates.isEmpty
+            ? nil
+            : Int((Double(heartRates.reduce(0, +)) / Double(heartRates.count)).rounded())
+        let maxHeartRate = heartRates.max()
+        guard avgHeartRate != nil || maxHeartRate != nil || activeCalories != nil else { return nil }
+        return RideHealthData(
+            averageHeartRate: avgHeartRate,
+            maxHeartRate: maxHeartRate,
+            activeCalories: activeCalories
+        )
+    }
+
     /// Compute total GPS distance from an array of telemetry samples.
     static func gpsDistance(from samples: [TelemetrySample]) -> Double {
         let coords = samples.compactMap { sample -> (lat: Double, lon: Double)? in
@@ -269,6 +311,47 @@ actor RideTracker {
             )
         }
         return total
+    }
+
+    private static func heartRate(for timestamp: Date, from heartRateSamples: [WatchHeartRateSample]) -> Int? {
+        let maxAge: TimeInterval = 15
+        let minTimestamp = timestamp.addingTimeInterval(-maxAge)
+        return heartRateSamples
+            .filter { $0.timestamp <= timestamp && $0.timestamp >= minTimestamp }
+            .max { $0.timestamp < $1.timestamp }?
+            .bpm
+    }
+}
+
+private extension TelemetrySample {
+    func withHeartRate(_ heartRate: Int) -> TelemetrySample {
+        TelemetrySample(
+            timestamp: timestamp,
+            speed: speed,
+            battery: battery,
+            bmsVoltage: bmsVoltage,
+            bmsCurrent: bmsCurrent,
+            bmsSOC: bmsSOC,
+            bmsTemp: bmsTemp,
+            tripDistance: tripDistance,
+            tripTime: tripTime,
+            bodyTemp: bodyTemp,
+            gearMode: gearMode,
+            estimatedRange: estimatedRange,
+            errorCode: errorCode,
+            warnCode: warnCode,
+            regenLevel: regenLevel,
+            speedResponse: speedResponse,
+            latitude: latitude,
+            longitude: longitude,
+            altitude: altitude,
+            gpsSpeed: gpsSpeed,
+            gpsCourse: gpsCourse,
+            horizontalAccuracy: horizontalAccuracy,
+            roughnessScore: roughnessScore,
+            maxAcceleration: maxAcceleration,
+            heartRate: heartRate
+        )
     }
 }
 #endif

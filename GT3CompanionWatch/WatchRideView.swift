@@ -30,8 +30,19 @@ struct WatchRideView: View {
         .onChange(of: connectivity.rideActive) { _, _ in
             synchronizeWorkout()
         }
-        .onChange(of: workout.heartRate) { _, hr in
-            connectivity.sendHeartRate(Int(hr))
+        .onChange(of: connectivity.hasRideState) { _, _ in
+            synchronizeWorkout()
+        }
+        .onChange(of: workout.latestHeartRateSample) { _, sample in
+            guard let sample else { return }
+            connectivity.enqueueHeartRateSample(
+                bpm: sample.bpm,
+                timestamp: sample.timestamp,
+                activeCalories: workout.activeCalories
+            )
+        }
+        .onChange(of: workout.activeCalories) { _, activeCalories in
+            connectivity.updateActiveCalories(activeCalories)
         }
     }
 
@@ -84,7 +95,8 @@ struct WatchRideView: View {
     private func synchronizeWorkout() {
         if shouldRecordWorkout {
             workout.startWorkout()
-        } else {
+        } else if connectivity.hasRideState {
+            connectivity.flushHealthData()
             workout.endWorkout()
         }
     }

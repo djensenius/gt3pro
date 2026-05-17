@@ -73,7 +73,7 @@ struct DashboardView: View {
                 }
             }
         }
-        .sheet(isPresented: $showCameraPicker) {
+        .fullScreenCover(isPresented: $showCameraPicker) {
             RideCameraPicker { image in
                 Task {
                     let success = await handleDashboardPhotoSelection(image: image)
@@ -82,6 +82,7 @@ struct DashboardView: View {
                     }
                 }
             }
+            .ignoresSafeArea()
         }
         .ridePhotoStatusAlert($photoAttachStatus)
         #endif

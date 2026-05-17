@@ -33,8 +33,9 @@ extension AppCoordinator {
         let liveTripDistance = gpsAccumulatedDistance > 0 ? gpsAccumulatedDistance : scooterTripDistance
         tripDistance = liveTripDistance
 
+        let sampleTimestamp = Date()
         let sample = TelemetrySample(
-            timestamp: Date(),
+            timestamp: sampleTimestamp,
             speed: currentSpeed,
             battery: currentBattery,
             bmsVoltage: await registerReader.getTelemetryDouble("rBMSVolt2") ?? 0,
@@ -58,7 +59,7 @@ extension AppCoordinator {
             horizontalAccuracy: gpsSample?.horizontalAccuracy,
             roughnessScore: roughness?.roughnessScore,
             maxAcceleration: roughness?.maxAcceleration,
-            heartRate: watchSession.latestHeartRate > 0 ? watchSession.latestHeartRate : nil
+            heartRate: watchSession.heartRate(at: sampleTimestamp)
         )
 
         let wasIdle = await rideTracker.state == .idle

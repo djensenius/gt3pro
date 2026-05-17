@@ -25,15 +25,16 @@ enum RidePhotoPickerSupport {
 struct RideCameraPicker: UIViewControllerRepresentable {
     let onImagePicked: (UIImage) -> Void
 
-    func makeUIViewController(context: Context) -> UIImagePickerController {
-        let picker = UIImagePickerController()
+    func makeUIViewController(context: Context) -> StableCameraPickerController {
+        let picker = StableCameraPickerController()
         picker.delegate = context.coordinator
         picker.sourceType = .camera
         picker.cameraCaptureMode = .photo
+        picker.modalPresentationStyle = .fullScreen
         return picker
     }
 
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+    func updateUIViewController(_ uiViewController: StableCameraPickerController, context: Context) {}
 
     func makeCoordinator() -> Coordinator {
         Coordinator(onImagePicked: onImagePicked)
@@ -59,6 +60,16 @@ struct RideCameraPicker: UIViewControllerRepresentable {
         func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
             picker.dismiss(animated: true)
         }
+    }
+}
+
+final class StableCameraPickerController: UIImagePickerController {
+    override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+        .allButUpsideDown
+    }
+
+    override var shouldAutorotate: Bool {
+        true
     }
 }
 #endif

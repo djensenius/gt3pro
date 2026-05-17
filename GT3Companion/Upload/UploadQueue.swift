@@ -80,6 +80,16 @@ actor UploadQueue {
         }
     }
 
+    func updateRideHealth(rideId: String, payload: RideHealthUpdatePayload) async {
+        do {
+            try await apiClient.updateRideHealth(rideId: rideId, payload: payload)
+            debugLog("Ride health update uploaded", level: .info)
+        } catch {
+            logger.error("Failed to update ride health: \(error)")
+            debugLog("Ride health update failed: \(error.localizedDescription)", level: .error)
+        }
+    }
+
     /// Upload a scooter snapshot.
     func uploadSnapshot(_ snapshot: [String: String]) async {
         do {
