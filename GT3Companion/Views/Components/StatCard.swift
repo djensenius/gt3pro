@@ -5,6 +5,7 @@
 //  Created by David Jensenius.
 //
 
+import Charts
 import SwiftUI
 
 struct StatCard: View {
@@ -64,6 +65,46 @@ struct RideHealthStatCards: View {
                 )
             }
         }
+    }
+}
+
+struct RideHeartRateChartSample: Identifiable {
+    let id = UUID()
+    let timestamp: Date
+    let value: Int
+}
+
+struct RideHeartRateChart: View {
+    let samples: [RideHeartRateChartSample]
+
+    var body: some View {
+        if hasEnoughSamples {
+            VStack(alignment: .leading, spacing: Theme.Spacing.small) {
+                Text("Heart Rate")
+                    .font(Theme.Fonts.headerLarge())
+                    .foregroundStyle(Theme.Colors.textPrimary)
+                    .padding(.horizontal)
+
+                Chart {
+                    ForEach(samples) { sample in
+                        LineMark(
+                            x: .value("Time", sample.timestamp),
+                            y: .value("Heart Rate", sample.value)
+                        )
+                        .foregroundStyle(Theme.Colors.error)
+                        .interpolationMethod(.catmullRom)
+                    }
+                }
+                .chartXAxis(.hidden)
+                .chartYAxisLabel("bpm")
+                .frame(height: 150)
+                .padding(.horizontal)
+            }
+        }
+    }
+
+    private var hasEnoughSamples: Bool {
+        samples.count >= 2 && Set(samples.map(\.timestamp)).count >= 2
     }
 }
 
