@@ -169,10 +169,23 @@ extension PhoneWatchSessionManager: WCSessionDelegate {
         _ session: WCSession,
         didReceiveMessage message: [String: Any]
     ) {
-        guard let heartRate = message["heartRate"] as? Int else { return }
-        Task { @MainActor in
-            self.latestHeartRate = heartRate
+        if let watchLog = message["watchLog"] as? String {
+            logger.info("Watch log: \(watchLog, privacy: .public)")
         }
+
+        if let heartRate = message["heartRate"] as? Int {
+            Task { @MainActor in
+                self.latestHeartRate = heartRate
+            }
+        }
+    }
+
+    nonisolated func session(
+        _ session: WCSession,
+        didReceiveUserInfo userInfo: [String: Any] = [:]
+    ) {
+        guard let watchLog = userInfo["watchLog"] as? String else { return }
+        logger.info("Watch log (queued): \(watchLog, privacy: .public)")
     }
 }
 #endif
