@@ -166,6 +166,7 @@ class RideWorkoutManager: NSObject, ObservableObject {
             cleanupEndedWorkout()
         default:
             session.end()
+            cleanupEndedWorkout()
         }
     }
 
@@ -238,7 +239,7 @@ extension RideWorkoutManager: HKWorkoutSessionDelegate {
         )
         if toState == .stopped {
             finishWorkout(at: date)
-        } else if toState == .ended, !isEndingWorkout {
+        } else if toState == .ended {
             cleanupEndedWorkout()
         }
     }
