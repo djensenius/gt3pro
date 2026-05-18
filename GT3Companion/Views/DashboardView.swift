@@ -14,7 +14,7 @@ import UIKit
 struct DashboardView: View {
     #if os(iOS)
     @Environment(AppCoordinator.self) private var coordinator
-    @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var selectedPhotoItems: [PhotosPickerItem] = []
     @State private var showCameraPicker = false
     @State private var photoAttachStatus: String?
     @State private var auth = AuthManager.shared
@@ -63,13 +63,22 @@ struct DashboardView: View {
             .navigationTitle("GT3 Companion")
         }
         #if os(iOS)
-        .onChange(of: selectedPhotoItem) { _, newItem in
-            guard let newItem else { return }
+        .onChange(of: selectedPhotoItems) { _, newItems in
+            guard !newItems.isEmpty else { return }
             Task {
-                let success = await handleDashboardPhotoSelection(item: newItem)
+                let successCount = await handleDashboardPhotoSelection(items: newItems)
                 await MainActor.run {
-                    photoAttachStatus = success ? "Photo attached to current ride." : "Could not attach photo."
-                    selectedPhotoItem = nil
+                    let failedCount = newItems.count - successCount
+                    if failedCount == 0 {
+                        photoAttachStatus = newItems.count == 1
+                            ? "Photo attached to current ride."
+                            : "\(newItems.count) photos attached to current ride."
+                    } else if successCount > 0 {
+                        photoAttachStatus = "\(successCount) photo(s) attached. \(failedCount) failed."
+                    } else {
+                        photoAttachStatus = "Could not attach selected photos."
+                    }
+                    selectedPhotoItems = []
                 }
             }
         }
@@ -218,7 +227,8 @@ struct DashboardView: View {
             if coordinator.isRiding {
                 HStack(spacing: Theme.Spacing.small) {
                     PhotosPicker(
-                        selection: $selectedPhotoItem,
+                        selection: $selectedPhotoItems,
+                        maxSelectionCount: 10,
                         matching: .images,
                         photoLibrary: .shared()
                     ) {
@@ -283,6 +293,16 @@ struct DashboardView: View {
     }
 
     #if os(iOS)
+    private func handleDashboardPhotoSelection(items: [PhotosPickerItem]) async -> Int {
+        var successCount = 0
+        for item in items {
+            if await handleDashboardPhotoSelection(item: item) {
+                successCount += 1
+            }
+        }
+        return successCount
+    }
+
     private func handleDashboardPhotoSelection(item: PhotosPickerItem) async -> Bool {
         guard let imageData = await RidePhotoPickerSupport.loadCompressedImageData(from: item) else {
             return false
