@@ -10,7 +10,7 @@ import MapKit
 import SwiftUI
 
 struct RouteNavigationView: View {
-    @StateObject private var navManager = NavigationManager()
+    @State private var navManager = NavigationManager()
     @State private var searchText = ""
 
     var body: some View {

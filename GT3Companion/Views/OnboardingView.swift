@@ -10,7 +10,7 @@ import SwiftUI
 struct OnboardingView: View {
     @State private var currentStep = 0
     @Binding var isComplete: Bool
-    @StateObject private var permissions = PermissionsManager()
+    @State private var permissions = PermissionsManager()
     @State private var isRequesting = false
     @State private var pairHex = ""
     @State private var pairSaved = false

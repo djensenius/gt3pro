@@ -74,7 +74,7 @@ struct ContentView: View {
 #Preview {
     #if os(iOS)
     ContentView()
-        .environmentObject(AppCoordinator.shared)
+        .environment(AppCoordinator.shared)
         .modelContainer(PreviewData.container)
     #else
     ContentView()

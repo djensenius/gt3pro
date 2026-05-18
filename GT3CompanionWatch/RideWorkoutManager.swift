@@ -1,11 +1,13 @@
 import HealthKit
 import Foundation
+import Observation
 
 struct WatchHeartRateSample: Equatable {
     let bpm: Int
     let timestamp: Date
 }
 
+@MainActor
 protocol RideWorkoutManagerDelegate: AnyObject {
     func rideWorkoutManager(
         _ manager: RideWorkoutManager,
@@ -15,23 +17,32 @@ protocol RideWorkoutManagerDelegate: AnyObject {
     func rideWorkoutManager(_ manager: RideWorkoutManager, didUpdateActiveCalories activeCalories: Double)
 }
 
-class RideWorkoutManager: NSObject, ObservableObject {
+@Observable
+class RideWorkoutManager: NSObject {
+    @ObservationIgnored
     let healthStore = HKHealthStore()
+    @ObservationIgnored
     weak var delegate: RideWorkoutManagerDelegate?
+    @ObservationIgnored
     private var session: HKWorkoutSession?
+    @ObservationIgnored
     private var builder: HKLiveWorkoutBuilder?
+    @ObservationIgnored
     private var authorizationInProgress = false
+    @ObservationIgnored
     private var authorizationCompletions: [(Bool) -> Void] = []
+    @ObservationIgnored
     private var pendingStartConfiguration: HKWorkoutConfiguration?
+    @ObservationIgnored
     private var isEndingWorkout = false
     private static let workoutType = HKObjectType.workoutType()
 
-    @Published var heartRate: Double = 0
-    @Published var latestHeartRateSample: WatchHeartRateSample?
-    @Published var activeCalories: Double = 0
-    @Published var isWorkoutActive = false
-    @Published var isAuthorizationGranted = false
-    @Published var workoutError: String?
+    var heartRate: Double = 0
+    var latestHeartRateSample: WatchHeartRateSample?
+    var activeCalories: Double = 0
+    var isWorkoutActive = false
+    var isAuthorizationGranted = false
+    var workoutError: String?
 
     private var isWorkoutAuthorized: Bool {
         healthStore.authorizationStatus(for: Self.workoutType) == .sharingAuthorized

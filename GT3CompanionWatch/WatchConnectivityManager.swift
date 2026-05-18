@@ -6,35 +6,50 @@
 //
 
 import Foundation
+import Observation
 import WatchConnectivity
 import os
 
-class WatchConnectivityManager: NSObject, ObservableObject, WCSessionDelegate {
-    static let shared = WatchConnectivityManager()
+@Observable
+class WatchConnectivityManager: NSObject, WCSessionDelegate {
+    nonisolated(unsafe) static let shared = WatchConnectivityManager()
     private static let startupLogger = Logger(
         subsystem: "org.davidjensenius.GT3Companion",
         category: "WatchStartup"
     )
     private static let pendingStartupLogsLock = NSLock()
-    private static var pendingStartupLogs: [String] = []
+    nonisolated(unsafe) private static var pendingStartupLogs: [String] = []
     private static let healthFlushInterval: TimeInterval = 10
     private static let maxHeartRateBatchSize = 20
 
-    @Published var speed: Double = 0
-    @Published var battery: Int = 0
-    @Published var tripDistance: Double = 0
-    @Published var estimatedRange: Double = 0
-    @Published var gearMode: Int = 0
-    @Published var isRiding: Bool = false
-    @Published var isConnected: Bool = false
-    @Published var rideActive: Bool = false
-    @Published var hasRideState: Bool = false
-    @Published var shouldRecordWorkout: Bool = false
+    var speed: Double = 0
+    var battery: Int = 0
+    var tripDistance: Double = 0
+    var estimatedRange: Double = 0
+    var gearMode: Int = 0
+    var isRiding: Bool = false
+    var isConnected: Bool = false
+    var rideActive: Bool = false
+    var hasRideState: Bool = false
+    var shouldRecordWorkout: Bool = false {
+        didSet {
+            guard oldValue != shouldRecordWorkout else { return }
+            onShouldRecordWorkoutChanged?(shouldRecordWorkout)
+        }
+    }
+    @ObservationIgnored
+    var onShouldRecordWorkoutChanged: ((Bool) -> Void)?
+    @ObservationIgnored
     private var pendingHeartRateSamples: [[String: Any]] = []
+    @ObservationIgnored
     private var latestActiveCalories: Double?
+    @ObservationIgnored
     private var lastHealthFlush = Date.distantPast
+    @ObservationIgnored
     private var autoWorkoutStartedAt: Date?
+    @ObservationIgnored
     private var receivedActiveRideStateAfterAutoStart = false
+    @ObservationIgnored
     private var activeRideSessionId: String?
 
     override init() {

@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct WatchRideView: View {
-    @EnvironmentObject private var connectivity: WatchConnectivityManager
-    @EnvironmentObject private var workout: RideWorkoutManager
+    @Environment(WatchConnectivityManager.self) private var connectivity
+    @Environment(RideWorkoutManager.self) private var workout
 
     var body: some View {
         Group {

@@ -13,11 +13,11 @@ import UIKit
 
 struct DashboardView: View {
     #if os(iOS)
-    @EnvironmentObject private var coordinator: AppCoordinator
+    @Environment(AppCoordinator.self) private var coordinator
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var showCameraPicker = false
     @State private var photoAttachStatus: String?
-    @ObservedObject private var auth = AuthManager.shared
+    @State private var auth = AuthManager.shared
 
     private var isDemo: Bool { auth.isDemoMode }
     private var isConnected: Bool { isDemo || coordinator.connectionState == .connected }
@@ -30,7 +30,7 @@ struct DashboardView: View {
     private var bmsTemp: Double { isDemo ? 28 : coordinator.bmsTemp }
     private var bodyTemp: Double { isDemo ? 25 : coordinator.bodyTemp }
     #else
-    @ObservedObject private var auth = AuthManager.shared
+    @State private var auth = AuthManager.shared
     private var isDemo: Bool { auth.isDemoMode }
     private var isConnected: Bool { isDemo }
     private var speed: Double { isDemo ? 32.5 : 0 }
@@ -303,7 +303,7 @@ struct DashboardView: View {
 #Preview {
     #if os(iOS)
     DashboardView()
-        .environmentObject(AppCoordinator.shared)
+        .environment(AppCoordinator.shared)
     #else
     DashboardView()
     #endif

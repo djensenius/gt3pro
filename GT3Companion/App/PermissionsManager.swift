@@ -10,6 +10,7 @@ import CoreLocation
 import CoreMotion
 import Foundation
 import HealthKit
+import Observation
 import os
 import UserNotifications
 
@@ -32,9 +33,13 @@ enum PermissionRequest {
 /// Each `request(_:)` call triggers the appropriate system authorization dialog
 /// and returns after the dialog has been dismissed (or skipped when unavailable).
 @MainActor
-final class PermissionsManager: NSObject, ObservableObject {
+@Observable
+final class PermissionsManager: NSObject {
+    @ObservationIgnored
     private var centralManager: CBCentralManager?
+    @ObservationIgnored
     private let locationManager = CLLocationManager()
+    @ObservationIgnored
     private let motionActivityManager = CMMotionActivityManager()
 
     func request(_ permission: PermissionRequest) async {
