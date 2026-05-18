@@ -6,8 +6,18 @@ struct WatchHeartRateSample: Equatable {
     let timestamp: Date
 }
 
+protocol RideWorkoutManagerDelegate: AnyObject {
+    func rideWorkoutManager(
+        _ manager: RideWorkoutManager,
+        didCollectHeartRateSample sample: WatchHeartRateSample,
+        activeCalories: Double
+    )
+    func rideWorkoutManager(_ manager: RideWorkoutManager, didUpdateActiveCalories activeCalories: Double)
+}
+
 class RideWorkoutManager: NSObject, ObservableObject {
     let healthStore = HKHealthStore()
+    weak var delegate: RideWorkoutManagerDelegate?
     private var session: HKWorkoutSession?
     private var builder: HKLiveWorkoutBuilder?
     private var authorizationInProgress = false
@@ -274,13 +284,21 @@ extension RideWorkoutManager: HKLiveWorkoutBuilderDelegate {
                         let timestamp = statistics.mostRecentQuantityDateInterval()?.end ?? Date()
                         self.heartRate = bpm
                         if bpm > 0 {
-                            self.latestHeartRateSample = WatchHeartRateSample(
+                            let sample = WatchHeartRateSample(
                                 bpm: Int(bpm.rounded()),
                                 timestamp: timestamp
                             )
+                            self.latestHeartRateSample = sample
+                            self.delegate?.rideWorkoutManager(
+                                self,
+                                didCollectHeartRateSample: sample,
+                                activeCalories: self.activeCalories
+                            )
                         }
                     case HKQuantityType(.activeEnergyBurned):
-                        self.activeCalories = statistics.sumQuantity()?.doubleValue(for: .kilocalorie()) ?? 0
+                        let activeCalories = statistics.sumQuantity()?.doubleValue(for: .kilocalorie()) ?? 0
+                        self.activeCalories = activeCalories
+                        self.delegate?.rideWorkoutManager(self, didUpdateActiveCalories: activeCalories)
                     default:
                         break
                     }

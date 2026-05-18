@@ -17,6 +17,7 @@ class WatchAppDelegate: NSObject, WKApplicationDelegate {
 
     func applicationDidFinishLaunching() {
         WatchConnectivityManager.logStartup("applicationDidFinishLaunching")
+        workoutManager.delegate = self
         workoutManager.requestAuthorization { granted in
             WatchConnectivityManager.logStartup("HealthKit workout authorization at launch: \(granted)")
         }
@@ -44,27 +45,6 @@ class WatchAppDelegate: NSObject, WKApplicationDelegate {
                 self?.synchronizeWorkout(shouldRecordWorkout: shouldRecordWorkout)
             }
             .store(in: &cancellables)
-
-        workoutManager.$latestHeartRateSample
-            .compactMap { $0 }
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] sample in
-                guard let self else { return }
-                self.connectivity.enqueueHeartRateSample(
-                    bpm: sample.bpm,
-                    timestamp: sample.timestamp,
-                    activeCalories: self.workoutManager.activeCalories
-                )
-            }
-            .store(in: &cancellables)
-
-        workoutManager.$activeCalories
-            .removeDuplicates()
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] calories in
-                self?.connectivity.updateActiveCalories(calories)
-            }
-            .store(in: &cancellables)
     }
 
     private func synchronizeWorkout(shouldRecordWorkout: Bool) {
@@ -74,6 +54,24 @@ class WatchAppDelegate: NSObject, WKApplicationDelegate {
             connectivity.flushHealthData()
             workoutManager.endWorkout()
         }
+    }
+}
+
+extension WatchAppDelegate: RideWorkoutManagerDelegate {
+    func rideWorkoutManager(
+        _ manager: RideWorkoutManager,
+        didCollectHeartRateSample sample: WatchHeartRateSample,
+        activeCalories: Double
+    ) {
+        connectivity.enqueueHeartRateSample(
+            bpm: sample.bpm,
+            timestamp: sample.timestamp,
+            activeCalories: activeCalories
+        )
+    }
+
+    func rideWorkoutManager(_ manager: RideWorkoutManager, didUpdateActiveCalories activeCalories: Double) {
+        connectivity.updateActiveCalories(activeCalories)
     }
 }
 
