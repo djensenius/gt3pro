@@ -21,17 +21,6 @@ struct WatchRideView: View {
                 idleView
             }
         }
-        .onChange(of: workout.latestHeartRateSample) { _, sample in
-            guard let sample else { return }
-            connectivity.enqueueHeartRateSample(
-                bpm: sample.bpm,
-                timestamp: sample.timestamp,
-                activeCalories: workout.activeCalories
-            )
-        }
-        .onChange(of: workout.activeCalories) { _, activeCalories in
-            connectivity.updateActiveCalories(activeCalories)
-        }
     }
 
     private var shouldRecordWorkout: Bool {

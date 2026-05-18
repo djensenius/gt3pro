@@ -44,6 +44,27 @@ class WatchAppDelegate: NSObject, WKApplicationDelegate {
                 self?.synchronizeWorkout(shouldRecordWorkout: shouldRecordWorkout)
             }
             .store(in: &cancellables)
+
+        workoutManager.$latestHeartRateSample
+            .compactMap { $0 }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] sample in
+                guard let self else { return }
+                self.connectivity.enqueueHeartRateSample(
+                    bpm: sample.bpm,
+                    timestamp: sample.timestamp,
+                    activeCalories: self.workoutManager.activeCalories
+                )
+            }
+            .store(in: &cancellables)
+
+        workoutManager.$activeCalories
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] calories in
+                self?.connectivity.updateActiveCalories(calories)
+            }
+            .store(in: &cancellables)
     }
 
     private func synchronizeWorkout(shouldRecordWorkout: Bool) {
