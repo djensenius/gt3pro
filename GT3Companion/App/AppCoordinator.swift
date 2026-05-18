@@ -87,6 +87,8 @@ class AppCoordinator: ScooterConnectionDelegate {
     @ObservationIgnored
     private var telemetryWatchdog: Task<Void, Never>?
     @ObservationIgnored
+    var watchLaunchRetryTask: Task<Void, Never>?
+    @ObservationIgnored
     private var lastTelemetryTime: Date?
     @ObservationIgnored
     private var backgroundTaskID: UIBackgroundTaskIdentifier = .invalid
@@ -271,6 +273,7 @@ class AppCoordinator: ScooterConnectionDelegate {
 
     private func onDisconnected() async {
         debugLog.log("onDisconnected() — finalizing ride", category: "BLE")
+        cancelWatchLaunchRetry()
         await registerReader.stopPolling()
         stopTelemetryWatchdog()
         let lastBattery = currentBattery
@@ -412,6 +415,7 @@ class AppCoordinator: ScooterConnectionDelegate {
     /// Handle the scooter powering off while still BLE-connected.
     private func handleScooterSleep(lastBattery: Int) async {
         logger.info("Scooter entered standby — cleaning up ride state")
+        cancelWatchLaunchRetry()
         isScooterAwake = false
         stopTelemetryWatchdog()
         resetDashboardValues()

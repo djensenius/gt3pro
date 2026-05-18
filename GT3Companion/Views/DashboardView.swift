@@ -296,9 +296,7 @@ struct DashboardView: View {
     private func handleDashboardPhotoSelection(items: [PhotosPickerItem]) async -> Int {
         var successCount = 0
         for item in items {
-            if await handleDashboardPhotoSelection(item: item) {
-                successCount += 1
-            }
+            successCount += await handleDashboardPhotoSelection(item: item) ? 1 : 0
         }
         return successCount
     }

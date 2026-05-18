@@ -164,6 +164,7 @@ extension AppCoordinator {
     }
 
     private func updateWatchForCompletedRide(_ rideLog: RideLog) {
+        cancelWatchLaunchRetry()
         watchSession.sendRideEnd(
             rideId: rideLog.rideId,
             context: WatchTelemetryContext(
@@ -181,15 +182,45 @@ extension AppCoordinator {
 
     /// Auto-launch the Watch companion app to start a workout session.
     func launchWatchApp() {
+        launchWatchApp(attempt: 1)
+    }
+
+    func cancelWatchLaunchRetry() {
+        watchLaunchRetryTask?.cancel()
+        watchLaunchRetryTask = nil
+    }
+
+    private func launchWatchApp(attempt: Int) {
         guard HKHealthStore.isHealthDataAvailable() else { return }
+        cancelWatchLaunchRetry()
         let config = HKWorkoutConfiguration()
         config.activityType = .cycling
         config.locationType = .outdoor
+        rideLogger.info("Requesting Watch workout launch (attempt \(attempt))")
         HKHealthStore().startWatchApp(with: config) { success, error in
             if let error {
                 rideLogger.warning("Watch app launch failed: \(error.localizedDescription)")
             } else if success {
                 rideLogger.info("Watch app launched for workout")
+            } else {
+                rideLogger.warning("Watch app launch returned false without an error")
+            }
+
+            guard !success, attempt < 3 else { return }
+            Task { @MainActor in
+                self.scheduleWatchLaunchRetry(nextAttempt: attempt + 1)
+            }
+        }
+    }
+
+    private func scheduleWatchLaunchRetry(nextAttempt: Int) {
+        guard isRiding else { return }
+        watchLaunchRetryTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(4))
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                guard let self, self.isRiding else { return }
+                self.launchWatchApp(attempt: nextAttempt)
             }
         }
     }
