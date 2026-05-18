@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct LoginView: View {
-    @ObservedObject private var auth = AuthManager.shared
+    @State private var auth = AuthManager.shared
     @State private var isSigningIn = false
     @State private var errorMessage: String?
 

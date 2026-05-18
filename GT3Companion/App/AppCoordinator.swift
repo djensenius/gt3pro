@@ -9,6 +9,7 @@
 import ActivityKit
 import CoreLocation
 import Foundation
+import Observation
 import os
 import SwiftData
 import UIKit
@@ -18,60 +19,80 @@ private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", catego
 
 /// Central orchestrator wiring BLE → Register Reader → Ride Tracker → Upload → Live Activity.
 @MainActor
-class AppCoordinator: ObservableObject, ScooterConnectionDelegate {
+@Observable
+class AppCoordinator: ScooterConnectionDelegate {
     static let shared = AppCoordinator()
 
-    @Published var connectionState: ConnectionState = .disconnected
-    @Published var isRiding = false
-    @Published var currentSpeed: Double = 0
-    @Published var currentBattery: Int = 0
-    @Published var tripDistance: Double = 0
-    @Published var estimatedRange: Double = 0
-    @Published var gearMode: Int = 0
-    @Published var bmsTemp: Double = 0
-    @Published var bodyTemp: Double = 0
-    @Published var serialNumber: String?
-    @Published var odometer: Double = 0
-    @Published var totalRideTime: Int = 0
-    @Published var controllerFirmware: String = "—"
-    @Published var mcuFirmware: String = "—"
-    @Published var bms1Firmware: String = "—"
-    @Published var bleFirmware: String = "—"
-    @Published var chargeStatus: Int = 0
-    @Published var timeToFull: Int = 0
-    @Published var partNumber: String = "—"
-    @Published var totalRuntime: Int = 0
-    @Published var bmsVoltage: Double = 0
-    @Published var bmsCurrent: Double = 0
-    @Published var chargeCycles: Int = 0
-    @Published var bmsRemainingCapacity: Int = 0
-    @Published var bmsManufactureDate: Int = 0
-    @Published var isScooterAwake: Bool = false
+    var connectionState: ConnectionState = .disconnected
+    var isRiding = false
+    var currentSpeed: Double = 0
+    var currentBattery: Int = 0
+    var tripDistance: Double = 0
+    var estimatedRange: Double = 0
+    var gearMode: Int = 0
+    var bmsTemp: Double = 0
+    var bodyTemp: Double = 0
+    var serialNumber: String?
+    var odometer: Double = 0
+    var totalRideTime: Int = 0
+    var controllerFirmware: String = "—"
+    var mcuFirmware: String = "—"
+    var bms1Firmware: String = "—"
+    var bleFirmware: String = "—"
+    var chargeStatus: Int = 0
+    var timeToFull: Int = 0
+    var partNumber: String = "—"
+    var totalRuntime: Int = 0
+    var bmsVoltage: Double = 0
+    var bmsCurrent: Double = 0
+    var chargeCycles: Int = 0
+    var bmsRemainingCapacity: Int = 0
+    var bmsManufactureDate: Int = 0
+    var isScooterAwake: Bool = false
 
+    @ObservationIgnored
     private let connectionManager = ScooterConnectionManager()
+    @ObservationIgnored
     let registerReader = RegisterReader()
+    @ObservationIgnored
     let rideTracker = RideTracker()
+    @ObservationIgnored
     let uploadQueue = UploadQueue()
+    @ObservationIgnored
     private let apiClient = GT3APIClient()
+    @ObservationIgnored
     let gpsTracker = GPSTracker()
+    @ObservationIgnored
     let roughnessTracker = SurfaceRoughnessTracker()
+    @ObservationIgnored
     let liveActivityManager = GT3LiveActivityManager.shared
+    @ObservationIgnored
     let watchSession = PhoneWatchSessionManager.shared
+    @ObservationIgnored
     private let debugLog = DebugLogStore.shared
 
     /// GPS-accumulated trip distance (km), updated each sample via haversine.
+    @ObservationIgnored
     var gpsAccumulatedDistance: Double = 0
+    @ObservationIgnored
     var lastGPSCoord: (lat: Double, lon: Double)?
     /// Raw scooter register distance, kept separate so GPS can override tripDistance.
+    @ObservationIgnored
     var scooterTripDistance: Double = 0
 
+    @ObservationIgnored
     private var storedPassword: Data?
+    @ObservationIgnored
     private var hasStarted = false
+    @ObservationIgnored
     private var telemetryWatchdog: Task<Void, Never>?
+    @ObservationIgnored
     private var lastTelemetryTime: Date?
+    @ObservationIgnored
     private var backgroundTaskID: UIBackgroundTaskIdentifier = .invalid
 
     /// How long to wait without telemetry before assuming VCU standby.
+    @ObservationIgnored
     private let telemetryTimeout: TimeInterval = 10
 
     private init() {

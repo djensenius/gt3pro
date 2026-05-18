@@ -9,8 +9,8 @@ import SwiftUI
 
 struct ScooterInfoView: View {
     #if os(iOS)
-    @EnvironmentObject private var coordinator: AppCoordinator
-    @ObservedObject private var auth = AuthManager.shared
+    @Environment(AppCoordinator.self) private var coordinator
+    @State private var auth = AuthManager.shared
     private var isDemo: Bool { auth.isDemoMode }
     private var serial: String { isDemo ? "N2GWD1234567890" : (coordinator.serialNumber ?? "—") }
     private var odometer: String {
@@ -75,7 +75,7 @@ struct ScooterInfoView: View {
         return "\(mins / 60)h \(mins % 60)m"
     }
     #else
-    @ObservedObject private var auth = AuthManager.shared
+    @State private var auth = AuthManager.shared
     private var isDemo: Bool { auth.isDemoMode }
     private var serial: String { isDemo ? "N2GWD1234567890" : "—" }
     private var odometer: String { isDemo ? "2,450 km" : "—" }
@@ -139,7 +139,7 @@ struct ScooterInfoView: View {
 #Preview {
     #if os(iOS)
     ScooterInfoView()
-        .environmentObject(AppCoordinator.shared)
+        .environment(AppCoordinator.shared)
     #else
     ScooterInfoView()
     #endif

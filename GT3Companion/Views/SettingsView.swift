@@ -16,8 +16,8 @@ struct SettingsView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Query private var rides: [PersistedRide]
-    @StateObject private var logStore = DebugLogStore.shared
-    @ObservedObject private var auth = AuthManager.shared
+    @State private var logStore = DebugLogStore.shared
+    @State private var auth = AuthManager.shared
 
     @State private var showForgetScooterAlert = false
     @State private var showClearDataAlert = false
@@ -322,7 +322,7 @@ struct LicensesView: View {
 }
 
 struct DebugLogView: View {
-    @StateObject private var logStore = DebugLogStore.shared
+    @State private var logStore = DebugLogStore.shared
     @State private var showFileExporter = false
 
     var body: some View {

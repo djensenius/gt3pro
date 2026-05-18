@@ -12,10 +12,10 @@ import SwiftUI
 struct GT3CompanionApp: App {
     #if os(iOS)
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @StateObject private var coordinator = AppCoordinator.shared
+    @State private var coordinator = AppCoordinator.shared
     @AppStorage("onboardingComplete") private var onboardingComplete = false
     #endif
-    @StateObject private var auth = AuthManager.shared
+    @State private var auth = AuthManager.shared
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
@@ -24,7 +24,7 @@ struct GT3CompanionApp: App {
             #if os(iOS)
             if ProcessInfo.processInfo.arguments.contains("--screenshot-mode") {
                 ContentView()
-                    .environmentObject(coordinator)
+                    .environment(coordinator)
                     .onAppear {
                         coordinator.start()
                     }
@@ -38,14 +38,14 @@ struct GT3CompanionApp: App {
             case .signedOut:
                 if auth.isDemoMode {
                     ContentView()
-                        .environmentObject(coordinator)
+                        .environment(coordinator)
                 } else {
                     LoginView()
                 }
             case .signedIn:
                 if onboardingComplete {
                     ContentView()
-                        .environmentObject(coordinator)
+                        .environment(coordinator)
                         .onAppear {
                             coordinator.start(storedPassword: ScooterKeychain.loadPassword())
                             Task { await RideSyncService.shared.syncRides() }

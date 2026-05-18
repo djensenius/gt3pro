@@ -8,6 +8,7 @@
 #if os(iOS)
 import Foundation
 import MapKit
+import Observation
 import os
 
 private let logger = Logger(subsystem: "org.davidjensenius.GT3Companion", category: "Navigation")
@@ -24,15 +25,18 @@ struct NavigationState {
 
 /// MapKit-based turn-by-turn navigation manager.
 @MainActor
-class NavigationManager: ObservableObject {
-    @Published var state = NavigationState(
+@Observable
+final class NavigationManager {
+    var state = NavigationState(
         isNavigating: false, nextInstruction: nil,
         nextDistance: nil, eta: nil, remainingDistance: nil,
         routeCoordinates: []
     )
-    @Published var searchResults: [MKMapItem] = []
+    var searchResults: [MKMapItem] = []
 
+    @ObservationIgnored
     private var currentRoute: MKRoute?
+    @ObservationIgnored
     private var currentStepIndex = 0
 
     /// Search for a destination.

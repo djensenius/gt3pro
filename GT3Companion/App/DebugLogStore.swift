@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Observation
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -15,16 +16,31 @@ import UniformTypeIdentifiers
 /// the user enables "Verbose Logging" in Settings. Call `DebugLogStore.shared.log(…)`
 /// from BLE, auth, upload, and pairing code paths to capture diagnostics.
 @MainActor
-final class DebugLogStore: ObservableObject {
+@Observable
+final class DebugLogStore {
     static let shared = DebugLogStore()
 
     private static let maxEntries = 500
+    private static let verboseLoggingKey = "verboseLoggingEnabled"
+    private static let bleDiscoveryLoggingKey = "bleDiscoveryLoggingEnabled"
 
-    @Published private(set) var entries: [LogEntry] = []
-    @AppStorage("verboseLoggingEnabled") var verboseLoggingEnabled = true
-    @AppStorage("bleDiscoveryLoggingEnabled") var bleDiscoveryLoggingEnabled = false
+    private(set) var entries: [LogEntry] = []
+    var verboseLoggingEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(verboseLoggingEnabled, forKey: Self.verboseLoggingKey)
+        }
+    }
+    var bleDiscoveryLoggingEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(bleDiscoveryLoggingEnabled, forKey: Self.bleDiscoveryLoggingKey)
+        }
+    }
 
-    private init() {}
+    private init() {
+        let defaults = UserDefaults.standard
+        verboseLoggingEnabled = defaults.object(forKey: Self.verboseLoggingKey) as? Bool ?? true
+        bleDiscoveryLoggingEnabled = defaults.object(forKey: Self.bleDiscoveryLoggingKey) as? Bool ?? false
+    }
 
     func log(_ message: String, category: String = "App", level: LogEntry.Level = .info) {
         guard verboseLoggingEnabled || level == .warning || level == .error else { return }

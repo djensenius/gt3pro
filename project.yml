@@ -2,11 +2,11 @@ name: GT3Companion
 options:
   bundleIdPrefix: org.davidjensenius
   deploymentTarget:
-    iOS: "18.0"
-    watchOS: "11.0"
-    macOS: "15.0"
-    visionOS: "2.0"
-  xcodeVersion: "16.3"
+    iOS: "26.0"
+    watchOS: "26.0"
+    macOS: "26.0"
+    visionOS: "26.0"
+  xcodeVersion: "26.5"
   createIntermediateGroups: true
   defaultConfig: Debug
 

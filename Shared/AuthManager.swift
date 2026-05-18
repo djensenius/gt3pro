@@ -8,6 +8,7 @@
 import AuthenticationServices
 import CryptoKit
 import Foundation
+import Observation
 import os
 #if canImport(AppKit)
 import AppKit
@@ -37,9 +38,6 @@ private class AuthAnchorProvider: NSObject, ASWebAuthenticationPresentationConte
                     }
                 }
             }
-        }
-        if #unavailable(iOS 26, visionOS 26) {
-            return ASPresentationAnchor(frame: .zero)
         }
         // Safe fallback: return a detached UIWindow rather than crashing.
         // ASWebAuthenticationSession may still present on it; if not, the
@@ -113,13 +111,12 @@ private actor RefreshCoordinator {
     }
 }
 
-// MARK: - AuthManager
-
 /// OIDC authentication manager for GT3 Companion.
 ///
 /// Uses PKCE + `ASWebAuthenticationSession` to sign in via the FluxHaus Authentik instance.
 /// Tokens are stored in the Keychain and refreshed automatically before expiry.
-class AuthManager: ObservableObject, @unchecked Sendable {
+@Observable
+class AuthManager: @unchecked Sendable {
     static let shared = AuthManager()
 
     // OIDC configuration — override via Info.plist keys OIDCIssuerBase / OIDCClientID
@@ -148,16 +145,17 @@ class AuthManager: ObservableObject, @unchecked Sendable {
         case signedOut
     }
 
-    @Published var authState: AuthState = .unknown
-    @Published var isDemoMode: Bool = false
+    var authState: AuthState = .unknown
+    var isDemoMode: Bool = false
 
+    @ObservationIgnored
     private var currentSession: ASWebAuthenticationSession?
+    @ObservationIgnored
     private var anchorProvider: AuthAnchorProvider?
+    @ObservationIgnored
     private let refreshCoordinator = RefreshCoordinator()
 
     var isSignedIn: Bool { authState == .signedIn }
-
-    // MARK: - Demo Mode
 
     @MainActor func enterDemoMode() {
         isDemoMode = true
@@ -213,8 +211,6 @@ class AuthManager: ObservableObject, @unchecked Sendable {
         }
     }
 
-    // MARK: - Authorization Header
-
     /// Returns `Authorization: Bearer <token>` for API requests, or nil if not signed in.
     func authorizationHeader() -> String? {
         guard let token = getAccessToken() else {
@@ -223,8 +219,6 @@ class AuthManager: ObservableObject, @unchecked Sendable {
         }
         return "Bearer \(token)"
     }
-
-    // MARK: - Sign In
 
     @MainActor func signInWithOIDC() async throws {
         let verifier = generateCodeVerifier()

@@ -10,7 +10,7 @@ import SwiftUI
 
 @main
 struct GT3CompanionMacApp: App {
-    @StateObject private var auth = AuthManager.shared
+    @State private var auth = AuthManager.shared
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {

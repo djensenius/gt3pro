@@ -69,7 +69,7 @@ struct RideDetailView: View {
     let ride: PersistedRide
 
     #if os(iOS)
-    @EnvironmentObject private var coordinator: AppCoordinator
+    @Environment(AppCoordinator.self) private var coordinator
     @State private var showShareSheet = false
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var showCameraPicker = false
@@ -488,6 +488,6 @@ struct RideDetailView: View {
     NavigationStack {
         RideDetailView(ride: PreviewData.sampleRide)
     }
-    .environmentObject(AppCoordinator.shared)
+    .environment(AppCoordinator.shared)
 }
 #endif

@@ -7,6 +7,7 @@
 
 #if os(iOS)
 import Foundation
+import Observation
 import WatchConnectivity
 import os
 
@@ -50,21 +51,30 @@ struct WatchHealthDelivery: Sendable {
 /// Manages WatchConnectivity from the iPhone side.
 /// Sends telemetry to Watch, receives heart rate back.
 @MainActor
-class PhoneWatchSessionManager: NSObject, ObservableObject {
+@Observable
+class PhoneWatchSessionManager: NSObject {
     static let shared = PhoneWatchSessionManager()
 
-    @Published var latestHeartRate: Int = 0
-    @Published var latestActiveCalories: Double = 0
-    @Published var isWatchReachable: Bool = false
+    var latestHeartRate: Int = 0
+    var latestActiveCalories: Double = 0
+    var isWatchReachable: Bool = false
 
+    @ObservationIgnored
     private var wcSession: WCSession?
+    @ObservationIgnored
     private var lastTelemetryContext: WatchTelemetryContext?
+    @ObservationIgnored
     private var lastTelemetryContextUpdate: Date?
+    @ObservationIgnored
     private let telemetryContextUpdateInterval: TimeInterval = 15
+    @ObservationIgnored
     private let heartRateMaxAge: TimeInterval = 15
+    @ObservationIgnored
     private let heartRateBufferMaxAge: TimeInterval = 3_600
+    @ObservationIgnored
     private var heartRateSamples: [WatchHeartRateSample] = []
 
+    @ObservationIgnored
     var onHealthDataReceived: ((WatchHealthDelivery) -> Void)?
 
     override init() {

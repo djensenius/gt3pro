@@ -8,12 +8,10 @@
 import SwiftUI
 import WatchKit
 import HealthKit
-import Combine
 
 class WatchAppDelegate: NSObject, WKApplicationDelegate {
     let workoutManager = RideWorkoutManager()
     let connectivity = WatchConnectivityManager.shared
-    private var cancellables = Set<AnyCancellable>()
 
     func applicationDidFinishLaunching() {
         WatchConnectivityManager.logStartup("applicationDidFinishLaunching")
@@ -38,13 +36,10 @@ class WatchAppDelegate: NSObject, WKApplicationDelegate {
     }
 
     private func observeRideState() {
-        connectivity.$shouldRecordWorkout
-            .removeDuplicates()
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] shouldRecordWorkout in
-                self?.synchronizeWorkout(shouldRecordWorkout: shouldRecordWorkout)
-            }
-            .store(in: &cancellables)
+        connectivity.onShouldRecordWorkoutChanged = { [weak self] shouldRecordWorkout in
+            self?.synchronizeWorkout(shouldRecordWorkout: shouldRecordWorkout)
+        }
+        synchronizeWorkout(shouldRecordWorkout: connectivity.shouldRecordWorkout)
     }
 
     private func synchronizeWorkout(shouldRecordWorkout: Bool) {
@@ -78,7 +73,7 @@ extension WatchAppDelegate: RideWorkoutManagerDelegate {
 @main
 struct GT3CompanionWatchApp: App {
     @WKApplicationDelegateAdaptor private var appDelegate: WatchAppDelegate
-    @StateObject private var connectivity = WatchConnectivityManager.shared
+    @State private var connectivity = WatchConnectivityManager.shared
 
     init() {
         WatchConnectivityManager.logStartup("GT3CompanionWatchApp initialized")
@@ -87,8 +82,8 @@ struct GT3CompanionWatchApp: App {
     var body: some Scene {
         WindowGroup {
             WatchRideView()
-                .environmentObject(connectivity)
-                .environmentObject(appDelegate.workoutManager)
+                .environment(connectivity)
+                .environment(appDelegate.workoutManager)
         }
     }
 }
