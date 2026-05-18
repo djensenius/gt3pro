@@ -4,6 +4,7 @@
 //
 //  Created by David Jensenius.
 //
+// swiftlint:disable file_length
 
 import Charts
 import SwiftUI
@@ -67,6 +68,7 @@ private struct RidePhotoDisplay: Identifiable {
 }
 #endif
 
+// swiftlint:disable:next type_body_length
 struct RideDetailView: View {
     let ride: PersistedRide
 
@@ -409,9 +411,7 @@ struct RideDetailView: View {
     private func handleRidePhotoSelection(items: [PhotosPickerItem]) async -> Int {
         var successCount = 0
         for item in items {
-            if await handleRidePhotoSelection(item: item) {
-                successCount += 1
-            }
+            successCount += await handleRidePhotoSelection(item: item) ? 1 : 0
         }
         return successCount
     }
