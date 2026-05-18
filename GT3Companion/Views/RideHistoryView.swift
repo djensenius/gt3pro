@@ -84,6 +84,12 @@ struct RideRowView: View {
                     .font(Theme.Fonts.caption)
                     .foregroundStyle(Theme.Colors.textSecondary)
                 }
+                HStack(spacing: 4) {
+                    Image(systemName: ride.uploaded ? "checkmark.icloud.fill" : "arrow.triangle.2.circlepath.icloud")
+                    Text(ride.uploaded ? "Synced" : "Syncing")
+                }
+                .font(Theme.Fonts.caption)
+                .foregroundStyle(ride.uploaded ? Theme.Colors.success : Theme.Colors.warning)
             }
             Spacer()
             Text(String(format: "%.0f", ride.maxSpeed))

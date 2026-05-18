@@ -43,7 +43,8 @@ private struct RideDetailCachedSamples {
                 createdAt: photo.createdAt,
                 imageData: photo.imageData,
                 latitude: photo.latitude,
-                longitude: photo.longitude
+                longitude: photo.longitude,
+                uploaded: photo.uploaded
             )
         }
         #endif
@@ -62,6 +63,7 @@ private struct RidePhotoDisplay: Identifiable {
     let imageData: Data
     let latitude: Double?
     let longitude: Double?
+    let uploaded: Bool
 }
 #endif
 
@@ -71,7 +73,7 @@ struct RideDetailView: View {
     #if os(iOS)
     @Environment(AppCoordinator.self) private var coordinator
     @State private var showShareSheet = false
-    @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var selectedPhotoItems: [PhotosPickerItem] = []
     @State private var showCameraPicker = false
     @State private var photoAttachStatus: String?
     #endif
@@ -146,6 +148,7 @@ struct RideDetailView: View {
                     if let healthSummary = ride.healthSummary {
                         RideHealthStatCards(healthSummary: healthSummary)
                     }
+                    rideSyncStatusSection
                     weatherSection
                     routeSection
                     #if os(iOS)
@@ -199,18 +202,40 @@ struct RideDetailView: View {
             }
             .ignoresSafeArea()
         }
-        .onChange(of: selectedPhotoItem) { _, newItem in
-            guard let newItem else { return }
+        .onChange(of: selectedPhotoItems) { _, newItems in
+            guard !newItems.isEmpty else { return }
             Task {
-                let success = await handleRidePhotoSelection(item: newItem)
+                let successCount = await handleRidePhotoSelection(items: newItems)
                 await MainActor.run {
-                    photoAttachStatus = success ? "Photo added to ride." : "Could not add photo."
-                    selectedPhotoItem = nil
+                    let failedCount = newItems.count - successCount
+                    if failedCount == 0 {
+                        photoAttachStatus = newItems.count == 1
+                            ? "Photo added to ride."
+                            : "\(newItems.count) photos added to ride."
+                    } else if successCount > 0 {
+                        photoAttachStatus = "\(successCount) photo(s) added. \(failedCount) failed."
+                    } else {
+                        photoAttachStatus = "Could not add selected photos."
+                    }
+                    selectedPhotoItems = []
                 }
             }
         }
         .ridePhotoStatusAlert($photoAttachStatus)
         #endif
+    }
+
+    @ViewBuilder
+    private var rideSyncStatusSection: some View {
+        HStack(spacing: Theme.Spacing.small) {
+            Image(systemName: ride.uploaded ? "checkmark.icloud.fill" : "arrow.triangle.2.circlepath.icloud")
+                .foregroundStyle(ride.uploaded ? Theme.Colors.success : Theme.Colors.warning)
+            Text(ride.uploaded ? "Synced to server" : "Syncing to server")
+                .font(Theme.Fonts.bodySmall)
+                .foregroundStyle(Theme.Colors.textSecondary)
+            Spacer()
+        }
+        .padding(.horizontal)
     }
 
     @ViewBuilder
@@ -309,7 +334,8 @@ struct RideDetailView: View {
                     .foregroundStyle(Theme.Colors.textPrimary)
                 Spacer()
                 PhotosPicker(
-                    selection: $selectedPhotoItem,
+                    selection: $selectedPhotoItems,
+                    maxSelectionCount: 10,
                     matching: .images,
                     photoLibrary: .shared()
                 ) {
@@ -355,6 +381,7 @@ struct RideDetailView: View {
                                 Text(photo.createdAt, style: .time)
                                     .font(Theme.Fonts.caption)
                                     .foregroundStyle(Theme.Colors.textSecondary)
+                                photoSyncStatusLabel(for: photo)
                             }
                         }
                     }
@@ -362,6 +389,31 @@ struct RideDetailView: View {
                 }
             }
         }
+    }
+
+    @ViewBuilder
+    private func photoSyncStatusLabel(for photo: RidePhotoDisplay) -> some View {
+        let synced = ride.uploaded && photo.uploaded
+        let symbolName = synced ? "checkmark.circle.fill" : "arrow.triangle.2.circlepath.circle.fill"
+        let text = synced ? "Synced" : "Syncing"
+        let color = synced ? Theme.Colors.success : Theme.Colors.warning
+
+        HStack(spacing: 4) {
+            Image(systemName: symbolName)
+            Text(text)
+        }
+        .font(Theme.Fonts.caption)
+        .foregroundStyle(color)
+    }
+
+    private func handleRidePhotoSelection(items: [PhotosPickerItem]) async -> Int {
+        var successCount = 0
+        for item in items {
+            if await handleRidePhotoSelection(item: item) {
+                successCount += 1
+            }
+        }
+        return successCount
     }
 
     private func handleRidePhotoSelection(item: PhotosPickerItem) async -> Bool {
