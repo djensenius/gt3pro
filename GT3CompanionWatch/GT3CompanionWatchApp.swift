@@ -17,6 +17,7 @@ class WatchAppDelegate: NSObject, WKApplicationDelegate {
 
     func applicationDidFinishLaunching() {
         WatchConnectivityManager.logStartup("applicationDidFinishLaunching")
+        workoutManager.delegate = self
         workoutManager.requestAuthorization { granted in
             WatchConnectivityManager.logStartup("HealthKit workout authorization at launch: \(granted)")
         }
@@ -53,6 +54,24 @@ class WatchAppDelegate: NSObject, WKApplicationDelegate {
             connectivity.flushHealthData()
             workoutManager.endWorkout()
         }
+    }
+}
+
+extension WatchAppDelegate: RideWorkoutManagerDelegate {
+    func rideWorkoutManager(
+        _ manager: RideWorkoutManager,
+        didCollectHeartRateSample sample: WatchHeartRateSample,
+        activeCalories: Double
+    ) {
+        connectivity.enqueueHeartRateSample(
+            bpm: sample.bpm,
+            timestamp: sample.timestamp,
+            activeCalories: activeCalories
+        )
+    }
+
+    func rideWorkoutManager(_ manager: RideWorkoutManager, didUpdateActiveCalories activeCalories: Double) {
+        connectivity.updateActiveCalories(activeCalories)
     }
 }
 
