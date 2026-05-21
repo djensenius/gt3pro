@@ -65,15 +65,7 @@ class RideWorkoutManager: NSObject {
             return
         }
 
-        if isWorkoutAuthorized {
-            DispatchQueue.main.async {
-                self.workoutError = nil
-                self.isAuthorizationGranted = true
-                completion?(true)
-            }
-            return
-        }
-
+        // Read authorization status is private, so request every launch to include heart rate.
         if let completion {
             authorizationCompletions.append(completion)
         }
