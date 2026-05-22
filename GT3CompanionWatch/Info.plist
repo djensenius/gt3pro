@@ -34,5 +34,7 @@
 	</array>
 	<key>WKCompanionAppBundleIdentifier</key>
 	<string>org.davidjensenius.GT3Companion</string>
+	<key>WKSupportsLiveActivities</key>
+	<true/>
 </dict>
 </plist>

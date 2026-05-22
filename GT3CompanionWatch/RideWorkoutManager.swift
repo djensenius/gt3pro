@@ -117,15 +117,29 @@ class RideWorkoutManager: NSObject {
         }()
 
         guard isWorkoutAuthorized else {
-            if authorizationInProgress {
-                pendingStartConfiguration = pendingStartConfiguration ?? config
-                return
-            }
-            pendingStartConfiguration = config
+            pendingStartConfiguration = pendingStartConfiguration ?? config
+            WatchConnectivityManager.logStartup(
+                "Workout start deferred until HealthKit authorization completes"
+            )
+            // Always register a completion that resumes the pending workout
+            // once authorization finishes — even if a previous (e.g. launch-time)
+            // requestAuthorization call is already in flight. Without this, a
+            // workout configuration delivered via startWatchApp before auth
+            // completes would be stored but never actually started.
             requestAuthorization { [weak self] authorized in
-                guard let self, authorized else { return }
+                guard let self else { return }
+                guard authorized else {
+                    self.pendingStartConfiguration = nil
+                    WatchConnectivityManager.logStartup(
+                        "Pending workout discarded: HealthKit authorization denied"
+                    )
+                    return
+                }
                 let pending = self.pendingStartConfiguration
                 self.pendingStartConfiguration = nil
+                WatchConnectivityManager.logStartup(
+                    "HealthKit authorization granted, resuming pending workout"
+                )
                 self.startWorkout(with: pending)
             }
             return
