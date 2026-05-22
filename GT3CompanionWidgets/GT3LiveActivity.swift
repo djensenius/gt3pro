@@ -12,16 +12,7 @@ import SwiftUI
 struct GT3LiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: GT3RideAttributes.self) { context in
-            // Lock Screen banner (iPhone) and supplemental small family (Apple Watch)
-            if context.activityFamily == .small {
-                watchLockScreen(context)
-            } else if !context.state.isConnected {
-                disconnectedLockScreen(context)
-            } else if context.state.isAwake {
-                awakeLockScreen(context)
-            } else {
-                standbyLockScreen(context)
-            }
+            GT3LiveActivityLockScreen(context: context)
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) { expandedLeading(context) }
@@ -144,10 +135,27 @@ struct GT3LiveActivity: Widget {
         }
     }
 
-    // MARK: - Lock Screen / Watch views
+}
+
+private struct GT3LiveActivityLockScreen: View {
+    @Environment(\.activityFamily) private var activityFamily
+
+    let context: ActivityViewContext<GT3RideAttributes>
+
+    var body: some View {
+        if activityFamily == .small {
+            watchLockScreen
+        } else if !context.state.isConnected {
+            disconnectedLockScreen
+        } else if context.state.isAwake {
+            awakeLockScreen
+        } else {
+            standbyLockScreen
+        }
+    }
 
     @ViewBuilder
-    private func watchLockScreen(_ context: ActivityViewContext<GT3RideAttributes>) -> some View {
+    private var watchLockScreen: some View {
         if !context.state.isConnected {
             VStack(spacing: 2) {
                 Image(systemName: "antenna.radiowaves.left.and.right.slash")
@@ -183,8 +191,7 @@ struct GT3LiveActivity: Widget {
         }
     }
 
-    @ViewBuilder
-    private func awakeLockScreen(_ context: ActivityViewContext<GT3RideAttributes>) -> some View {
+    private var awakeLockScreen: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text(context.attributes.scooterName).font(.headline)
@@ -207,8 +214,7 @@ struct GT3LiveActivity: Widget {
         .padding()
     }
 
-    @ViewBuilder
-    private func standbyLockScreen(_ context: ActivityViewContext<GT3RideAttributes>) -> some View {
+    private var standbyLockScreen: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text(context.attributes.scooterName).font(.headline)
@@ -222,8 +228,7 @@ struct GT3LiveActivity: Widget {
         .padding()
     }
 
-    @ViewBuilder
-    private func disconnectedLockScreen(_ context: ActivityViewContext<GT3RideAttributes>) -> some View {
+    private var disconnectedLockScreen: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text(context.attributes.scooterName).font(.headline)
@@ -236,4 +241,5 @@ struct GT3LiveActivity: Widget {
         }
         .padding()
     }
+
 }
