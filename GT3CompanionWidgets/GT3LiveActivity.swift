@@ -12,8 +12,10 @@ import SwiftUI
 struct GT3LiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: GT3RideAttributes.self) { context in
-            // Lock Screen banner
-            if !context.state.isConnected {
+            // Lock Screen banner (iPhone) and supplemental small family (Apple Watch)
+            if context.activityFamily == .small {
+                watchLockScreen(context)
+            } else if !context.state.isConnected {
                 disconnectedLockScreen(context)
             } else if context.state.isAwake {
                 awakeLockScreen(context)
@@ -135,6 +137,53 @@ struct GT3LiveActivity: Widget {
                         .foregroundStyle(.secondary)
                 }
             }
+        }
+        .supplementalActivityFamilies([.small])
+    }
+
+    @ViewBuilder
+    private func watchLockScreen(_ context: ActivityViewContext<GT3RideAttributes>) -> some View {
+        if !context.state.isConnected {
+            VStack(spacing: 2) {
+                Image(systemName: "antenna.radiowaves.left.and.right.slash")
+                    .font(.title3)
+                    .foregroundStyle(.secondary)
+                Text("Searching…")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(8)
+        } else if context.state.isAwake {
+            VStack(spacing: 2) {
+                HStack(alignment: .firstTextBaseline, spacing: 2) {
+                    Text("\(Int(context.state.speed))")
+                        .font(.title2.bold())
+                        .foregroundStyle(.cyan)
+                    Text("km/h")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                HStack(spacing: 8) {
+                    Label("\(context.state.battery)%", systemImage: batteryIconName(for: context.state.battery))
+                    Label(
+                        String(format: "%.1f km", context.state.tripDistance),
+                        systemImage: "point.topleft.down.to.point.bottomright.curvepath"
+                    )
+                }
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            }
+            .padding(8)
+        } else {
+            VStack(spacing: 2) {
+                Image(systemName: "moon.zzz.fill")
+                    .font(.title3)
+                    .foregroundStyle(.cyan.opacity(0.6))
+                Text("Standby")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(8)
         }
     }
 

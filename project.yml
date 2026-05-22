@@ -132,6 +132,7 @@ targets:
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         WKApplication: true
         WKCompanionAppBundleIdentifier: org.davidjensenius.GT3Companion
+        WKSupportsLiveActivities: true
         NSHealthShareUsageDescription: GT3 Companion reads your heart rate during scooter rides.
         NSHealthUpdateUsageDescription: GT3 Companion saves scooter ride workouts to Apple Health.
         WKBackgroundModes:
