@@ -30,8 +30,16 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         if launchOptions?[.bluetoothCentrals] != nil {
             logger.info("Launched via BLE state restoration")
             Task { @MainActor in
+                DebugLogStore.shared.log(
+                    "Cold launch via BLE state restoration — bootstrapping coordinator",
+                    category: "BLE", level: .warning
+                )
                 let coordinator = AppCoordinator.shared
                 coordinator.start(storedPassword: ScooterKeychain.loadPassword())
+            }
+        } else {
+            Task { @MainActor in
+                DebugLogStore.shared.log("Cold launch (normal, not BLE restoration)", category: "BLE", level: .debug)
             }
         }
 

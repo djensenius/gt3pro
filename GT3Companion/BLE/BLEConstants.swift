@@ -132,6 +132,14 @@ enum BLEConstants {
     /// Echo detection retry delays (escalating)
     static let echoRetryDelays: [UInt64] = [1000, 2000]
 
+    // MARK: - Connection Watchdog
+
+    /// Max time allowed to progress from a connect attempt through full
+    /// authentication before the watchdog force-resets the connection.
+    /// Recovers from stalls (dropped CCCD ACK, stale half-open peripheral)
+    /// without requiring the user to force-quit the app.
+    static let connectionWatchdogTimeout: TimeInterval = 30
+
     // MARK: - State Restoration
 
     static let centralManagerRestoreID = "GT3CompanionCentral"
