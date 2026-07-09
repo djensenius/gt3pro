@@ -238,23 +238,32 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     }
 
     private func startConnectionWatchdog() {
-        // Reuse the existing deadline if one is already pending so a normal
-        // connecting → discovering → authenticating progression doesn't keep
-        // resetting the overall timeout.
-        guard connectionWatchdog == nil else { return }
-        let work = DispatchWorkItem { [weak self] in
-            self?.connectionWatchdogFired()
+        // Serialize all access to `connectionWatchdog` on bleQueue, since
+        // `connectionState` (whose didSet drives this) can be mutated from
+        // multiple executors.
+        bleQueue.async { [weak self] in
+            guard let self else { return }
+            // Reuse the existing deadline if one is already pending so a normal
+            // connecting → discovering → authenticating progression doesn't keep
+            // resetting the overall timeout.
+            guard self.connectionWatchdog == nil else { return }
+            let work = DispatchWorkItem { [weak self] in
+                self?.connectionWatchdogFired()
+            }
+            self.connectionWatchdog = work
+            self.bleQueue.asyncAfter(
+                deadline: .now() + BLEConstants.connectionWatchdogTimeout,
+                execute: work
+            )
         }
-        connectionWatchdog = work
-        bleQueue.asyncAfter(
-            deadline: .now() + BLEConstants.connectionWatchdogTimeout,
-            execute: work
-        )
     }
 
     private func cancelConnectionWatchdog() {
-        connectionWatchdog?.cancel()
-        connectionWatchdog = nil
+        bleQueue.async { [weak self] in
+            guard let self else { return }
+            self.connectionWatchdog?.cancel()
+            self.connectionWatchdog = nil
+        }
     }
 
     /// Called when a connection attempt stalls. Tears down the half-open
