@@ -76,11 +76,13 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     private var auth: NinebotAuth?
     private var mtu: Int = BLEConstants.defaultMTU
     private var intentionalDisconnect = false
+    private var connectionWatchdog: DispatchWorkItem?
 
     private(set) var connectionState: ConnectionState = .disconnected {
         didSet {
             logger.info("Connection state: \(String(describing: self.connectionState))")
             let state = connectionState
+            updateConnectionWatchdog(for: state)
             Task { @MainActor [weak self] in
                 self?.delegate?.connectionStateChanged(state)
             }
@@ -88,6 +90,13 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     }
 
     weak var delegate: (any ScooterConnectionDelegate)?
+
+    /// Whether the underlying CoreBluetooth peripheral is currently connected.
+    /// Used to distinguish a still-connected scooter (short stop) from a lost
+    /// link (rode out of range), independent of the higher-level auth state.
+    var isPeripheralConnected: Bool {
+        peripheral?.state == .connected
+    }
 
     private var btName: String?
     private var rawBtName: String?
@@ -109,6 +118,24 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
                 CBCentralManagerOptionRestoreIdentifierKey: BLEConstants.centralManagerRestoreID
             ]
         )
+    }
+
+    /// Cancel any stale/half-open connection and re-arm scanning.
+    /// Called on foreground when the link is not established, to recover from
+    /// a stuck peripheral without a manual force-quit.
+    func resetAndScan() {
+        guard connectionState != .connected else { return }
+        if let peripheral = peripheral, peripheral.state != .connected {
+            logger.info("resetAndScan — cancelling stale connection to \(peripheral.name ?? "unknown")")
+            centralManager?.cancelPeripheralConnection(peripheral)
+        }
+        cancelConnectionWatchdog()
+        clearPerConnectionState()
+        intentionalDisconnect = false
+        if connectionState != .disconnected {
+            connectionState = .disconnected
+        }
+        scan()
     }
 
     /// Start scanning for GT3 Pro devices.
@@ -139,7 +166,8 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
                 btName = existing.name
                 connectionState = .reconnecting
                 logger.info("Queued reconnect for saved peripheral: \(self.btName ?? savedUUID.uuidString)")
-                bleLog("Waiting for saved peripheral: \(existing.name ?? savedUUID.uuidString)")
+                bleLog("Armed persistent reconnect (background auto-launch) for: " +
+                       "\(existing.name ?? savedUUID.uuidString)")
             }
         }
 
@@ -193,6 +221,74 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     }
 
     // MARK: - Private Helpers
+
+    // MARK: - Connection Watchdog
+
+    /// Start/stop the connection watchdog based on the current state.
+    /// The watchdog force-resets a connection attempt that stalls before
+    /// reaching `.connected`, so the user never has to force-quit the app.
+    private func updateConnectionWatchdog(for state: ConnectionState) {
+        switch state {
+        case .connecting, .discovering, .authenticating:
+            startConnectionWatchdog()
+        case .connected, .disconnected, .scanning, .reconnecting:
+            // Terminal or passive states — no in-flight handshake to guard.
+            cancelConnectionWatchdog()
+        }
+    }
+
+    private func startConnectionWatchdog() {
+        // Reuse the existing deadline if one is already pending so a normal
+        // connecting → discovering → authenticating progression doesn't keep
+        // resetting the overall timeout.
+        guard connectionWatchdog == nil else { return }
+        let work = DispatchWorkItem { [weak self] in
+            self?.connectionWatchdogFired()
+        }
+        connectionWatchdog = work
+        bleQueue.asyncAfter(
+            deadline: .now() + BLEConstants.connectionWatchdogTimeout,
+            execute: work
+        )
+    }
+
+    private func cancelConnectionWatchdog() {
+        connectionWatchdog?.cancel()
+        connectionWatchdog = nil
+    }
+
+    /// Called when a connection attempt stalls. Tears down the half-open
+    /// connection and re-arms scanning — the automated equivalent of a
+    /// force-quit.
+    private func connectionWatchdogFired() {
+        connectionWatchdog = nil
+        guard connectionState != .connected, connectionState != .disconnected else { return }
+        logger.warning("[WATCHDOG] Connection stalled in \(String(describing: self.connectionState)) — resetting")
+        bleLog("Connection stalled (\(String(describing: connectionState))) — auto-resetting", level: .warning)
+
+        if let peripheral = peripheral {
+            centralManager?.cancelPeripheralConnection(peripheral)
+        }
+        clearPerConnectionState()
+        intentionalDisconnect = false
+        connectionState = .disconnected
+        // Re-arm discovery/reconnect so we recover automatically.
+        scan()
+    }
+
+    /// Clear all per-connection state so the next connection starts clean.
+    private func clearPerConnectionState() {
+        writeCharacteristic = nil
+        notifyCharacteristic = nil
+        rctpWriteCharacteristic = nil
+        authWriteCharacteristic = nil
+        authNotifyCharacteristic = nil
+        oldWriteCharacteristic = nil
+        oldNotifyCharacteristic = nil
+        pendingBeginAuthOnCCCDOn = false
+        auth = nil
+        transport = nil
+    }
 
     private func connectToPeripheral(_ peripheral: CBPeripheral) {
         self.peripheral = peripheral
@@ -254,7 +350,16 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     func beginAuthentication() {
         guard let name = btName else {
             logger.error("No BT name available for auth")
-            bleLog("Auth failed — no BT name available", level: .error)
+            bleLog("Auth failed — no BT name available, resetting connection", level: .error)
+            // Don't strand the state machine — tear down so the watchdog/reconnect
+            // path can recover instead of hanging in .authenticating forever.
+            if let peripheral = peripheral {
+                centralManager?.cancelPeripheralConnection(peripheral)
+            }
+            clearPerConnectionState()
+            intentionalDisconnect = false
+            connectionState = .disconnected
+            scan()
             return
         }
 
@@ -476,11 +581,15 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
             self.peripheral = restored
             self.btName = restored.name
             restored.delegate = self
+            bleLog("willRestoreState — restored peripheral \(restored.name ?? "unknown") " +
+                   "state=\(restored.state.rawValue)")
             if restored.state == .connected {
                 discoverServices()
             } else {
                 connectToPeripheral(restored)
             }
+        } else {
+            bleLog("willRestoreState — no peripherals to restore", level: .debug)
         }
     }
 
@@ -575,16 +684,7 @@ extension ScooterConnectionManager: CBCentralManagerDelegate {
 
         // Clear per-connection state so checkReadyForAuth() doesn't fire
         // prematurely on the next connection's characteristic discovery.
-        writeCharacteristic = nil
-        notifyCharacteristic = nil
-        rctpWriteCharacteristic = nil
-        authWriteCharacteristic = nil
-        authNotifyCharacteristic = nil
-        oldWriteCharacteristic = nil
-        oldNotifyCharacteristic = nil
-        pendingBeginAuthOnCCCDOn = false
-        auth = nil
-        transport = nil
+        clearPerConnectionState()
 
         let err = error
         Task { @MainActor [weak self] in

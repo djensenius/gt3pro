@@ -145,12 +145,24 @@ class AppCoordinator: ScooterConnectionDelegate {
     /// Restart BLE scanning.
     func retryScan() { connectionManager.scan() }
 
-    /// Called when the app returns to foreground — restarts Live Activity if needed.
+    /// Called when the app returns to foreground — restarts Live Activity if
+    /// needed and re-arms BLE scanning if the link is not established.
     func resumeFromBackground() {
         let isConnected = connectionState == .connected || connectionState == .authenticating
-        guard isConnected, !liveActivityManager.isActive else { return }
-        logger.info("App foregrounded while connected — restarting Live Activity")
-        Task { await liveActivityManager.startRideActivity() }
+        if isConnected {
+            if !liveActivityManager.isActive {
+                logger.info("App foregrounded while connected — restarting Live Activity")
+                Task { await liveActivityManager.startRideActivity() }
+            }
+            return
+        }
+        // Not connected — re-arm scan/reconnect so a stalled or dropped link
+        // recovers without the user having to force-quit.
+        debugLog.log(
+            "App foregrounded while \(String(describing: connectionState)) — re-arming BLE scan",
+            category: "BLE"
+        )
+        connectionManager.resetAndScan()
     }
 
     private func requestServerPushToStart() {
@@ -412,9 +424,18 @@ class AppCoordinator: ScooterConnectionDelegate {
         currentBattery = value
     }
 
-    /// Handle the scooter powering off while still BLE-connected.
+    /// Handle the scooter powering off (still BLE-connected) OR the telemetry
+    /// stream stopping because the phone rode out of BLE range.
     private func handleScooterSleep(lastBattery: Int) async {
-        logger.info("Scooter entered standby — cleaning up ride state")
+        // Distinguish a genuine standby (still connected — likely a short stop)
+        // from a lost link (rode out of range). Only the former should keep the
+        // idle Live Activity around; the latter must end it so it doesn't linger.
+        let stillConnected = connectionManager.isPeripheralConnected
+        logger.info("handleScooterSleep — stillConnected=\(stillConnected)")
+        debugLog.log(
+            "Telemetry stopped — BLE \(stillConnected ? "still connected (standby)" : "lost (out of range)")",
+            category: "BLE"
+        )
         cancelWatchLaunchRetry()
         isScooterAwake = false
         stopTelemetryWatchdog()
@@ -426,19 +447,29 @@ class AppCoordinator: ScooterConnectionDelegate {
         isRiding = false
         gpsTracker.stopTracking()
         roughnessTracker.stopTracking()
-        await liveActivityManager.updateActivity(state: .idle(isConnected: true))
-        watchSession.sendTelemetry(WatchTelemetryContext(
-            battery: 0,
-            isConnected: true,
-            rideActive: false,
-            speed: 0,
-            tripDistance: 0,
-            range: 0,
-            mode: 0,
-            rideSessionId: nil
-        ))
-        watchSession.updateContext(battery: 0, isConnected: true)
-        sendScooterSleepNotification()
+
+        if stillConnected {
+            // Short stop: keep the idle Live Activity showing while connected.
+            await liveActivityManager.updateActivity(state: .idle(isConnected: true))
+            watchSession.sendTelemetry(WatchTelemetryContext(
+                battery: 0,
+                isConnected: true,
+                rideActive: false,
+                speed: 0,
+                tripDistance: 0,
+                range: 0,
+                mode: 0,
+                rideSessionId: nil
+            ))
+            watchSession.updateContext(battery: 0, isConnected: true)
+            sendScooterSleepNotification()
+        } else {
+            // Out of range / link lost: end the Live Activity now rather than
+            // leaving a stale idle one behind. onDisconnected() will also run
+            // when the formal disconnect arrives; ending here is idempotent.
+            await liveActivityManager.endRideActivity()
+            watchSession.updateContext(battery: 0, isConnected: false)
+        }
     }
 
     func sendScooterSleepNotification() {

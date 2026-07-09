@@ -206,7 +206,11 @@ class GT3LiveActivityManager {
         guard let activity = currentActivity,
               activity.activityState == .active else { return }
 
-        let staleInterval: TimeInterval = state.isConnected ? 300 : 3600
+        // While connected, keep a modest stale window (short stops are fine).
+        // While disconnected, use a short stale window so a lingering activity
+        // is marked stale quickly instead of hanging around for an hour if the
+        // app never wakes to end it.
+        let staleInterval: TimeInterval = state.isConnected ? 300 : 120
         let content = ActivityContent(state: state, staleDate: Date().addingTimeInterval(staleInterval))
         nonisolated(unsafe) let sendableActivity = activity
         await sendableActivity.update(content)
@@ -218,6 +222,9 @@ class GT3LiveActivityManager {
     }
 
     /// End ALL Live Activities for this app, including orphans from prior launches.
+    /// Ends immediately. The shortened disconnected stale window in
+    /// `updateActivity` is the passive fallback for the case where the app is
+    /// suspended and can't run this at all.
     private func endAllActivities() async {
         let activities = Activity<GT3RideAttributes>.activities
         laLog("endAllActivities — ending \(activities.count) activity instance(s)")
