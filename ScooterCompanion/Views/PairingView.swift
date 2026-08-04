@@ -81,7 +81,7 @@ struct PairingView: View {
             if isPairing {
                 ProgressView()
                     .scaleEffect(1.5)
-                Text("Press the button on your GT3 Pro dashboard")
+                Text("Press the button on your scooter dashboard")
                     .font(Theme.Fonts.bodyLarge)
                     .foregroundStyle(Theme.Colors.textPrimary)
                     .multilineTextAlignment(.center)
@@ -89,7 +89,7 @@ struct PairingView: View {
                     .font(Theme.Fonts.bodySmall)
                     .foregroundStyle(Theme.Colors.textSecondary)
             } else {
-                Text("Make sure your GT3 Pro is powered on and nearby")
+                Text("Make sure your scooter is powered on and nearby")
                     .font(Theme.Fonts.bodyMedium)
                     .foregroundStyle(Theme.Colors.textSecondary)
                 Button("Start Pairing") { isPairing = true }

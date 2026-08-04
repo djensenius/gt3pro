@@ -118,7 +118,7 @@ extension AppCoordinator {
     func sendRideStartNotification() {
         sendNotification(
             title: "Ride Started 🛴",
-            body: "GT3 Pro ride logging is active. Battery: \(currentBattery)%"
+            body: "Scooter ride logging is active. Battery: \(currentBattery)%"
         )
     }
 

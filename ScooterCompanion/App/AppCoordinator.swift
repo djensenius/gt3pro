@@ -473,7 +473,7 @@ class AppCoordinator: ScooterConnectionDelegate {
     }
 
     func sendScooterSleepNotification() {
-        sendNotification(title: "Scooter Standby 💤", body: "GT3 Pro powered off. Still connected via Bluetooth.")
+        sendNotification(title: "Scooter Standby 💤", body: "Scooter powered off. Still connected via Bluetooth.")
     }
 
     func sendNotification(title: String, body: String) {

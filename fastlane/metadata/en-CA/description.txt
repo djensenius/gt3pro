@@ -1,6 +1,6 @@
-Scooter Companion — your GT3 Pro ride tracker.
+Scooter Companion — your scooter ride tracker.
 
-Connect to your GT3 Pro over Bluetooth, see live speed, battery, and range on your lock screen, and automatically log every ride with GPS routes, heart rate, and detailed telemetry.
+Connect to your scooter over Bluetooth, see live speed, battery, and range on your lock screen, and automatically log every ride with GPS routes, heart rate, and detailed telemetry.
 
 LIVE DASHBOARD
 • Real-time speed, battery, range, and gear mode
@@ -35,4 +35,4 @@ SCOOTER INFO
 • Battery health diagnostics
 • Real-time error and warning codes
 
-Requires a SuperScooter GT3 Pro and a FluxHaus server account for cloud sync. Built with privacy in mind — all data stays on your device unless you choose to sync.
+Requires a compatible scooter and a FluxHaus server account for cloud sync. Built with privacy in mind — all data stays on your device unless you choose to sync.

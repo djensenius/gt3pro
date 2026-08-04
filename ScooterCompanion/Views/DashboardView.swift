@@ -115,7 +115,7 @@ struct DashboardView: View {
                 .font(.system(size: 80))
                 .foregroundStyle(Theme.Colors.textSecondary)
                 .environment(\.layoutDirection, .rightToLeft)
-            Text("Waiting for GT3 Pro")
+            Text("Waiting for your scooter")
                 .font(Theme.Fonts.headerLarge())
                 .foregroundStyle(Theme.Colors.textPrimary)
             Text("Power on your scooter to connect automatically")

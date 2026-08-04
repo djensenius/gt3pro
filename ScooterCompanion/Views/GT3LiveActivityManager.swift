@@ -163,7 +163,7 @@ class GT3LiveActivityManager {
     }
 
     /// Start a new Live Activity for a ride.
-    func startRideActivity(scooterName: String = "GT3 Pro") async {
+    func startRideActivity(scooterName: String = "Scooter") async {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else {
             laLog("Live Activities disabled by user", level: .warning)
             return
