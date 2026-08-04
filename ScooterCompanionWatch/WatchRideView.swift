@@ -1,0 +1,111 @@
+//
+//  WatchRideView.swift
+//  ScooterCompanionWatch
+//
+//  Created by David Jensenius.
+//
+
+import SwiftUI
+
+struct WatchRideView: View {
+    @Environment(WatchConnectivityManager.self) private var connectivity
+    @Environment(RideWorkoutManager.self) private var workout
+
+    var body: some View {
+        Group {
+            if shouldRecordWorkout {
+                ridingView
+            } else if connectivity.isConnected {
+                standbyView
+            } else {
+                idleView
+            }
+        }
+    }
+
+    private var shouldRecordWorkout: Bool {
+        connectivity.rideActive || connectivity.isRiding
+    }
+
+    private var ridingView: some View {
+        VStack(spacing: 4) {
+            Text("\(Int(connectivity.speed))")
+                .font(.system(size: 48, weight: .bold, design: .rounded))
+                .foregroundStyle(.cyan)
+            Text("km/h")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+
+            if workout.heartRate > 0 {
+                HStack {
+                    Image(systemName: "heart.fill")
+                        .foregroundStyle(.red)
+                    Text("\(Int(workout.heartRate))")
+                        .font(.headline)
+                }
+            } else if workout.workoutError != nil {
+                HStack {
+                    Image(systemName: "heart.slash.fill")
+                    Text("HR unavailable")
+                }
+                .font(.caption2)
+                .foregroundStyle(.red)
+            }
+
+            HStack(spacing: 12) {
+                Label("\(connectivity.battery)%", systemImage: batteryIconName(for: connectivity.battery))
+                    .font(.caption)
+                Label(
+                    String(format: "%.1f km", connectivity.tripDistance),
+                    systemImage: "point.topleft.down.to.point.bottomright.curvepath"
+                )
+                .font(.caption)
+            }
+            .foregroundStyle(.secondary)
+
+            Text(gearModeName)
+                .font(.caption2)
+                .foregroundStyle(.cyan.opacity(0.7))
+        }
+    }
+
+    private var standbyView: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "moon.zzz.fill")
+                .font(.system(size: 40))
+                .foregroundStyle(.cyan.opacity(0.5))
+            Text("Connected")
+                .font(.headline)
+            Text("\(connectivity.battery)%")
+                .font(.title3.bold())
+                .foregroundStyle(.cyan)
+            Text("Waiting for ride")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var idleView: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "scooter")
+                .font(.system(size: 40))
+                .foregroundStyle(.cyan)
+                .environment(\.layoutDirection, .rightToLeft)
+            Text("Scooter Companion")
+                .font(.headline)
+            Text("Open app on iPhone")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var gearModeName: String {
+        switch connectivity.gearMode {
+        case 1: return "Walk"
+        case 2: return "Eco"
+        case 3: return "Sport"
+        case 4: return "Race"
+        default: return ""
+        }
+    }
+}

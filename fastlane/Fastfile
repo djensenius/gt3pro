@@ -15,8 +15,8 @@ platform :ios do
       build_number: Time.now.strftime("%Y%m%d%H%M")
     )
     build_app(
-      project: "GT3Companion.xcodeproj",
-      scheme: "GT3Companion",
+      project: "ScooterCompanion.xcodeproj",
+      scheme: "ScooterCompanion",
       export_method: "app-store",
       xcargs: "-allowProvisioningUpdates"
     )
@@ -72,8 +72,8 @@ platform :ios do
       build_number: Time.now.strftime("%Y%m%d%H%M")
     )
     build_app(
-      project: "GT3Companion.xcodeproj",
-      scheme: "GT3Companion",
+      project: "ScooterCompanion.xcodeproj",
+      scheme: "ScooterCompanion",
       export_method: "app-store",
       xcargs: "-allowProvisioningUpdates"
     )
@@ -117,8 +117,8 @@ platform :mac do
       build_number: Time.now.strftime("%Y%m%d%H%M")
     )
     build_app(
-      project: "GT3Companion.xcodeproj",
-      scheme: "GT3CompanionMac",
+      project: "ScooterCompanion.xcodeproj",
+      scheme: "ScooterCompanionMac",
       export_method: "app-store",
       xcargs: "-allowProvisioningUpdates"
     )
@@ -134,8 +134,8 @@ platform :mac do
       build_number: Time.now.strftime("%Y%m%d%H%M")
     )
     build_app(
-      project: "GT3Companion.xcodeproj",
-      scheme: "GT3CompanionMac",
+      project: "ScooterCompanion.xcodeproj",
+      scheme: "ScooterCompanionMac",
       export_method: "app-store",
       xcargs: "-allowProvisioningUpdates"
     )
@@ -178,8 +178,8 @@ platform :visionos do
       build_number: Time.now.strftime("%Y%m%d%H%M")
     )
     build_app(
-      project: "GT3Companion.xcodeproj",
-      scheme: "GT3CompanionVision",
+      project: "ScooterCompanion.xcodeproj",
+      scheme: "ScooterCompanionVision",
       export_method: "app-store",
       xcargs: "-allowProvisioningUpdates"
     )

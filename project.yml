@@ -1,4 +1,4 @@
-name: GT3Companion
+name: ScooterCompanion
 options:
   bundleIdPrefix: org.davidjensenius
   deploymentTarget:
@@ -21,21 +21,21 @@ settings:
     SWIFT_EMIT_LOC_STRINGS: YES
 
 targets:
-  GT3Companion:
+  ScooterCompanion:
     type: application
     platform: iOS
     sources:
-      - path: GT3Companion
+      - path: ScooterCompanion
         excludes:
           - "**/.DS_Store"
       - path: Shared
         excludes:
           - "**/.DS_Store"
     info:
-      path: GT3Companion/Info.plist
+      path: ScooterCompanion/Info.plist
       properties:
-        CFBundleDisplayName: GT3 Companion
-        CFBundleName: GT3Companion
+        CFBundleDisplayName: Scooter Companion
+        CFBundleName: ScooterCompanion
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         UILaunchScreen: {}
@@ -47,13 +47,13 @@ targets:
         UIBackgroundModes:
           - bluetooth-central
           - location
-        NSBluetoothAlwaysUsageDescription: GT3 Companion connects to your Segway GT3 Pro to read ride telemetry and sync data.
-        NSBluetoothPeripheralUsageDescription: GT3 Companion needs Bluetooth to communicate with your Segway GT3 Pro.
-        NSLocationWhenInUseUsageDescription: GT3 Companion records your GPS route during rides.
-        NSLocationAlwaysAndWhenInUseUsageDescription: GT3 Companion needs background location to track rides when your phone is in your pocket.
-        NSMotionUsageDescription: GT3 Companion uses motion sensors to detect road surface quality.
-        NSHealthShareUsageDescription: GT3 Companion reads heart rate data from your Apple Watch during rides.
-        NSHealthUpdateUsageDescription: GT3 Companion saves ride workouts to Apple Health.
+        NSBluetoothAlwaysUsageDescription: Scooter Companion connects to your GT3 Pro to read ride telemetry and sync data.
+        NSBluetoothPeripheralUsageDescription: Scooter Companion needs Bluetooth to communicate with your GT3 Pro.
+        NSLocationWhenInUseUsageDescription: Scooter Companion records your GPS route during rides.
+        NSLocationAlwaysAndWhenInUseUsageDescription: Scooter Companion needs background location to track rides when your phone is in your pocket.
+        NSMotionUsageDescription: Scooter Companion uses motion sensors to detect road surface quality.
+        NSHealthShareUsageDescription: Scooter Companion reads heart rate data from your Apple Watch during rides.
+        NSHealthUpdateUsageDescription: Scooter Companion saves ride workouts to Apple Health.
         NSSupportsLiveActivities: true
         NSSupportsLiveActivitiesFrequentUpdates: true
         CFBundleURLTypes:
@@ -73,33 +73,33 @@ targets:
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.travel
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     entitlements:
-      path: GT3Companion/GT3Companion.entitlements
+      path: ScooterCompanion/ScooterCompanion.entitlements
       properties:
         aps-environment: development
         com.apple.developer.healthkit: true
         com.apple.developer.healthkit.access: []
         com.apple.developer.weatherkit: true
     dependencies:
-      - target: GT3CompanionWidgets
+      - target: ScooterCompanionWidgets
         embed: true
-      - target: GT3CompanionWatch
+      - target: ScooterCompanionWatch
         embed: true
         codeSign: true
 
-  GT3CompanionWidgets:
+  ScooterCompanionWidgets:
     type: app-extension
     platform: iOS
     sources:
-      - path: GT3CompanionWidgets
+      - path: ScooterCompanionWidgets
         excludes:
           - "**/.DS_Store"
       - path: Shared
         excludes:
           - "**/.DS_Store"
     info:
-      path: GT3CompanionWidgets/Info.plist
+      path: ScooterCompanionWidgets/Info.plist
       properties:
-        CFBundleDisplayName: GT3 Widgets
+        CFBundleDisplayName: Scooter Widgets
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:
@@ -111,11 +111,11 @@ targets:
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: false
 
-  GT3CompanionWatch:
+  ScooterCompanionWatch:
     type: application
     platform: watchOS
     sources:
-      - path: GT3CompanionWatch
+      - path: ScooterCompanionWatch
         excludes:
           - "**/.DS_Store"
       - path: Shared
@@ -124,17 +124,17 @@ targets:
           - Theme.swift
           - WeatherSnapshot.swift
     info:
-      path: GT3CompanionWatch/Info.plist
+      path: ScooterCompanionWatch/Info.plist
       properties:
-        CFBundleDisplayName: GT3 Companion
-        CFBundleName: GT3CompanionWatch
+        CFBundleDisplayName: Scooter Companion
+        CFBundleName: ScooterCompanionWatch
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         WKApplication: true
         WKCompanionAppBundleIdentifier: org.davidjensenius.GT3Companion
         WKSupportsLiveActivities: true
-        NSHealthShareUsageDescription: GT3 Companion reads your heart rate during scooter rides.
-        NSHealthUpdateUsageDescription: GT3 Companion saves scooter ride workouts to Apple Health.
+        NSHealthShareUsageDescription: Scooter Companion reads your heart rate during scooter rides.
+        NSHealthUpdateUsageDescription: Scooter Companion saves scooter ride workouts to Apple Health.
         WKBackgroundModes:
           - workout-processing
         ITSAppUsesNonExemptEncryption: false
@@ -146,16 +146,16 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         TARGETED_DEVICE_FAMILY: "4"
     entitlements:
-      path: GT3CompanionWatch/GT3CompanionWatch.entitlements
+      path: ScooterCompanionWatch/ScooterCompanionWatch.entitlements
       properties:
         com.apple.developer.healthkit: true
         com.apple.developer.healthkit.access: []
 
-  GT3CompanionTests:
+  ScooterCompanionTests:
     type: bundle.unit-test
     platform: iOS
     sources:
-      - path: GT3CompanionTests
+      - path: ScooterCompanionTests
         excludes:
           - "**/.DS_Store"
     settings:
@@ -163,14 +163,14 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.tests
         GENERATE_INFOPLIST_FILE: true
     dependencies:
-      - target: GT3Companion
+      - target: ScooterCompanion
         embed: false
 
-  GT3CompanionUITests:
+  ScooterCompanionUITests:
     type: bundle.ui-testing
     platform: iOS
     sources:
-      - path: GT3CompanionUITests
+      - path: ScooterCompanionUITests
         excludes:
           - "**/.DS_Store"
     settings:
@@ -178,14 +178,14 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.uitests
         GENERATE_INFOPLIST_FILE: true
     dependencies:
-      - target: GT3Companion
+      - target: ScooterCompanion
         embed: false
 
-  GT3CompanionMacTests:
+  ScooterCompanionMacTests:
     type: bundle.unit-test
     platform: macOS
     sources:
-      - path: GT3CompanionMacTests
+      - path: ScooterCompanionMacTests
         excludes:
           - "**/.DS_Store"
     settings:
@@ -193,14 +193,14 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.tests.mac
         GENERATE_INFOPLIST_FILE: true
     dependencies:
-      - target: GT3CompanionMac
+      - target: ScooterCompanionMac
         embed: false
 
-  GT3CompanionVisionTests:
+  ScooterCompanionVisionTests:
     type: bundle.unit-test
     platform: visionOS
     sources:
-      - path: GT3CompanionVisionTests
+      - path: ScooterCompanionVisionTests
         excludes:
           - "**/.DS_Store"
     settings:
@@ -208,14 +208,14 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.tests.vision
         GENERATE_INFOPLIST_FILE: true
     dependencies:
-      - target: GT3CompanionVision
+      - target: ScooterCompanionVision
         embed: false
 
-  GT3CompanionWatchTests:
+  ScooterCompanionWatchTests:
     type: bundle.unit-test
     platform: watchOS
     sources:
-      - path: GT3CompanionWatchTests
+      - path: ScooterCompanionWatchTests
         excludes:
           - "**/.DS_Store"
     settings:
@@ -223,27 +223,27 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: org.davidjensenius.GT3Companion.watch.tests
         GENERATE_INFOPLIST_FILE: true
     dependencies:
-      - target: GT3CompanionWatch
+      - target: ScooterCompanionWatch
         embed: false
 
-  GT3CompanionMac:
+  ScooterCompanionMac:
     type: application
     platform: macOS
     sources:
-      - path: GT3CompanionMac
+      - path: ScooterCompanionMac
         excludes:
           - "**/.DS_Store"
       - path: Shared
         excludes:
           - "**/.DS_Store"
-      - path: GT3Companion/Views/AggregateAnalyticsView.swift
-      - path: GT3Companion/Views/ScooterInfoView.swift
-      - path: GT3Companion/Views/Components/InfoRow.swift
+      - path: ScooterCompanion/Views/AggregateAnalyticsView.swift
+      - path: ScooterCompanion/Views/ScooterInfoView.swift
+      - path: ScooterCompanion/Views/Components/InfoRow.swift
     info:
-      path: GT3CompanionMac/Info.plist
+      path: ScooterCompanionMac/Info.plist
       properties:
-        CFBundleDisplayName: GT3 Companion
-        CFBundleName: GT3Companion
+        CFBundleDisplayName: Scooter Companion
+        CFBundleName: ScooterCompanion
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         ITSAppUsesNonExemptEncryption: false
@@ -266,26 +266,26 @@ targets:
         ENABLE_OUTGOING_NETWORK_CONNECTIONS: true
         COMBINE_HIDPI_IMAGES: true
     entitlements:
-      path: GT3CompanionMac/GT3CompanionMac.entitlements
+      path: ScooterCompanionMac/ScooterCompanionMac.entitlements
 
-  GT3CompanionVision:
+  ScooterCompanionVision:
     type: application
     platform: visionOS
     sources:
-      - path: GT3CompanionVision
+      - path: ScooterCompanionVision
         excludes:
           - "**/.DS_Store"
       - path: Shared
         excludes:
           - "**/.DS_Store"
-      - path: GT3Companion/Views/AggregateAnalyticsView.swift
-      - path: GT3Companion/Views/ScooterInfoView.swift
-      - path: GT3Companion/Views/Components/InfoRow.swift
+      - path: ScooterCompanion/Views/AggregateAnalyticsView.swift
+      - path: ScooterCompanion/Views/ScooterInfoView.swift
+      - path: ScooterCompanion/Views/Components/InfoRow.swift
     info:
-      path: GT3CompanionVision/Info.plist
+      path: ScooterCompanionVision/Info.plist
       properties:
-        CFBundleDisplayName: GT3 Companion
-        CFBundleName: GT3CompanionVision
+        CFBundleDisplayName: Scooter Companion
+        CFBundleName: ScooterCompanionVision
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         ITSAppUsesNonExemptEncryption: false
@@ -303,80 +303,80 @@ targets:
         TARGETED_DEVICE_FAMILY: "7"
 
 schemes:
-  GT3Companion:
+  ScooterCompanion:
     build:
       targets:
-        GT3CompanionWatch: all
-        GT3Companion: all
-        GT3CompanionWidgets: all
+        ScooterCompanionWatch: all
+        ScooterCompanion: all
+        ScooterCompanionWidgets: all
     run:
       config: Debug
     test:
       config: Debug
       targets:
-        - GT3CompanionTests
-        - GT3CompanionUITests
+        - ScooterCompanionTests
+        - ScooterCompanionUITests
     profile:
       config: Release
     analyze:
       config: Debug
 
-  GT3CompanionCI:
+  ScooterCompanionCI:
     build:
       targets:
-        GT3Companion: all
-        GT3CompanionWidgets: all
+        ScooterCompanion: all
+        ScooterCompanionWidgets: all
     run:
       config: Debug
     test:
       config: Debug
       targets:
-        - GT3CompanionTests
+        - ScooterCompanionTests
     profile:
       config: Release
     analyze:
       config: Debug
 
-  GT3CompanionMac:
+  ScooterCompanionMac:
     build:
       targets:
-        GT3CompanionMac: all
+        ScooterCompanionMac: all
     run:
       config: Debug
     test:
       config: Debug
       targets:
-        - GT3CompanionMacTests
+        - ScooterCompanionMacTests
     profile:
       config: Release
     analyze:
       config: Debug
 
-  GT3CompanionWatch:
+  ScooterCompanionWatch:
     build:
       targets:
-        GT3CompanionWatch: all
+        ScooterCompanionWatch: all
     run:
       config: Debug
     test:
       config: Debug
       targets:
-        - GT3CompanionWatchTests
+        - ScooterCompanionWatchTests
     profile:
       config: Release
     analyze:
       config: Debug
 
-  GT3CompanionVision:
+  ScooterCompanionVision:
     build:
       targets:
-        GT3CompanionVision: all
+        ScooterCompanionVision: all
     run:
       config: Debug
     test:
       config: Debug
       targets:
-        - GT3CompanionVisionTests
+        - ScooterCompanionVisionTests
     profile:
       config: Release
     analyze:

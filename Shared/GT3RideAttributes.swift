@@ -1,6 +1,6 @@
 //
 //  GT3RideAttributes.swift
-//  GT3Companion
+//  ScooterCompanion
 //
 //  Created by David Jensenius.
 //

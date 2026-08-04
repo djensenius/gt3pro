@@ -8,7 +8,7 @@ devices([
 
 languages(["en-CA"])
 
-scheme("GT3Companion")
+scheme("ScooterCompanion")
 output_directory("./fastlane/screenshots")
 clear_previous_screenshots(true)
 override_status_bar(true)

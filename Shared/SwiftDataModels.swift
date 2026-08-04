@@ -1,6 +1,6 @@
 //
 //  SwiftDataModels.swift
-//  GT3Companion
+//  ScooterCompanion
 //
 //  Created by David Jensenius.
 //

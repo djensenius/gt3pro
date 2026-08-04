@@ -1,6 +1,6 @@
 //
 //  AuthManager.swift
-//  GT3Companion
+//  ScooterCompanion
 //
 //  Created by David Jensenius.
 //
@@ -111,7 +111,7 @@ private actor RefreshCoordinator {
     }
 }
 
-/// OIDC authentication manager for GT3 Companion.
+/// OIDC authentication manager for Scooter Companion.
 ///
 /// Uses PKCE + `ASWebAuthenticationSession` to sign in via the FluxHaus Authentik instance.
 /// Tokens are stored in the Keychain and refreshed automatically before expiry.

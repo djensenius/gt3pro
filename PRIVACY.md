@@ -1,9 +1,9 @@
 # Privacy Policy
 
-**GT3 Companion**
+**Scooter Companion**
 *Last updated: April 19, 2026*
 
-GT3 Companion is an open-source app for the Segway SuperScooter GT3 Pro. This policy explains what data the app collects, how it is used, and how you can control it.
+Scooter Companion is an open-source app for the SuperScooter GT3 Pro. This policy explains what data the app collects, how it is used, and how you can control it.
 
 ## Data We Collect
 
@@ -78,7 +78,7 @@ The app works fully offline without a server. Cloud sync is opt-in.
 | Apple MapKit | Map display and navigation | Map tile requests (Apple's privacy policy applies) |
 | Your FluxHaus Server | Cloud sync (optional, self-hosted) | Ride data, telemetry, GPS tracks |
 
-No data is sent to Segway, Ninebot, or any other third party.
+No data is sent to the scooter manufacturer or any other third party.
 
 ## Bluetooth
 
@@ -90,7 +90,7 @@ If you enable Live Activities, the app may register a push token with your FluxH
 
 ## Children's Privacy
 
-GT3 Companion is not directed at children under 13 and does not knowingly collect data from children.
+Scooter Companion is not directed at children under 13 and does not knowingly collect data from children.
 
 ## Your Rights
 
@@ -109,4 +109,4 @@ For questions about this privacy policy, please [open an issue](https://github.c
 
 ## Open Source
 
-GT3 Companion is open source under the Apache 2.0 license. You can review exactly what data the app collects by reading the [source code](https://github.com/djensenius/gt3pro).
+Scooter Companion is open source under the Apache 2.0 license. You can review exactly what data the app collects by reading the [source code](https://github.com/djensenius/gt3pro).
