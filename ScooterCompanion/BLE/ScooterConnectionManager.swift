@@ -337,7 +337,7 @@ final class ScooterConnectionManager: NSObject, @unchecked Sendable {
     }
 
     /// CCCD toggle workaround for iOS stale notifications on reconnect.
-    /// Only toggles 006E-0004 — the packet capture shows the official official app
+    /// Only toggles 006E-0004 — the packet capture shows the official app
     /// never unsubscribes B5A3-0003 (it re-subscribes it AFTER PRE_COMM instead).
     /// beginAuthentication fires on the 006E-0004 CCCD ON ACK + drain delay.
     private func toggleNotifications() {

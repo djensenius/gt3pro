@@ -381,3 +381,83 @@ schemes:
       config: Release
     analyze:
       config: Debug
+
+  # Compatibility aliases for existing Xcode Cloud workflows.
+  GT3Companion:
+    build:
+      targets:
+        ScooterCompanionWatch: all
+        ScooterCompanion: all
+        ScooterCompanionWidgets: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - ScooterCompanionTests
+        - ScooterCompanionUITests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+
+  GT3CompanionCI:
+    build:
+      targets:
+        ScooterCompanion: all
+        ScooterCompanionWidgets: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - ScooterCompanionTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+
+  GT3CompanionMac:
+    build:
+      targets:
+        ScooterCompanionMac: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - ScooterCompanionMacTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+
+  GT3CompanionWatch:
+    build:
+      targets:
+        ScooterCompanionWatch: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - ScooterCompanionWatchTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+
+  GT3CompanionVision:
+    build:
+      targets:
+        ScooterCompanionVision: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - ScooterCompanionVisionTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
