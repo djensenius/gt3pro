@@ -96,7 +96,7 @@ struct ScooterInfoView: View {
         NavigationStack {
             List {
                 Section("Device") {
-                    InfoRow(label: "Model", value: "GT3 Pro")
+                    InfoRow(label: "Device", value: "Scooter")
                     InfoRow(label: "Serial", value: serial)
                     InfoRow(label: "Part Number", value: partNumber)
                     InfoRow(label: "Odometer", value: odometer)

@@ -26,7 +26,7 @@ struct InfoRow: View {
 #if DEBUG
 #Preview {
     List {
-        InfoRow(label: "Model", value: "GT3 Pro")
+        InfoRow(label: "Device", value: "Scooter")
         InfoRow(label: "Serial", value: "N4GSD1234567890")
         InfoRow(label: "Odometer", value: "1,234 km")
     }

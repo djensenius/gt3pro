@@ -34,9 +34,9 @@
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.travel</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>Scooter Companion connects to your GT3 Pro to read ride telemetry and sync data.</string>
+	<string>Scooter Companion connects to your scooter to read ride telemetry and sync data.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
-	<string>Scooter Companion needs Bluetooth to communicate with your GT3 Pro.</string>
+	<string>Scooter Companion needs Bluetooth to communicate with your scooter.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Scooter Companion lets you take ride photos to attach to your rides.</string>
 	<key>NSHealthShareUsageDescription</key>

@@ -1,15 +1,15 @@
 # Privacy Policy
 
 **Scooter Companion**
-*Last updated: April 19, 2026*
+*Last updated: August 3, 2026*
 
-Scooter Companion is an open-source app for the SuperScooter GT3 Pro. This policy explains what data the app collects, how it is used, and how you can control it.
+Scooter Companion is an open-source app for your scooter. This policy explains what data the app collects, how it is used, and how you can control it.
 
 ## Data We Collect
 
 ### Scooter Telemetry
 
-When connected to your GT3 Pro via Bluetooth, the app reads:
+When connected to your scooter via Bluetooth, the app reads:
 
 - Speed, battery level, estimated range, and gear mode
 - Battery voltage, current, temperature, and state of charge
@@ -82,7 +82,7 @@ No data is sent to the scooter manufacturer or any other third party.
 
 ## Bluetooth
 
-The app connects to your GT3 Pro over Bluetooth Low Energy. The BLE connection is used exclusively for reading scooter telemetry and sending commands (e.g., power on/off). No data is shared with other Bluetooth devices.
+The app connects to your scooter over Bluetooth Low Energy. The BLE connection is used exclusively for reading scooter telemetry and sending commands (e.g., power on/off). No data is shared with other Bluetooth devices.
 
 ## Push Notifications
 

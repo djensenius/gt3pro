@@ -47,8 +47,8 @@ targets:
         UIBackgroundModes:
           - bluetooth-central
           - location
-        NSBluetoothAlwaysUsageDescription: Scooter Companion connects to your GT3 Pro to read ride telemetry and sync data.
-        NSBluetoothPeripheralUsageDescription: Scooter Companion needs Bluetooth to communicate with your GT3 Pro.
+        NSBluetoothAlwaysUsageDescription: Scooter Companion connects to your scooter to read ride telemetry and sync data.
+        NSBluetoothPeripheralUsageDescription: Scooter Companion needs Bluetooth to communicate with your scooter.
         NSLocationWhenInUseUsageDescription: Scooter Companion records your GPS route during rides.
         NSLocationAlwaysAndWhenInUseUsageDescription: Scooter Companion needs background location to track rides when your phone is in your pocket.
         NSMotionUsageDescription: Scooter Companion uses motion sensors to detect road surface quality.

@@ -133,7 +133,7 @@ private struct MacDashboardView: View {
             Text("Ride Explorer")
                 .font(Theme.Fonts.headerXL())
                 .foregroundStyle(Theme.Colors.textPrimary)
-            Text("Routes, weather, battery, roughness, and performance from every synced GT3 Pro ride.")
+            Text("Routes, weather, battery, roughness, and performance from every synced scooter ride.")
                 .font(Theme.Fonts.bodyMedium)
                 .foregroundStyle(Theme.Colors.textSecondary)
         }
