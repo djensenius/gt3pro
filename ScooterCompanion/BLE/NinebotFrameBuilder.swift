@@ -1,0 +1,139 @@
+//
+//  NinebotFrameBuilder.swift
+//  ScooterCompanion
+//
+//  Created by David Jensenius.
+//
+
+import Foundation
+
+enum NinebotFrameBuilder {
+    /// Build a read register command frame.
+    /// - Parameters:
+    ///   - board: Target board (e.g., .vcu, .bms1)
+    ///   - register: Register address (index byte)
+    ///   - length: Number of bytes to read
+    static func buildReadFrame(board: BLEConstants.Board, register: UInt8, length: UInt8) -> Data {
+        let data = Data([length])
+        return buildFrame(
+            target: board.rawValue,
+            cmd: BLEConstants.Command.read.rawValue,
+            index: register,
+            data: data
+        )
+    }
+
+    /// Build a write register command frame.
+    static func buildWriteFrame(board: BLEConstants.Board, register: UInt8, data: Data) -> Data {
+        return buildFrame(
+            target: board.rawValue,
+            cmd: BLEConstants.Command.write.rawValue,
+            index: register,
+            data: data
+        )
+    }
+
+    /// Build an auth command frame (PRE_COMM, SET_PWD, AUTH).
+    /// Uses MCU target (0x04) for the GT3 Pro encrypted auth channel.
+    static func buildAuthFrame(cmd: BLEConstants.Command, data: Data) -> Data {
+        return buildFrame(
+            target: BLEConstants.Board.mcu.rawValue,
+            cmd: cmd.rawValue,
+            index: 0x00,
+            data: data
+        )
+    }
+
+    /// Build a plain PRE_COMM probe frame with the legacy BLE target (0x21).
+    /// Sent unencrypted to 006E-0005 as a legacy wakeup signal.
+    static func buildPlainPreComm() -> Data {
+        return buildFrame(
+            target: BLEConstants.Board.ble.rawValue,
+            cmd: BLEConstants.Command.preComm.rawValue,
+            index: 0x00,
+            data: Data()
+        )
+    }
+
+    /// Build a power-on command frame for the VCU.
+    /// Verified from packet capture: CMD=0x79, TARGET=VCU(0x16), DATA=[0x01, 0x00].
+    static func buildPowerOnFrame() -> Data {
+        return buildFrame(
+            target: BLEConstants.Board.vcu.rawValue,
+            cmd: BLEConstants.Command.powerOn.rawValue,
+            index: 0x00,
+            data: Data([0x01, 0x00])
+        )
+    }
+
+    /// Build a power-off (closeAcc) command frame for the VCU.
+    /// CMD=0x79, INDEX=0x00, DATA=[0x02, 0x00].
+    /// Verified from pklg capture: official app sends 0x02 for closeAcc, 0x01 for openAcc.
+    static func buildPowerOffFrame() -> Data {
+        return buildFrame(
+            target: BLEConstants.Board.vcu.rawValue,
+            cmd: BLEConstants.Command.powerOn.rawValue,
+            index: 0x00,
+            data: Data([0x02, 0x00])
+        )
+    }
+
+    /// Build a raw Ninebot frame.
+    /// Layout: [0x5A, 0xA5, LEN, BT_ID, TARGET, CMD, INDEX, DATA...]
+    /// LEN = data.count (GT3 Pro "x3 series" protocol: LEN counts data bytes only)
+    private static func buildFrame(target: UInt8, cmd: UInt8, index: UInt8, data: Data) -> Data {
+        let len = UInt8(data.count)
+
+        var frame = Data()
+        frame.append(BLEConstants.syncByte1)
+        frame.append(BLEConstants.syncByte2Plain)
+        frame.append(len)
+        frame.append(BLEConstants.btID)
+        frame.append(target)
+        frame.append(cmd)
+        frame.append(index)
+        frame.append(data)
+        return frame
+    }
+
+    /// Parse a received frame's fields (after decryption).
+    /// Returns nil if the frame is too short, has invalid sync bytes,
+    /// or the length field doesn't match the actual frame size.
+    static func parseFrame(_ frame: Data) -> ParsedFrame? {
+        guard frame.count >= 7 else { return nil }
+        guard frame[0] == BLEConstants.syncByte1 else { return nil }
+        guard frame[1] == BLEConstants.syncByte2Plain
+            || frame[1] == BLEConstants.syncByte2Encrypted else { return nil }
+
+        let length = frame[2]
+        // Accept old format (LEN = SRC+DEST+CMD+INDEX+data, so frame = LEN+3 bytes)
+        // and new GT3 Pro format (LEN = data only, so frame = LEN+7 bytes).
+        let isOldFormat = length >= 4 && frame.count == Int(length) + 3
+        let isNewFormat = frame.count == Int(length) + 7
+        guard isOldFormat || isNewFormat else { return nil }
+
+        let btID = frame[3]
+        let source = frame[4]
+        let cmd = frame[5]
+        let index = frame[6]
+        let payload = frame.count > 7 ? Data(frame[7...]) : Data()
+
+        return ParsedFrame(
+            length: length,
+            btID: btID,
+            source: source,
+            cmd: cmd,
+            index: index,
+            payload: payload
+        )
+    }
+
+    struct ParsedFrame: Sendable {
+        let length: UInt8
+        let btID: UInt8
+        let source: UInt8
+        let cmd: UInt8
+        let index: UInt8
+        let payload: Data
+    }
+}

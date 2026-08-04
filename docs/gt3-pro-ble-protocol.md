@@ -1,8 +1,8 @@
-# Segway GT3 Pro — Bluetooth Low Energy Protocol Reference
+# GT3 Pro — Bluetooth Low Energy Protocol Reference
 
-> **Scooter model**: Segway SuperScooter GT3 Pro (x3 series)
+> **Scooter model**: SuperScooter GT3 Pro (x3 series)
 
-> Reverse-engineered from Bluetooth packet captures, the Segway Mobility app, and the
+> Reverse-engineered from Bluetooth packet captures, the official mobility app, and the
 > [segway-ninebot-ble](https://nootnooot.codeberg.page/segway-ninebot-ble/) community docs.
 
 ---
@@ -47,7 +47,7 @@
 ### Connection Flow
 
 ```
-1.  Create CBCentralManager (restore key: "GT3CompanionCentral")
+1.  Create CBCentralManager (restore key: "ScooterCompanionCentral")
 2.  Scan by advertised name/prefix OR service UUID
     └─ Also check retrieveConnectedPeripherals + saved peripheral UUID
 3.  Connect to peripheral
@@ -584,8 +584,8 @@ Off→On:   2098 → 2065 → 2067 → 2098
 
 - **CCCD toggle is mandatory** after reconnect: disable notifications → wait 300ms →
   re-enable → wait 200ms drain before starting auth.
-- **Only one app can hold the BLE connection.** Force-quit the Segway Mobility app
-  before connecting with GT3 Companion.
+- **Only one app can hold the BLE connection.** Force-quit the official mobility app
+  before connecting with Scooter Companion.
 - **Echo detection**: If the PRE_COMM response is identical to the request, the device
   is in a bad state. Disconnect and retry.
 
@@ -622,4 +622,4 @@ to press the button.
 
 - [segway-ninebot-ble](https://nootnooot.codeberg.page/segway-ninebot-ble/) — Community BLE protocol documentation
 - [Codeberg source](https://codeberg.org/NootNooot/segway-ninebot-ble) — Transport, encryption, auth, 8693 commands for 66 models
-- GT3 Companion source — `GT3Companion/BLE/`, `GT3Companion/Crypto/`, `GT3Companion/Data/`
+- Scooter Companion source — `ScooterCompanion/BLE/`, `ScooterCompanion/Crypto/`, `ScooterCompanion/Data/`

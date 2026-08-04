@@ -1,6 +1,6 @@
-# GT3 Companion
+# Scooter Companion
 
-A native SwiftUI app for the **Segway SuperScooter GT3 Pro** that connects over Bluetooth Low Energy, reads live telemetry, records GPS routes, tracks surface roughness, monitors heart rate via Apple Watch, and optionally syncs everything to a self-hosted [FluxHaus Server](https://github.com/djensenius/FluxHaus-Server).
+A native SwiftUI app for the **SuperScooter GT3 Pro** that connects over Bluetooth Low Energy, reads live telemetry, records GPS routes, tracks surface roughness, monitors heart rate via Apple Watch, and optionally syncs everything to a self-hosted [FluxHaus Server](https://github.com/djensenius/FluxHaus-Server).
 
 ## Features
 
@@ -54,21 +54,21 @@ Requires **macOS** with **Xcode 16+** and **SwiftLint**.
 
 ```bash
 brew install swiftlint
-open GT3Companion.xcodeproj
+open ScooterCompanion.xcodeproj
 ```
 
 ### Command-Line Builds
 
 ```bash
 # iOS
-xcodebuild -project GT3Companion.xcodeproj \
-  -scheme "GT3Companion" \
+xcodebuild -project ScooterCompanion.xcodeproj \
+  -scheme "ScooterCompanion" \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
   -configuration Debug build CODE_SIGNING_ALLOWED=NO
 
 # macOS
-xcodebuild -project GT3Companion.xcodeproj \
-  -scheme "GT3CompanionMac" \
+xcodebuild -project ScooterCompanion.xcodeproj \
+  -scheme "ScooterCompanionMac" \
   -configuration Debug build CODE_SIGNING_ALLOWED=NO
 ```
 
@@ -76,7 +76,7 @@ xcodebuild -project GT3Companion.xcodeproj \
 
 ## First-Time Setup: Extracting the Pairing Password
 
-GT3 Companion needs your scooter's pairing password to connect. The easiest way to get it is from an existing Segway Mobility app backup — no physical button press required.
+Scooter Companion needs your scooter's pairing password to connect. The easiest way to get it is from an existing official mobility app backup — no physical button press required.
 
 ### Step 1: Create an Unencrypted iPhone Backup
 
@@ -86,7 +86,7 @@ GT3 Companion needs your scooter's pairing password to connect. The easiest way 
 4. **Uncheck** "Encrypt local backup" if it's checked
 5. Click **Back Up Now** and wait for it to complete
 
-### Step 2: Find the Segway App Preferences
+### Step 2: Find the Official App Preferences
 
 The backup is stored at `~/Library/Application Support/MobileSync/Backup/`. Each backup is a folder of hashed filenames with a `Manifest.db` SQLite database mapping them.
 
@@ -97,7 +97,7 @@ ls -lt ~/Library/Application\ Support/MobileSync/Backup/ | head -5
 # Enter the backup directory (use the most recent one)
 cd ~/Library/Application\ Support/MobileSync/Backup/YOUR_BACKUP_ID/
 
-# Find the Segway Mobility app preferences file
+# Find the official mobility app preferences file
 sqlite3 Manifest.db "SELECT fileID, relativePath FROM Files
     WHERE domain = 'AppDomain-com.ninebot.segway'
     AND relativePath LIKE '%Preferences%plist'"
@@ -112,10 +112,10 @@ abc123def456|Library/Preferences/com.ninebot.segway.plist
 
 ```bash
 # Copy the file using the hash from Step 2 (first two chars are subdirectory)
-cp ab/abc123def456 /tmp/segway.plist
+cp ab/abc123def456 /tmp/mobility.plist
 
 # Find the decrypt key for your scooter
-plutil -p /tmp/segway.plist | grep _decrypt
+plutil -p /tmp/mobility.plist | grep _decrypt
 ```
 
 You'll see output like:
@@ -133,22 +133,22 @@ This gives you a **32-character hex string** (representing 16 bytes).
 
 ### Step 5: Enter in the App
 
-1. Open GT3 Companion
+1. Open Scooter Companion
 2. Go to **Settings** → **Pair Scooter**
-3. Choose **Recover from Segway App (Recommended)**
+3. Choose **Recover from Official App (Recommended)**
 4. Paste the 32-character hex string
 5. Tap **Save Password**
 
 That's it! The app will use this password to authenticate instantly on every connection — fully automatic, no button press needed.
 
-> **Note**: If you don't have the Segway Mobility app installed, you can do a fresh pair instead. This requires pressing a button on the GT3 Pro dashboard when prompted.
+> **Note**: If you don't have the official mobility app installed, you can do a fresh pair instead. This requires pressing a button on the GT3 Pro dashboard when prompted.
 
 ## Running Tests
 
 ```bash
 xcodebuild test \
-  -project GT3Companion.xcodeproj \
-  -scheme "GT3Companion" \
+  -project ScooterCompanion.xcodeproj \
+  -scheme "ScooterCompanion" \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
   -configuration Debug \
   CODE_SIGNING_ALLOWED=NO
@@ -159,7 +159,7 @@ Unit tests cover crypto, frame parsing, telemetry parsing, and data models. BLE 
 ## Project Structure
 
 ```
-GT3Companion/
+ScooterCompanion/
 ├── App/          # @main entry point, AppDelegate, AppCoordinator
 ├── BLE/          # CoreBluetooth transport, frame codec
 ├── Crypto/       # AES-128, key derivation, auth handshake
@@ -168,10 +168,10 @@ GT3Companion/
 ├── Views/        # SwiftUI views and components
 ├── Navigation/   # MapKit turn-by-turn
 ├── Health/       # WatchConnectivity, HealthKit bridge
-GT3CompanionWatch/  # watchOS companion app
-GT3CompanionWidgets/ # Live Activity widget extension
-GT3CompanionMac/    # macOS target
-GT3CompanionVision/ # visionOS target
+ScooterCompanionWatch/  # watchOS companion app
+ScooterCompanionWidgets/ # Live Activity widget extension
+ScooterCompanionMac/    # macOS target
+ScooterCompanionVision/ # visionOS target
 Shared/             # Code shared between targets (SwiftData models, AuthManager)
 docs/               # BLE protocol spec, Grafana dashboard
 ```

@@ -1,6 +1,6 @@
 //
 //  LoginView.swift
-//  GT3Companion
+//  ScooterCompanion
 //
 //  Created by David Jensenius.
 //
@@ -21,7 +21,7 @@ struct LoginView: View {
                 .foregroundStyle(Theme.Colors.accent)
                 .environment(\.layoutDirection, .rightToLeft)
 
-            Text("GT3 Companion")
+            Text("Scooter Companion")
                 .font(Theme.Fonts.headerXL())
                 .foregroundStyle(Theme.Colors.textPrimary)
 

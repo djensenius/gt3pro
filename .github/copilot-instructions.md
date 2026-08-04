@@ -1,6 +1,6 @@
-# GT3 Companion — Segway GT3 Pro Ride Tracker
+# Scooter Companion — GT3 Pro Ride Tracker
 
-GT3 Companion is a native Swift/SwiftUI iOS app that connects to a Segway SuperScooter GT3 Pro over Bluetooth Low Energy (BLE), reads live telemetry, records GPS routes, tracks surface roughness via CoreMotion, and uploads everything to the FluxHaus monitoring stack. It includes an Apple Watch companion for HealthKit workout tracking with heart rate monitoring.
+Scooter Companion is a native Swift/SwiftUI iOS app that connects to a SuperScooter GT3 Pro over Bluetooth Low Energy (BLE), reads live telemetry, records GPS routes, tracks surface roughness via CoreMotion, and uploads everything to the FluxHaus monitoring stack. It includes an Apple Watch companion for HealthKit workout tracking with heart rate monitoring.
 
 **Always reference these instructions first and fallback to search or bash commands only when you encounter unexpected information that does not match the information here.**
 
@@ -20,14 +20,14 @@ The application uses Xcode with multiple targets.
 #### Core Build Commands (NEVER CANCEL - Set 90+ minute timeouts)
 ```bash
 # Open the project in Xcode
-open GT3Companion.xcodeproj
+open ScooterCompanion.xcodeproj
 
 # Command line builds
-xcodebuild -project GT3Companion.xcodeproj -scheme "GT3Companion" -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -configuration Debug build CODE_SIGNING_ALLOWED=NO
-xcodebuild -project GT3Companion.xcodeproj -scheme "GT3CompanionMac" -configuration Debug build CODE_SIGNING_ALLOWED=NO
+xcodebuild -project ScooterCompanion.xcodeproj -scheme "ScooterCompanion" -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -configuration Debug build CODE_SIGNING_ALLOWED=NO
+xcodebuild -project ScooterCompanion.xcodeproj -scheme "ScooterCompanionMac" -configuration Debug build CODE_SIGNING_ALLOWED=NO
 
 # watchOS target (added in a later PR)
-# xcodebuild -project GT3Companion.xcodeproj -scheme "GT3CompanionWatch" -destination 'platform=watchOS Simulator,name=Apple Watch Series 10 (46mm)' -configuration Debug build CODE_SIGNING_ALLOWED=NO
+# xcodebuild -project ScooterCompanion.xcodeproj -scheme "ScooterCompanionWatch" -destination 'platform=watchOS Simulator,name=Apple Watch Series 10 (46mm)' -configuration Debug build CODE_SIGNING_ALLOWED=NO
 ```
 
 **CRITICAL BUILD TIMING:**
@@ -38,7 +38,7 @@ xcodebuild -project GT3Companion.xcodeproj -scheme "GT3CompanionMac" -configurat
 ### Testing
 ```bash
 # Run unit tests (takes 5-10 minutes)
-xcodebuild test -project GT3Companion.xcodeproj -scheme "GT3Companion" -destination 'platform=iOS Simulator,name=iPhone 17 Pro' CODE_SIGNING_ALLOWED=NO
+xcodebuild test -project ScooterCompanion.xcodeproj -scheme "ScooterCompanion" -destination 'platform=iOS Simulator,name=iPhone 17 Pro' CODE_SIGNING_ALLOWED=NO
 ```
 
 **Important**: BLE and HealthKit functionality cannot be tested in the simulator. Unit tests cover crypto, frame parsing, telemetry parsing, and data models. Integration testing requires a real GT3 Pro scooter.
@@ -53,7 +53,7 @@ swiftlint --strict --config .swiftlint.yml
 ```
 
 **SwiftLint Configuration** (`.swiftlint.yml`):
-- Excludes `Packages/` and `GT3CompanionWatch/` directories
+- Excludes `Packages/` and `ScooterCompanionWatch/` directories
 - Limits: file_length: 500, function_body_length: 100, type_body_length: 400
 - **ALWAYS run SwiftLint before committing** — CI will fail otherwise
 
@@ -73,7 +73,7 @@ swiftlint --strict --config .swiftlint.yml
 ### Component Architecture
 ```
 ┌────────────────────────────────────────────────────────────┐
-│                     GT3 Companion App                      │
+│                     Scooter Companion App                      │
 ├──────────┬──────────┬──────────┬──────────┬────────────────┤
 │ BLE Layer│ Crypto   │ Data     │ UI Layer │ Upload Layer   │
 │          │ Layer    │ Layer    │          │                │
@@ -112,9 +112,9 @@ GT3 Pro ←—BLE—→ iPhone ←—WCSession—→ Apple Watch
 
 ## Project Structure
 ```
-GT3Companion/
-├── GT3Companion.xcodeproj
-├── GT3Companion/                    # Main iOS app target
+ScooterCompanion/
+├── ScooterCompanion.xcodeproj
+├── ScooterCompanion/                    # Main iOS app target
 │   ├── App/                         # @main entry, AppDelegate
 │   ├── BLE/                         # CoreBluetooth, transport, frame codec
 │   ├── Crypto/                      # AES, key derivation, auth handshake
@@ -124,9 +124,9 @@ GT3Companion/
 │   ├── Navigation/                  # MapKit turn-by-turn
 │   ├── Health/                      # WatchConnectivity, HealthKit
 │   └── Utilities/                   # Keychain, logging
-├── GT3CompanionWidgets/             # Widget Extension (Live Activity)
-├── GT3CompanionWatch/               # watchOS app
-├── GT3CompanionTests/               # Unit tests
+├── ScooterCompanionWidgets/             # Widget Extension (Live Activity)
+├── ScooterCompanionWatch/               # watchOS app
+├── ScooterCompanionTests/               # Unit tests
 ├── Shared/                          # Shared between app + widget
 ├── Icons/                           # App icon source files
 └── docs/                            # Specification and documentation
@@ -157,7 +157,7 @@ Use `Theme.Colors`, `Theme.Fonts`, `Theme.Spacing` from `Theme.swift`. Never use
 - Notify characteristic is `0004`, NOT `0003` — this is the #1 source of bugs
 - After reconnect, toggle CCCD off→300ms→on→200ms drain before auth
 - Echo detection: if PRE_COMM response equals request, disconnect and retry
-- Only one app can hold the BLE connection — force-quit Segway Mobility app
+- Only one app can hold the BLE connection — force-quit official mobility app
 
 ### Background Execution
 - Live Activity keeps app alive longer in background

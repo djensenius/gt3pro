@@ -1,6 +1,6 @@
 //
 //  PersistenceController.swift
-//  GT3Companion
+//  ScooterCompanion
 //
 //  Created by David Jensenius.
 //
@@ -8,7 +8,7 @@
 import Foundation
 import SwiftData
 
-/// Shared SwiftData stack used by all GT3 Companion targets.
+/// Shared SwiftData stack used by all Scooter Companion targets.
 @MainActor
 final class PersistenceController {
     static let shared = PersistenceController()
