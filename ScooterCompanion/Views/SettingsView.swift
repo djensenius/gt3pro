@@ -57,7 +57,10 @@ struct SettingsView: View {
                     Label("Demo Mode", systemImage: "play.circle")
                         .foregroundStyle(Theme.Colors.accent)
                     Spacer()
-                    Button("Exit Demo") { auth.exitDemoMode() }
+                    Button("Exit Demo") {
+                        DemoRideData.removeDemoRides(in: modelContext)
+                        auth.exitDemoMode()
+                    }
                         .foregroundStyle(Theme.Colors.error)
                 }
                 .listRowBackground(Theme.Colors.elevatedBackground)
@@ -354,13 +357,13 @@ struct DebugLogView: View {
                 Button {
                     showFileExporter = true
                 } label: {
-                    Image(systemName: "folder")
+                    Label("Export", systemImage: "folder")
                 }
                 ShareLink(
                     item: logStore.export(),
                     preview: SharePreview(logStore.exportFilename)
                 ) {
-                    Image(systemName: "square.and.arrow.up")
+                    Label("Share", systemImage: "square.and.arrow.up")
                 }
             }
         }

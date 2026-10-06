@@ -39,6 +39,7 @@ struct ScooterCompanionApp: App {
                 if auth.isDemoMode {
                     ContentView()
                         .environment(coordinator)
+                        .task { seedDemoRides() }
                 } else {
                     LoginView()
                 }
@@ -72,6 +73,10 @@ struct ScooterCompanionApp: App {
             coordinator.resumeFromBackground()
             #endif
         }
+    }
+
+    @MainActor private func seedDemoRides() {
+        DemoRideData.seedIfNeeded(in: PersistenceController.shared.container.mainContext)
     }
 
     /// Finds rides that were never closed (app was killed mid-ride) and finalises them

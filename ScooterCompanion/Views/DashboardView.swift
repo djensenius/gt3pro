@@ -168,95 +168,41 @@ struct DashboardView: View {
     }
 
     private var connectedView: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .top, spacing: Theme.Spacing.extraLarge) {
+                dashboardPrimaryColumn
+                    .frame(minWidth: 320, maxWidth: 420)
+                dashboardStatsGrid
+                    .frame(minWidth: 360, maxWidth: .infinity)
+            }
+
+            VStack(spacing: Theme.Spacing.large) {
+                dashboardPrimaryColumn
+                dashboardStatsGrid
+            }
+        }
+        .padding()
+    }
+
+    private var dashboardPrimaryColumn: some View {
         VStack(spacing: Theme.Spacing.large) {
             VStack(spacing: 4) {
                 Text("\(Int(speed))")
                     .font(.system(size: 96, weight: .bold, design: .rounded))
+                    .minimumScaleFactor(0.7)
+                    .lineLimit(1)
                     .foregroundStyle(Theme.Colors.accent)
                 Text("km/h")
                     .font(Theme.Fonts.bodyMedium)
                     .foregroundStyle(Theme.Colors.textSecondary)
             }
-
-            HStack(spacing: Theme.Spacing.medium) {
-                StatCard(
-                    title: "Battery",
-                    value: "\(battery)%",
-                    icon: batteryIconName(for: battery),
-                    color: batteryColor
-                )
-                StatCard(
-                    title: "Range",
-                    value: String(format: "%.0f km", estimatedRange),
-                    icon: "fuelpump",
-                    color: Theme.Colors.info
-                )
-            }
-
-            HStack(spacing: Theme.Spacing.medium) {
-                StatCard(
-                    title: "Trip",
-                    value: String(format: "%.1f km", tripDistance),
-                    icon: "point.topleft.down.to.point.bottomright.curvepath",
-                    color: Theme.Colors.secondary
-                )
-                StatCard(
-                    title: "Mode",
-                    value: gearModeName,
-                    icon: "gauge.with.dots.needle.33percent",
-                    color: Theme.Colors.primary
-                )
-            }
-
-            HStack(spacing: Theme.Spacing.medium) {
-                StatCard(
-                    title: "BMS Temp",
-                    value: String(format: "%.0f°C", bmsTemp),
-                    icon: "thermometer.medium",
-                    color: tempColor(bmsTemp)
-                )
-                StatCard(
-                    title: "Vehicle Temp",
-                    value: String(format: "%.0f°C", bodyTemp),
-                    icon: "thermometer.sun",
-                    color: tempColor(bodyTemp)
-                )
-            }
+            .frame(maxWidth: .infinity)
 
             #if os(iOS)
             if coordinator.isRiding {
-                HStack(spacing: Theme.Spacing.small) {
-                    PhotosPicker(
-                        selection: $selectedPhotoItems,
-                        maxSelectionCount: 10,
-                        matching: .images,
-                        photoLibrary: .shared()
-                    ) {
-                        Label("Add from Library", systemImage: "photo.on.rectangle")
-                            .font(Theme.Fonts.bodySmall)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, Theme.Spacing.small)
-                    }
-                    .buttonStyle(.bordered)
-                    .tint(Theme.Colors.accent)
-
-                    Button {
-                        showCameraPicker = true
-                    } label: {
-                        Label("Take Photo", systemImage: "camera")
-                            .font(Theme.Fonts.bodySmall)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, Theme.Spacing.small)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(Theme.Colors.accent)
-                    .disabled(!UIImagePickerController.isSourceTypeAvailable(.camera))
-                }
-                .padding(.horizontal)
+                ridePhotoActions
             }
-            #endif
 
-            #if os(iOS)
             PowerSlideButton(
                 title: "Slide to Power Off",
                 systemImage: "power",
@@ -264,11 +210,88 @@ struct DashboardView: View {
             ) {
                 coordinator.sendPowerOff()
             }
-            .padding(.horizontal)
+            .frame(maxWidth: 420)
             #endif
         }
-        .padding()
+        .frame(maxWidth: .infinity)
     }
+
+    private var dashboardStatsGrid: some View {
+        LazyVGrid(
+            columns: [GridItem(.adaptive(minimum: 150), spacing: Theme.Spacing.medium)],
+            spacing: Theme.Spacing.medium
+        ) {
+            StatCard(
+                title: "Battery",
+                value: "\(battery)%",
+                icon: batteryIconName(for: battery),
+                color: batteryColor
+            )
+            StatCard(
+                title: "Range",
+                value: String(format: "%.0f km", estimatedRange),
+                icon: "fuelpump",
+                color: Theme.Colors.info
+            )
+            StatCard(
+                title: "Trip",
+                value: String(format: "%.1f km", tripDistance),
+                icon: "point.topleft.down.to.point.bottomright.curvepath",
+                color: Theme.Colors.secondary
+            )
+            StatCard(
+                title: "Mode",
+                value: gearModeName,
+                icon: "gauge.with.dots.needle.33percent",
+                color: Theme.Colors.primary
+            )
+            StatCard(
+                title: "BMS Temp",
+                value: String(format: "%.0f°C", bmsTemp),
+                icon: "thermometer.medium",
+                color: tempColor(bmsTemp)
+            )
+            StatCard(
+                title: "Vehicle Temp",
+                value: String(format: "%.0f°C", bodyTemp),
+                icon: "thermometer.sun",
+                color: tempColor(bodyTemp)
+            )
+        }
+    }
+
+    #if os(iOS)
+    private var ridePhotoActions: some View {
+        HStack(spacing: Theme.Spacing.small) {
+            PhotosPicker(
+                selection: $selectedPhotoItems,
+                maxSelectionCount: 10,
+                matching: .images,
+                photoLibrary: .shared()
+            ) {
+                Label("Add from Library", systemImage: "photo.on.rectangle")
+                    .font(Theme.Fonts.bodySmall)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Theme.Spacing.small)
+            }
+            .buttonStyle(.bordered)
+            .tint(Theme.Colors.accent)
+
+            Button {
+                showCameraPicker = true
+            } label: {
+                Label("Take Photo", systemImage: "camera")
+                    .font(Theme.Fonts.bodySmall)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Theme.Spacing.small)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(Theme.Colors.accent)
+            .disabled(!UIImagePickerController.isSourceTypeAvailable(.camera))
+        }
+        .frame(maxWidth: 420)
+    }
+    #endif
 
     private var batteryColor: Color {
         if battery > 60 { return Theme.Colors.success }

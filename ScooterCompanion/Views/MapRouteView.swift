@@ -71,11 +71,20 @@ struct RidePhotoThumbnailView: View {
 struct MapRouteView: View {
     let coordinates: [RouteCoordinate]
     let ridePhotos: [RidePhotoMapAnnotation]
+    let height: CGFloat
+    let cornerRadius: CGFloat
     @State private var selectedPhoto: RidePhotoMapAnnotation?
 
-    init(coordinates: [RouteCoordinate], ridePhotos: [RidePhotoMapAnnotation] = []) {
+    init(
+        coordinates: [RouteCoordinate],
+        ridePhotos: [RidePhotoMapAnnotation] = [],
+        height: CGFloat = 250,
+        cornerRadius: CGFloat = Theme.cornerRadius
+    ) {
         self.coordinates = coordinates
         self.ridePhotos = ridePhotos
+        self.height = height
+        self.cornerRadius = cornerRadius
     }
 
     private var segments: [RouteSpeedSegment] {
@@ -88,9 +97,9 @@ struct MapRouteView: View {
 
     var body: some View {
         if coordinates.isEmpty {
-            RoundedRectangle(cornerRadius: Theme.cornerRadius)
+            RoundedRectangle(cornerRadius: cornerRadius)
                 .fill(Theme.Colors.secondaryBackground)
-                .frame(height: 250)
+                .frame(height: height)
                 .overlay {
                     VStack {
                         Image(systemName: "map")
@@ -145,8 +154,8 @@ struct MapRouteView: View {
                     .stroke(routeSpeedColor(speed: segment.speed, maxSpeed: maxSpeed), lineWidth: 4)
                 }
             }
-            .frame(height: 250)
-            .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius))
+            .frame(height: height)
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
             .sheet(item: $selectedPhoto) { photo in
                 VStack(spacing: Theme.Spacing.medium) {
                     RidePhotoThumbnailView(

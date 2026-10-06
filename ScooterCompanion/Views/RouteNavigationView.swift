@@ -43,7 +43,10 @@ struct RouteNavigationView: View {
                         Text(item.name ?? "Unknown")
                             .font(Theme.Fonts.bodyMedium)
                             .foregroundStyle(Theme.Colors.textPrimary)
-                        if let address = item.placemark.title {
+                        if let address = item.addressRepresentations?.fullAddress(
+                            includingRegion: false,
+                            singleLine: true
+                        ) {
                             Text(address)
                                 .font(Theme.Fonts.bodySmall)
                                 .foregroundStyle(Theme.Colors.textSecondary)

@@ -66,7 +66,6 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A83A7797F28590F653E2440A"
             BuildableName = "ScooterCompanionWatch.app"
-            BlueprintName = "ScooterCompanionWatch"
             ReferencedContainer = "container:ScooterCompanion.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -83,7 +82,6 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A83A7797F28590F653E2440A"
             BuildableName = "ScooterCompanionWatch.app"
-            BlueprintName = "ScooterCompanionWatch"
             ReferencedContainer = "container:ScooterCompanion.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

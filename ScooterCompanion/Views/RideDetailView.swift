@@ -81,6 +81,7 @@ struct RideDetailView: View {
     #endif
 
     private var cache: RideDetailCachedSamples { RideDetailCachedSamples(ride: ride) }
+    private var rideTitle: String { ride.startTime.formatted(date: .abbreviated, time: .omitted) }
 
     #if os(iOS)
     private var photoAnnotations: [RidePhotoMapAnnotation] {
@@ -100,71 +101,12 @@ struct RideDetailView: View {
     var body: some View {
         ZStack {
             Theme.Colors.background.ignoresSafeArea()
-            ScrollView {
-                VStack(spacing: Theme.Spacing.large) {
-                    HStack(spacing: Theme.Spacing.medium) {
-                        StatCard(
-                            title: "Distance",
-                            value: String(format: "%.1f km", ride.totalDistance),
-                            icon: "point.topleft.down.to.point.bottomright.curvepath",
-                            color: Theme.Colors.accent
-                        )
-                        StatCard(
-                            title: "Duration",
-                            value: ride.formattedDuration,
-                            icon: "clock",
-                            color: Theme.Colors.secondary
-                        )
-                    }
-
-                    HStack(spacing: Theme.Spacing.medium) {
-                        StatCard(
-                            title: "Max Speed",
-                            value: String(format: "%.0f km/h", ride.maxSpeed),
-                            icon: "speedometer",
-                            color: Theme.Colors.error
-                        )
-                        StatCard(
-                            title: "Avg Speed",
-                            value: String(format: "%.0f km/h", ride.avgSpeed),
-                            icon: "gauge.open.with.lines.needle.33percent",
-                            color: Theme.Colors.info
-                        )
-                    }
-
-                    HStack(spacing: Theme.Spacing.medium) {
-                        StatCard(
-                            title: "Start",
-                            value: "\(ride.startBattery)%",
-                            icon: batteryIconName(for: ride.startBattery),
-                            color: Theme.Colors.success
-                        )
-                        StatCard(
-                            title: "End",
-                            value: "\(ride.endBattery ?? 0)%",
-                            icon: batteryIconName(for: ride.endBattery ?? 0),
-                            color: Theme.Colors.warning
-                        )
-                    }
-
-                    if let healthSummary = ride.healthSummary {
-                        RideHealthStatCards(healthSummary: healthSummary)
-                    }
-                    rideSyncStatusSection
-                    weatherSection
-                    routeSection
-                    #if os(iOS)
-                    photosSection
-                    #endif
-                    speedChartSection
-                    RideHeartRateChart(samples: cache.heartRates)
-                    batteryChartSection
-                    tempChartSection
-                }
-                .padding()
-            }
+            rideDetailContent
         }
-        .navigationTitle(ride.startTime.formatted(date: .abbreviated, time: .omitted))
+        .navigationTitle("")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
         .onAppear {
             // Recompute distance from GPS if the stored value looks wrong
             let validGPSSamples = (ride.samples ?? []).filter { sample in
@@ -185,7 +127,7 @@ struct RideDetailView: View {
                     Button {
                         showShareSheet = true
                     } label: {
-                        Image(systemName: "square.and.arrow.up")
+                        Label("Share", systemImage: "square.and.arrow.up")
                     }
                 }
             }
@@ -227,6 +169,182 @@ struct RideDetailView: View {
         #endif
     }
 
+    private var rideDetailContent: some View {
+        GeometryReader { geometry in
+            if geometry.size.width >= 760 {
+                rideDetailTwoColumnLayout(
+                    height: geometry.size.height + geometry.safeAreaInsets.top + geometry.safeAreaInsets.bottom
+                )
+            } else {
+                ScrollView {
+                    rideDetailSingleColumnLayout
+                        .padding()
+                }
+            }
+        }
+    }
+
+    private func rideDetailTwoColumnLayout(height: CGFloat) -> some View {
+        HStack(alignment: .top, spacing: Theme.Spacing.extraLarge) {
+            rideDetailRoutePane(height: height)
+                .frame(minWidth: 340, maxWidth: .infinity)
+                .ignoresSafeArea(edges: [.top, .bottom, .leading])
+
+            ScrollView {
+                rideDetailStatsColumn(includeTitle: true, includePhotos: true)
+                    .padding()
+            }
+            .frame(minWidth: 340, maxWidth: .infinity)
+        }
+    }
+
+    private func rideDetailStatsColumn(includeTitle: Bool, includePhotos: Bool) -> some View {
+        VStack(spacing: Theme.Spacing.large) {
+            if includeTitle {
+                rideTitleHeader(showSyncStatus: true)
+            }
+            rideSummaryGrid
+            if let healthSummary = ride.healthSummary {
+                rideHealthSection(healthSummary: healthSummary)
+            }
+            weatherSection
+            if includePhotos {
+                #if os(iOS)
+                photosSection
+                #endif
+            }
+            speedChartSection
+            RideHeartRateChart(samples: cache.heartRates)
+            batteryChartSection
+            tempChartSection
+        }
+    }
+
+    private var rideDetailSingleColumnLayout: some View {
+        VStack(spacing: Theme.Spacing.large) {
+            rideTitleHeader(showSyncStatus: false)
+            rideSummaryGrid
+            if let healthSummary = ride.healthSummary {
+                rideHealthSection(healthSummary: healthSummary)
+            }
+            rideSyncStatusSection
+            weatherSection
+            routeSection
+            #if os(iOS)
+            photosSection
+            #endif
+            speedChartSection
+            RideHeartRateChart(samples: cache.heartRates)
+            batteryChartSection
+            tempChartSection
+        }
+    }
+
+    private func rideTitleHeader(showSyncStatus: Bool) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.medium) {
+            Text(rideTitle)
+                .font(Theme.Fonts.headerLarge())
+                .foregroundStyle(Theme.Colors.textPrimary)
+            Spacer(minLength: Theme.Spacing.medium)
+            if showSyncStatus {
+                rideSyncStatusPill
+            }
+        }
+        .padding(.horizontal)
+    }
+
+    private var rideSummaryGrid: some View {
+        LazyVGrid(
+            columns: [GridItem(.adaptive(minimum: 150), spacing: Theme.Spacing.medium)],
+            spacing: Theme.Spacing.medium
+        ) {
+            StatCard(
+                title: "Distance",
+                value: String(format: "%.1f km", ride.totalDistance),
+                icon: "point.topleft.down.to.point.bottomright.curvepath",
+                color: Theme.Colors.accent
+            )
+            StatCard(
+                title: "Duration",
+                value: ride.formattedDuration,
+                icon: "clock",
+                color: Theme.Colors.secondary
+            )
+            StatCard(
+                title: "Max Speed",
+                value: String(format: "%.0f km/h", ride.maxSpeed),
+                icon: "speedometer",
+                color: Theme.Colors.error
+            )
+            StatCard(
+                title: "Avg Speed",
+                value: String(format: "%.0f km/h", ride.avgSpeed),
+                icon: "gauge.open.with.lines.needle.33percent",
+                color: Theme.Colors.info
+            )
+            StatCard(
+                title: "Start",
+                value: "\(ride.startBattery)%",
+                icon: batteryIconName(for: ride.startBattery),
+                color: Theme.Colors.success
+            )
+            StatCard(
+                title: "End",
+                value: "\(ride.endBattery ?? 0)%",
+                icon: batteryIconName(for: ride.endBattery ?? 0),
+                color: Theme.Colors.warning
+            )
+        }
+    }
+
+    private func rideHealthSection(healthSummary: PersistedRideHealthSummary) -> some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: Theme.Spacing.medium) {
+                if let averageHeartRate = healthSummary.averageHeartRate {
+                    StatCard(
+                        title: "Avg HR",
+                        value: "\(averageHeartRate) bpm",
+                        icon: "heart.fill",
+                        color: Theme.Colors.error
+                    )
+                    .frame(minWidth: 150)
+                }
+                if let maxHeartRate = healthSummary.maxHeartRate {
+                    StatCard(
+                        title: "Max HR",
+                        value: "\(maxHeartRate) bpm",
+                        icon: "heart.text.square.fill",
+                        color: Theme.Colors.error
+                    )
+                    .frame(minWidth: 150)
+                }
+                if let activeCalories = healthSummary.activeCalories {
+                    StatCard(
+                        title: "Active Calories",
+                        value: "\(Int(activeCalories.rounded())) cal",
+                        icon: "flame.fill",
+                        color: Theme.Colors.warning
+                    )
+                    .frame(minWidth: 150)
+                }
+            }
+
+            RideHealthStatCards(healthSummary: healthSummary)
+        }
+    }
+
+    private var rideSyncStatusPill: some View {
+        Label(
+            ride.uploaded ? "Synced" : "Syncing",
+            systemImage: ride.uploaded ? "checkmark.icloud.fill" : "arrow.triangle.2.circlepath.icloud"
+        )
+        .font(Theme.Fonts.bodySmall)
+        .foregroundStyle(ride.uploaded ? Theme.Colors.success : Theme.Colors.warning)
+        .padding(.vertical, 6)
+        .padding(.horizontal, 10)
+        .background(Theme.Colors.secondaryBackground, in: Capsule())
+    }
+
     @ViewBuilder
     private var rideSyncStatusSection: some View {
         HStack(spacing: Theme.Spacing.small) {
@@ -247,7 +365,6 @@ struct RideDetailView: View {
                 Text("Weather")
                     .font(Theme.Fonts.headerLarge())
                     .foregroundStyle(Theme.Colors.textPrimary)
-                    .padding(.horizontal)
 
                 VStack(spacing: Theme.Spacing.medium) {
                     HStack(spacing: Theme.Spacing.large) {
@@ -292,7 +409,6 @@ struct RideDetailView: View {
                 .padding()
                 .background(Theme.Colors.elevatedBackground)
                 .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius))
-                .padding(.horizontal)
             }
         }
     }
@@ -309,6 +425,17 @@ struct RideDetailView: View {
                 .foregroundStyle(Theme.Colors.textSecondary)
         }
         .frame(maxWidth: .infinity)
+    }
+
+    private func rideDetailRoutePane(height: CGFloat) -> some View {
+        #if os(iOS)
+        MapRouteView(
+            coordinates: cache.routes,
+            ridePhotos: photoAnnotations,
+            height: max(320, height),
+            cornerRadius: 0
+        )
+        #endif
     }
 
     private var routeSection: some View {
@@ -370,7 +497,7 @@ struct RideDetailView: View {
                     .padding(.horizontal)
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack(spacing: Theme.Spacing.small) {
+                    LazyHStack(alignment: .top, spacing: Theme.Spacing.small) {
                         ForEach(cache.photos) { photo in
                             VStack(alignment: .leading, spacing: 6) {
                                 RidePhotoThumbnailView(
@@ -380,32 +507,37 @@ struct RideDetailView: View {
                                     height: 110,
                                     cornerRadius: 10
                                 )
+                                .overlay(alignment: .bottomLeading) {
+                                    if !isPhotoSynced(photo) {
+                                        photoSyncStatusBadge
+                                            .padding(6)
+                                    }
+                                }
                                 Text(photo.createdAt, style: .time)
                                     .font(Theme.Fonts.caption)
                                     .foregroundStyle(Theme.Colors.textSecondary)
-                                photoSyncStatusLabel(for: photo)
                             }
+                            .frame(width: 110, alignment: .topLeading)
                         }
                     }
                     .padding(.horizontal)
                 }
+                .frame(height: 136)
             }
         }
     }
 
-    @ViewBuilder
-    private func photoSyncStatusLabel(for photo: RidePhotoDisplay) -> some View {
-        let synced = ride.uploaded && photo.uploaded
-        let symbolName = synced ? "checkmark.circle.fill" : "arrow.triangle.2.circlepath.circle.fill"
-        let text = synced ? "Synced" : "Syncing"
-        let color = synced ? Theme.Colors.success : Theme.Colors.warning
+    private func isPhotoSynced(_ photo: RidePhotoDisplay) -> Bool {
+        ride.uploaded && photo.uploaded
+    }
 
-        HStack(spacing: 4) {
-            Image(systemName: symbolName)
-            Text(text)
-        }
-        .font(Theme.Fonts.caption)
-        .foregroundStyle(color)
+    private var photoSyncStatusBadge: some View {
+        Label("Syncing", systemImage: "arrow.triangle.2.circlepath")
+            .font(Theme.Fonts.caption)
+            .padding(.vertical, 4)
+            .padding(.horizontal, 6)
+            .foregroundStyle(Theme.Colors.warning)
+            .background(.thinMaterial, in: Capsule())
     }
 
     private func handleRidePhotoSelection(items: [PhotosPickerItem]) async -> Int {
